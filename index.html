@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="pt">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>RetroCollection</title>
+    <meta name="description" content="Gestor de coleção de jogos e consolas retro">
+    <meta name="theme-color" content="#0f172a">
+
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="assets/icon-192.png">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/style.css">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div id="app">
+        <header class="app-header">
+            <div class="logo">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                    class="lucide lucide-gamepad-2">
+                    <line x1="6" x2="10" y1="12" y2="12" />
+                    <line x1="8" x2="8" y1="10" y2="14" />
+                    <line x1="15" x2="15.01" y1="13" y2="13" />
+                    <line x1="18" x2="18.01" y1="11" y2="11" />
+                    <rect width="20" height="12" x="2" y="6" rx="2" />
+                </svg>
+                <h1>RetroCollection</h1>
+            </div>
+            <nav class="main-nav">
+                <button id="nav-dashboard" class="active">Dashboard</button>
+                <button id="nav-collection">Coleção</button>
+                <button id="nav-wishlist">Wishlist</button>
+                <button id="nav-platforms">Plataformas</button>
+                <button id="nav-import">Importar</button>
+                <button id="nav-add" class="btn-primary">+ Novo</button>
+            </nav>
+        </header>
+
+        <main id="main-content">
+            <div class="loading-state">
+                <div class="spinner"></div>
+                <p>A carregar a tua coleção...</p>
+                <p style="font-size:0.8rem; color: #666; margin-top:1rem;">(Se isto demorar muito, recarregue a página)
+                </p>
+            </div>
+        </main>
+
+        <!-- Bottom Nav for Mobile -->
+        <nav class="bottom-nav">
+            <button id="mobile-home" class="active">🏠</button>
+            <button id="mobile-collection">🎮</button>
+            <button id="mobile-wishlist">📝</button>
+            <button id="mobile-add">➕</button>
+            <button id="mobile-sync">☁️</button>
+        </nav>
+    </div>
+
+    <!-- External Libs -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+
+    <!-- Main Entry Point v11 -->
+    <script type="module" src="js/app.js?v=11"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js?v=11').catch(err => console.log('SW failed', err));
+            });
+        }
+    </script>
+</body>
+
+</html>
