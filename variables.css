@@ -1,0 +1,63 @@
+:root {
+    /* Colors - Premium Orange / Amber Palette (Lightened) */
+    --bg-app: #1e1e24;
+    /* Slate Charcoal (Lighter than black) */
+
+    /* Card Backgrounds - Matte Glass */
+    --bg-card: rgba(43, 43, 54, 0.9);
+    --bg-card-hover: rgba(55, 55, 65, 0.95);
+
+    --text-primary: #ffffff;
+    --text-secondary: #ffc978;
+    /* Brighter Pastel Orange */
+
+    /* Premium Accents */
+    --accent-color: #ff9f0a;
+    /* Vibrant Amber */
+    --accent-secondary: #ff7950;
+    /* Warm Coral */
+
+    --accent-glow: rgba(255, 159, 10, 0.35);
+
+    --border-color: rgba(255, 159, 10, 0.25);
+
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, #ff9f0a 0%, #ff7950 100%);
+    --gradient-secondary: linear-gradient(135deg, #ffd60a 0%, #ff9f0a 100%);
+
+    /* Spacing */
+    --space-xs: 0.25rem;
+    --space-sm: 0.5rem;
+    --space-md: 1rem;
+    --space-lg: 1.5rem;
+    --space-xl: 2rem;
+
+    /* Radius */
+    --radius-sm: 0.25rem;
+    --radius-md: 0.5rem;
+    --radius-lg: 0.75rem;
+    --radius-full: 9999px;
+
+    /* Effects */
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.2);
+    --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.25);
+    --glass-blur: blur(12px);
+    --transition-fast: 0.2s ease;
+
+    /* Font */
+    --font-main: 'Outfit', sans-serif;
+}
+
+/* Glassmorphism Classes */
+.glass {
+    background: var(--bg-card);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--border-color);
+}
+
+.glass-hover:hover {
+    background: var(--bg-card-hover);
+    border-color: rgba(148, 163, 184, 0.2);
+    box-shadow: 0 0 15px var(--accent-glow);
+}
