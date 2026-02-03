@@ -2,7 +2,7 @@ import { dbService } from './services/db.js';
 import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js';
 import { coverSearchService } from './services/coverSearch.js';
 import WebuyService from './services/webuyService.js';
-import { localFileSync } from './services/localFileSync.js?v=55';
+import { localFileSync } from './services/localFileSync.js?v=56';
 
 // Global Exposure
 window.navigate = navigate;
@@ -129,7 +129,7 @@ async function renderDashboard() {
         const ownedTotal = ownedGames.length + ownedConsoles.length;
         const wishlistTotal = games.filter(g => g.isWishlist).length + consoles.filter(c => c.isWishlist).length;
 
-        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v55</span></h2>`;
+        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v56</span></h2>`;
 
         const platData = await getPlatformOptions();
 
@@ -559,7 +559,7 @@ async function pickLogoForPlatform(id) {
     modal.style.display = 'flex';
     grid.innerHTML = '<p style="grid-column:1/-1; text-align:center; opacity:0.5;">A carregar sugestões...</p>';
 
-    const base = 'https://raw.githubusercontent.com/KyleBing/retro-game-console-icons/main/icons/';
+    const base = 'https://raw.githubusercontent.com/KyleBing/retro-game-console-icons/master/icons/';
     const icons = [
         'ps.png', 'ps2.png', 'ps3.png', 'ps4.png', 'ps5.png', 'psp.png', 'vita.png',
         'fc.png', 'sfc.png', 'n64.png', 'ngc.png', 'wii.png', 'wiiu.png', 'switch.png',
@@ -625,7 +625,7 @@ async function exportCollection() {
         const platforms = await dbService.getAll('platforms');
 
         const data = {
-            version: "v55",
+            version: "v56",
             timestamp: new Date().toISOString(),
             games,
             consoles,
@@ -696,15 +696,15 @@ async function importCollection() {
 
 /** INITIALIZATION **/
 async function init() {
-    logger("Iniciando RetroCollection v55...");
+    logger("Iniciando RetroCollection v56...");
     try {
         await dbService.open();
         logger("DB Conectado.");
 
-        // Auto-Sync Logos logic for v55
-        if (!localStorage.getItem('logos_synced_v55')) {
+        // Auto-Sync Logos logic for v56
+        if (!localStorage.getItem('logos_synced_v56')) {
             await autoSyncLogos();
-            localStorage.setItem('logos_synced_v55', 'true');
+            localStorage.setItem('logos_synced_v56', 'true');
         }
         await navigate('nav-dashboard');
 
@@ -726,7 +726,7 @@ async function init() {
 
 async function autoSyncLogos() {
     const platforms = await getPlatformOptions();
-    const base = 'https://raw.githubusercontent.com/KyleBing/retro-game-console-icons/main/icons/';
+    const base = 'https://raw.githubusercontent.com/KyleBing/retro-game-console-icons/master/icons/';
     const map = {
         'playstation': 'ps.png', 'ps1': 'ps.png', 'psx': 'ps.png', 'playstation 1': 'ps.png', 'psone': 'ps.png',
         'playstation 2': 'ps2.png', 'ps2': 'ps2.png',
