@@ -2,8 +2,8 @@ import { dbService } from './services/db.js';
 import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js';
 import { coverSearchService } from './services/coverSearch.js';
 import WebuyService from './services/webuyService.js';
-import { localFileSync } from './services/localFileSync.js?v=68';
-import { metadataService } from './services/metadataService.js?v=68';
+import { localFileSync } from './services/localFileSync.js?v=69';
+import { metadataService } from './services/metadataService.js?v=69';
 
 // Global Exposure
 window.navigate = navigate;
@@ -143,7 +143,7 @@ async function renderDashboard() {
         const ownedTotal = ownedGames.length + ownedConsoles.length;
         const wishlistTotal = games.filter(g => g.isWishlist).length + consoles.filter(c => c.isWishlist).length;
 
-        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v68</span></h2>`;
+        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v69</span></h2>`;
 
         const platData = await getPlatformOptions();
 
@@ -276,7 +276,10 @@ async function renderGenericGrid(viewTitle, itemsFilter) {
                         <div onclick="navigate('nav-add', '${item.id}')" style="background:rgba(255,255,255,0.05); border-radius:12px; overflow:hidden; border:1px solid rgba(255,255,255,0.1); height:210px; cursor:pointer; display:flex; flex-direction:column; transition: transform 0.2s;">
                             <div style="height:130px; background:#000 url(${item.image || ''}) center/contain no-repeat; pointer-events:none;"></div>
                             <div style="padding:10px; flex:1; display:flex; flex-direction:column; justify-content:space-between;">
-                                <h4 style="font-size:0.75rem; overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; line-height:1.2; font-weight:600;">${item.title}</h4>
+                                <div>
+                                    <h4 style="font-size:0.75rem; overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; line-height:1.2; font-weight:600; margin-bottom:2px;">${item.title}</h4>
+                                    ${item.year ? `<div style="font-size:0.6rem; opacity:0.5; margin-bottom:4px;">${item.year}</div>` : ''}
+                                </div>
                                 <span style="font-size:0.65rem; color:#ffc978; font-weight:800; text-transform:uppercase;">${item.platform || 'Geral'}</span>
                             </div>
                         </div>
@@ -856,15 +859,15 @@ async function importCollection() {
 
 /** INITIALIZATION **/
 async function init() {
-    logger("Iniciando RetroCollection v67...");
+    logger("Iniciando RetroCollection v69...");
     try {
         await dbService.open();
         logger("DB Conectado.");
 
-        // Auto-Sync Logos logic for v68
-        if (!localStorage.getItem('logos_synced_v68')) {
+        // Auto-Sync Logos logic for v69
+        if (!localStorage.getItem('logos_synced_v69')) {
             await autoSyncLogos();
-            localStorage.setItem('logos_synced_v68', 'true');
+            localStorage.setItem('logos_synced_v69', 'true');
         }
         await navigate('nav-dashboard');
 
