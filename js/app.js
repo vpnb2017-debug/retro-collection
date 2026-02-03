@@ -221,7 +221,7 @@ async function renderDashboard() {
         <div class="view-scroll">
             <div class="header-section">
                 <h2>Olá, Colecionador! 👋</h2>
-                <p class="subtitle">Aqui está o resumo do teu império. <span style="opacity:0.3; font-size:0.7rem; font-weight:400;">v23</span></p>
+                <p class="subtitle">Aqui está o resumo do teu império. <span style="opacity:0.3; font-size:0.7rem; font-weight:400;">v24</span></p>
                 ${installNotice}
             </div>
 
