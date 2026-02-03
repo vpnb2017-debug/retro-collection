@@ -6,12 +6,16 @@
     -webkit-tap-highlight-color: transparent;
 }
 
+html,
+body {
+    height: 100%;
+    overflow: hidden;
+}
+
 body {
     font-family: var(--font-main);
     background-color: var(--bg-app);
     color: var(--text-primary);
-    min-height: 100vh;
-    overflow-x: hidden;
     line-height: 1.5;
 }
 

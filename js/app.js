@@ -2,7 +2,7 @@ import { dbService } from './services/db.js';
 import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js';
 import { coverSearchService } from './services/coverSearch.js';
 import WebuyService from './services/webuyService.js';
-import { localFileSync } from './services/localFileSync.js?v=20';
+import { localFileSync } from './services/localFileSync.js?v=21';
 
 // Premium UI Service for Modals
 const uiService = {
@@ -221,7 +221,7 @@ async function renderDashboard() {
         <div class="view-scroll">
             <div class="header-section">
                 <h2>Olá, Colecionador! 👋</h2>
-                <p class="subtitle">Aqui está o resumo do teu império. <span style="opacity:0.3; font-size:0.7rem; font-weight:400;">v20</span></p>
+                <p class="subtitle">Aqui está o resumo do teu império. <span style="opacity:0.3; font-size:0.7rem; font-weight:400;">v21</span></p>
                 ${installNotice}
             </div>
 
@@ -874,7 +874,7 @@ async function renderSyncView() {
             <div class="glass" style="padding: 2rem; border-radius: var(--radius-lg); display:flex; flex-direction:column; gap:1.5rem;">
                 <div style="text-align:center;">
                     <span style="font-size:3rem; filter: drop-shadow(0 0 10px var(--accent-secondary));">💾</span>
-                    <p style="margin-top:0.5rem; color:var(--accent-secondary); font-weight:600;">Modo Sem API (v19)</p>
+                    <p style="margin-top:0.5rem; color:var(--accent-secondary); font-weight:600;">Modo Sem API (v21)</p>
                     <button id="btn-force-update" style="font-size:0.6rem; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border_radius:4px; padding:2px 6px; cursor:pointer; color:var(--text-secondary); margin-top:5px;">🔄 Forçar Atualização da App</button>
                 </div>
 
