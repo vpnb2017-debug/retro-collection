@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport"
         content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>RetroCollection v33 🎮</title>
+    <title>RetroCollection v34 🎮</title>
 
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1e1e24">
@@ -65,14 +65,23 @@
             position: relative;
         }
 
+        .v29-title-zone,
+        .v29-filter-zone,
+        .v29-scroll-zone {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
         .v29-title-zone {
             padding: 15px 20px 5px 20px;
             background: var(--bg-app);
+            width: 100%;
         }
 
         .v29-filter-zone {
             padding: 5px 20px 10px 20px;
             background: var(--bg-app);
+            width: 100%;
         }
 
         .v29-scroll-zone {
@@ -80,6 +89,7 @@
             padding: 10px 20px 100px 20px;
             -webkit-overflow-scrolling: touch;
             background: var(--bg-app);
+            width: 100%;
         }
 
         @media (max-width: 600px) {
@@ -246,17 +256,17 @@
             return false;
         };
 
-        log("Arranque v33 iniciado...");
+        log("Arranque v34 iniciado...");
 
-        // v33 FINAL WIPE
-        if (localStorage.getItem('app_v') !== '33') {
-            log("Limpando cache v32...");
+        // v34 FINAL WIPE
+        if (localStorage.getItem('app_v') !== '34') {
+            log("Limpando cache v33...");
             localStorage.clear();
-            localStorage.setItem('app_v', '33');
+            localStorage.setItem('app_v', '34');
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.getRegistrations().then(rs => {
                     Promise.all(rs.map(r => r.unregister())).then(() => {
-                        log("Cache limpo. A recarregar v33...");
+                        log("Cache limpo. A recarregar v34...");
                         location.reload();
                     });
                 });
@@ -270,17 +280,17 @@
             const title = document.querySelector('.v29-title-zone h2');
             if (title && title.innerText.includes('A carregar')) {
                 log("Hanging detetado! Tentando bypass...");
-                location.href = location.href.split('?')[0] + '?force_v33=' + Date.now();
+                location.href = location.href.split('?')[0] + '?force_v34=' + Date.now();
             }
         }, 8000);
     </script>
 
-    <script type="module" src="js/app.js?v=33"></script>
+    <script type="module" src="js/app.js?v=34"></script>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js?v=33')
-                    .then(() => log("v33 Pronta."))
+                navigator.serviceWorker.register('sw.js?v=34')
+                    .then(() => log("v34 Pronta."))
                     .catch(e => log("Falha: " + e.message));
             });
         }
