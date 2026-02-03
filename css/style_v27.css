@@ -1,0 +1,186 @@
+/* v27 ZERO-FAILURE ABSOLUTE LAYOUT */
+:root {
+    --header-h: 60px;
+    --filters-h: 120px;
+    /* Rigid Height for Filters */
+    --footer-h: 60px;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+    height: 100%;
+    width: 100%;
+    overflow: hidden !important;
+    /* NO GLOBAL SCROLL */
+    background: var(--bg-app);
+    font-family: var(--font-main);
+    color: var(--text-primary);
+    position: fixed;
+    /* Extra lock */
+    inset: 0;
+}
+
+#app {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+}
+
+/* Header is FIXED at the very top */
+.app-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: var(--header-h);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 var(--space-lg);
+    background: #1e1e24;
+    /* Solid color to be safe */
+    border-bottom: 2px solid var(--accent-color);
+    z-index: 10000;
+    /* Cloud-level z-index */
+}
+
+/* Main content area (Absolute to avoid inheritance) */
+#main-content {
+    position: absolute;
+    top: var(--header-h);
+    bottom: 0;
+    left: 0;
+    right: 0;
+    overflow: hidden;
+}
+
+@media (max-width: 600px) {
+    #main-content {
+        bottom: var(--footer-h);
+    }
+
+    .bottom-nav {
+        display: flex !important;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: var(--footer-h);
+        background: #1e1e24;
+        border-top: 1px solid var(--border-color);
+        z-index: 10000;
+        align-items: center;
+        justify-content: space-around;
+    }
+}
+
+/* COLLECTION VIEW - THE ABSOLUTE FORTRESS */
+.collection-view-container {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+}
+
+.collection-header-static {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background: var(--bg-app);
+    padding: 10px 20px;
+    z-index: 900;
+}
+
+.filters-static {
+    position: absolute;
+    top: 60px;
+    left: 0;
+    right: 0;
+    height: 120px;
+    /* Fixed height for the filter area */
+    background: var(--bg-app);
+    padding: 0 20px;
+    z-index: 800;
+}
+
+.scrollable-list-area {
+    position: absolute;
+    top: 180px;
+    /* Header-static(60) + Filters-static(120) */
+    left: 0;
+    right: 0;
+    bottom: 0;
+    overflow-y: scroll !important;
+    /* THE ONLY SCROLL */
+    padding: 0 20px 40px 20px;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* UI Elements Preserved */
+.logo h1 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--accent-color);
+}
+
+.main-nav {
+    display: flex;
+    gap: var(--space-md);
+}
+
+.main-nav button {
+    color: var(--text-secondary);
+    background: none;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.main-nav button.active {
+    color: white;
+    border-bottom: 2px solid var(--accent-color);
+}
+
+.btn-primary {
+    background: var(--gradient-primary);
+    color: white !important;
+    padding: 8px 16px !important;
+    border-radius: var(--radius-full) !important;
+    border: none;
+    font-weight: 700;
+}
+
+input,
+select {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
+    color: white;
+    padding: 10px;
+    border-radius: 8px;
+    width: 100%;
+}
+
+.stat-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border-color);
+    padding: 20px;
+    border-radius: 12px;
+}
+
+/* Scrollbar Style */
+.scrollable-list-area::-webkit-scrollbar {
+    width: 8px;
+}
+
+.scrollable-list-area::-webkit-scrollbar-thumb {
+    background: var(--accent-color);
+    border-radius: 4px;
+}

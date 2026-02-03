@@ -2,7 +2,7 @@ import { dbService } from './services/db.js';
 import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js';
 import { coverSearchService } from './services/coverSearch.js';
 import WebuyService from './services/webuyService.js';
-import { localFileSync } from './services/localFileSync.js?v=26';
+import { localFileSync } from './services/localFileSync.js?v=27';
 
 // Premium UI Service for Modals
 const uiService = {
@@ -220,7 +220,7 @@ async function renderDashboard() {
         contentEl.innerHTML = `
         <div class="view-scroll">
             <div class="header-section">
-                <h2>Olá, Colecionador! 👋 <span style="font-size:0.6rem; color:var(--accent-secondary); vertical-align:middle; border:1px solid; padding:2px 4px; border-radius:4px;">v26</span></h2>
+                <h2>Olá, Colecionador! 👋 <span style="font-size:0.6rem; color:var(--accent-secondary); vertical-align:middle; border:1px solid; padding:2px 4px; border-radius:4px;">v27</span></h2>
                 <p class="subtitle">Aqui está o resumo do teu império.</p>
                 ${installNotice}
             </div>
@@ -282,7 +282,7 @@ async function renderGenericGrid(viewTitle, itemsFilter) {
     contentEl.innerHTML = `
         <div class="collection-view-container">
             <div class="collection-header-static">
-                 <h2>${viewTitle} <span style="font-size:0.6rem; color:#ff4d4d; border:1px solid; padding:2px; border-radius:3px;">v26-NUCLEAR</span></h2>
+                 <h2>${viewTitle} <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px; border-radius:3px;">v27-ABSOLUTE</span></h2>
             </div>
             
             <div class="filters-static">
@@ -878,8 +878,8 @@ async function renderSyncView() {
             <div class="glass" style="padding: 2rem; border-radius: var(--radius-lg); display:flex; flex-direction:column; gap:1.5rem;">
                 <div style="text-align:center;">
                     <span style="font-size:3rem; filter: drop-shadow(0 0 10px var(--accent-secondary));">💾</span>
-                    <p style="margin-top:0.5rem; color:var(--accent-secondary); font-weight:600;">Modo Sem API (v26)</p>
-                    <button id="btn-force-update" style="font-size:0.6rem; background:rgba(255,100,100,0.2); border:1px solid rgba(255,0,0,0.4); border-radius:4px; padding:4px 8px; cursor:pointer; color:white; margin-top:5px; font-weight:bold;">🚨 FORÇAR RESET TOTAL (v26)</button>
+                    <p style="margin-top:0.5rem; color:var(--accent-secondary); font-weight:600;">Modo Sem API (v27)</p>
+                    <button id="btn-force-update" style="font-size:0.6rem; background:rgba(255,100,100,0.2); border:1px solid rgba(255,0,0,0.4); border-radius:4px; padding:4px 8px; cursor:pointer; color:white; margin-top:5px; font-weight:bold;">🚨 FORÇAR RESET TOTAL (v27)</button>
                 </div>
 
                 <div style="background: rgba(255,255,255,0.05); padding:1.2rem; border-radius:var(--radius-md); font-size:0.85rem; line-height:1.5;">
@@ -1019,7 +1019,7 @@ async function renderSyncView() {
     const btnForce = document.getElementById('btn-force-update');
     if (btnForce) {
         btnForce.onclick = async () => {
-            if (confirm('ATENÇÃO: Isto irá apagar TODOS os dados locais e cache para garantir a v26. Tem a certeza?')) {
+            if (confirm('ATENÇÃO: Isto irá apagar TODOS os dados locais e cache para garantir a v27. Tem a certeza?')) {
                 if ('serviceWorker' in navigator) {
                     const regs = await navigator.serviceWorker.getRegistrations();
                     for (let reg of regs) await reg.unregister();
@@ -1027,7 +1027,7 @@ async function renderSyncView() {
                 const names = await caches.keys();
                 for (let name of names) await caches.delete(name);
                 localStorage.clear();
-                alert('Limpeza v26 concluída. A reiniciar...');
+                alert('Limpeza v27 concluída. A reiniciar...');
                 location.href = location.href.split('?')[0] + '?v=' + Date.now();
             }
         };
