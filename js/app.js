@@ -201,6 +201,21 @@ async function renderDashboard() {
             `;
         }
 
+        // Platform Stats Logic
+        const statsByPlatform = {};
+        [...ownedGames, ...ownedConsoles].forEach(item => {
+            const p = item.platform || 'Geral';
+            statsByPlatform[p] = (statsByPlatform[p] || 0) + 1;
+        });
+
+        const sortedPlatforms = Object.entries(statsByPlatform).sort((a, b) => b[1] - a[1]);
+        const platformStatsHtml = sortedPlatforms.map(([name, count]) => `
+            <div style="display:flex; justify-content:space-between; padding:0.5rem; background:rgba(255,255,255,0.05); border-radius:4px; font-size:0.85rem;">
+                <span style="color:var(--text-secondary)">${name}</span>
+                <span style="color:var(--accent-secondary); font-weight:700;">${count}</span>
+            </div>
+        `).join('');
+
         contentEl.innerHTML = `
         <div class="header-section">
             <h2>Olá, Colecionador! 👋</h2>
@@ -217,15 +232,20 @@ async function renderDashboard() {
                 <h3>Wishlist</h3>
                 <p class="stat-number" style="font-size: 2.5rem; font-weight: 700; color: var(--text-primary)">${wishlistCount}</p>
             </div>
-            <div class="stat-card glass" style="padding: 1.5rem; border-radius: var(--radius-lg); border-left: 4px solid #fff; cursor:pointer;" id="dash-link-platforms">
-                <h3>Sistemas</h3>
-                <p style="font-size: 1rem; color: var(--text-secondary); margin-top:0.5rem;">Gerir plataformas</p>
-                <span style="font-size: 2rem;">🎮</span>
+        </div>
+
+        <div style="margin-top: 2.5rem; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
+            <div class="glass" style="padding: 1.5rem; border-radius: var(--radius-lg);">
+                <h3 style="margin-bottom: 1rem; color: var(--accent-secondary); display:flex; align-items:center; gap:10px;">📊 Por Plataforma</h3>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:0.5rem;">
+                    ${platformStatsHtml || '<p style="font-size:0.8rem; color:var(--text-secondary);">Sem itens na coleção.</p>'}
+                </div>
             </div>
-            <div class="stat-card glass" style="padding: 1.5rem; border-radius: var(--radius-lg); border-left: 4px solid var(--accent-color); cursor:pointer;" id="dash-link-sync">
-                <h3>Nuvem</h3>
-                <p style="font-size: 1rem; color: var(--text-secondary); margin-top:0.5rem;">Google Drive</p>
-                <span style="font-size: 2rem;">☁️</span>
+
+            <div class="glass" style="padding: 1.5rem; border-radius: var(--radius-lg); display: flex; flex-direction: column; gap: 1rem;">
+                <h3 style="margin-bottom: 0.5rem; color: var(--accent-color);">⚙️ Opções Rápidas</h3>
+                <button class="btn-primary" style="width:100%;" id="dash-link-platforms">Gerir Plataformas 🎮</button>
+                <button class="glass glass-hover" style="width:100%; border:1px solid var(--accent-secondary); border-radius:var(--radius-md); padding:0.8rem;" id="dash-link-sync">Nuvem & Sync ☁️</button>
             </div>
         </div>
     `;
@@ -347,7 +367,7 @@ async function renderGenericGrid(viewTitle, itemsFilter) {
         grid.innerHTML = items.map(item => {
             if (state.viewMode === 'list') {
                 return `
-                <div class="game-card glass glass-hover" style="border-radius: var(--radius-md); overflow: hidden; display: flex; align-items: center; padding: 0.5rem; gap: 1rem; border: 1px solid var(--border-color);">
+                <div class="game-card glass glass-hover" data-id="${item.id}" data-type="${item._type}" style="border-radius: var(--radius-md); overflow: hidden; display: flex; align-items: center; padding: 0.5rem; gap: 1rem; border: 1px solid var(--border-color); cursor:pointer;">
                     <div style="width: 50px; height: 50px; border-radius: 4px; background-image: url(${item.image || ''}); background-size: cover; background-position: center; background-color: #000; flex-shrink: 0; display:flex; align-items:center; justify-content:center;">
                         ${!item.image ? '👾' : ''}
                     </div>
@@ -355,9 +375,7 @@ async function renderGenericGrid(viewTitle, itemsFilter) {
                         <h4 style="font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--accent-secondary)">${item.title}</h4>
                         <span style="font-size: 0.7rem; color: var(--text-secondary);">${item.platform || 'General'}</span>
                     </div>
-                    <div style="display:flex; gap:10px;">
-                        <button class="btn-edit" data-id="${item.id}" data-type="${item._type}" style="font-size: 1.2rem;">✏️</button>
-                    </div>
+                    <div style="font-size: 1.2rem; opacity:0.5;">✏️</div>
                 </div>`;
             }
 
@@ -374,19 +392,15 @@ async function renderGenericGrid(viewTitle, itemsFilter) {
             }
 
             return `
-            <div class="game-card glass glass-hover" style="border-radius: var(--radius-lg); overflow: hidden; height: 320px; display: flex; flex-direction: column; cursor: pointer; border: 1px solid var(--border-color); position: relative;">
+            <div class="game-card glass glass-hover" data-id="${item.id}" data-type="${item._type}" style="border-radius: var(--radius-lg); overflow: hidden; height: 320px; display: flex; flex-direction: column; cursor: pointer; border: 1px solid var(--border-color); position: relative;">
                 ${imgLayer}
-                <div class="card-actions" style="position:absolute; top:10px; right:10px; display:flex; gap:5px;">
-                    <button class="btn-icon btn-edit" data-id="${item.id}" data-type="${item._type}" style="background:rgba(0,0,0,0.7); border:1px solid var(--accent-color); color:white; border-radius:50%; width:32px; height:32px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:0.2s;">✏️</button>
-                    <button class="btn-icon btn-delete" data-id="${item.id}" data-type="${item._type}" style="background:rgba(0,0,0,0.7); border:1px solid #ff4444; color:white; border-radius:50%; width:32px; height:32px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:0.2s;">🗑️</button>
-                </div>
-
                 <div style="padding: 1rem; border-top: 1px solid rgba(255,255,255,0.05); background: rgba(0,0,0,0.3)">
-                    <h4 style="font-weight: 600; font-size: 1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--accent-secondary)">${item.title}</h4>
+                    <h4 style="font_weight: 600; font-size: 1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--accent-secondary)">${item.title}</h4>
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.4rem">
                         <span style="font-size: 0.75rem; color: var(--text-secondary); background:rgba(255,255,255,0.1); padding:2px 6px; border-radius:4px;">${item.platform || 'General'}</span>
                         <span style="font-size: 0.75rem; color: #666;">${item._type === 'games' ? 'Jogo' : 'HW'}</span>
                     </div>
+                    ${item.acquiredDate ? `<p style="font-size: 0.65rem; color: #555; margin-top:0.5rem;">📅 Comprado em: ${item.acquiredDate}</p>` : ''}
                 </div>
             </div>
             `;
@@ -409,30 +423,12 @@ async function renderGenericGrid(viewTitle, itemsFilter) {
     searchInput.addEventListener('input', applyFilters);
 
     grid.addEventListener('click', async (e) => {
-        if (e.target.closest('.btn-delete')) {
-            e.stopPropagation();
-            const btn = e.target.closest('.btn-delete');
-            const id = btn.dataset.id;
-            const type = btn.dataset.type;
-
-            if (await uiService.confirm('Tem a certeza que quer eliminar este item?')) {
-                try {
-                    await dbService.delete(type, id);
-                    renderGenericGrid(viewTitle, itemsFilter); // Refresh
-                } catch (err) {
-                    uiService.alert('Erro ao eliminar: ' + err);
-                }
-            }
-            return;
-        }
-
-        if (e.target.closest('.btn-edit')) {
-            e.stopPropagation();
-            const btn = e.target.closest('.btn-edit');
-            const id = btn.dataset.id;
+        const card = e.target.closest('.game-card');
+        if (card) {
+            const id = card.dataset.id;
+            const type = card.dataset.type;
             const item = allItems.find(i => i.id === id);
             if (item) navigate('nav-add', item);
-            return;
         }
     });
 
@@ -569,6 +565,11 @@ async function renderAddForm(itemToEdit = null) {
                     </div>
                 </div>
 
+                <div>
+                    <label>Data de Aquisição</label>
+                    <input type="text" id="input-date" name="acquiredDate" placeholder="dd/mm/aaaa" value="${itemToEdit ? (itemToEdit.acquiredDate || '') : ''}">
+                </div>
+
                 <div style="background: rgba(247, 37, 133, 0.1); border: 1px dashed #f72585; padding: 1rem; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: space-between;">
                     <label style="margin-bottom: 0; cursor:pointer;">
                         <span>📖 Lista de Desejos?</span>
@@ -604,8 +605,11 @@ async function renderAddForm(itemToEdit = null) {
                      </div>
                 </div>
 
-                <div style="margin-top: 1rem;">
-                    <button type="submit" class="btn-primary" style="width: 100%;">Guardar</button>
+                <div style="margin-top: 1rem; display:flex; gap:1rem;">
+                    ${itemToEdit ? `
+                        <button type="button" id="btn-delete-item" class="glass glass-hover" style="flex:1; border:1px solid #ff4444; color:#ff4444; border-radius:var(--radius-md); padding:0.8rem; font_weight:600;">🗑️ Eliminar</button>
+                    ` : ''}
+                    <button type="submit" class="btn-primary" style="flex:2;">${itemToEdit ? 'Guardar Alterações' : 'Guardar Loot'}</button>
                 </div>
             </form>
         </div>
@@ -713,6 +717,7 @@ async function renderAddForm(itemToEdit = null) {
             const newItem = {
                 title: formData.get('title'),
                 platform: formData.get('platform'),
+                acquiredDate: formData.get('acquiredDate'),
                 image: currentImageBase64,
                 isWishlist: formData.get('isWishlist') === 'on'
             };
@@ -729,6 +734,17 @@ async function renderAddForm(itemToEdit = null) {
                 navigate(newItem.isWishlist ? 'nav-wishlist' : 'nav-collection');
             } catch (err) { uiService.alert('Erro ao guardar: ' + err); }
         });
+
+        if (itemToEdit && document.getElementById('btn-delete-item')) {
+            document.getElementById('btn-delete-item').onclick = async () => {
+                if (await uiService.confirm('Tem a certeza que quer eliminar este item?')) {
+                    try {
+                        await dbService.delete(itemToEdit._type, itemToEdit.id);
+                        navigate(isWishlist ? 'nav-wishlist' : 'nav-collection');
+                    } catch (err) { uiService.alert('Erro ao eliminar: ' + err); }
+                }
+            };
+        }
     } catch (e) {
         console.error(e);
         contentEl.innerHTML = `<div style="padding:2rem;">Erro ao abrir formulário: ${e.message}</div>`;
