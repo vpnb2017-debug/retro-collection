@@ -2,7 +2,7 @@ import { dbService } from './services/db.js';
 import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js';
 import { coverSearchService } from './services/coverSearch.js';
 import WebuyService from './services/webuyService.js';
-import { localFileSync } from './services/localFileSync.js?v=23';
+import { localFileSync } from './services/localFileSync.js?v=24';
 
 // Premium UI Service for Modals
 const uiService = {
@@ -280,42 +280,44 @@ async function renderGenericGrid(viewTitle, itemsFilter) {
     }).join('');
 
     contentEl.innerHTML = `
-        <div class="header-section" style="padding: var(--space-lg) var(--space-lg) 0 var(--space-lg);">
-             <h2>${viewTitle}</h2>
-        </div>
-        
-        <div class="filters glass" style="display:flex; gap:1rem; padding:1rem; border-radius:var(--radius-md); margin: 1rem var(--space-lg) 2rem var(--space-lg); flex-wrap:wrap; border:1px solid var(--accent-glow);">
-            <div style="flex:1; min-width: 120px;">
-                <label style="font-size:0.8rem; color:var(--accent-secondary)">Tipo</label>
-                <select id="filter-type">
-                    <option value="all" ${state.filterType === 'all' ? 'selected' : ''}>Tudo</option>
-                    <option value="games" ${state.filterType === 'games' ? 'selected' : ''}>Jogos</option>
-                    <option value="consoles" ${state.filterType === 'consoles' ? 'selected' : ''}>Consolas</option>
-                </select>
+        <div class="fortress-view">
+            <div class="header-section" style="padding: var(--space-lg) var(--space-lg) 0 var(--space-lg);">
+                 <h2>${viewTitle}</h2>
             </div>
-            <div style="flex:1; min-width: 120px;">
-                <label style="font-size:0.8rem; color:var(--accent-secondary)">Plataforma</label>
-                <select id="filter-platform">
-                    <option value="all" ${state.filterPlatform === 'all' ? 'selected' : ''}>Todas</option>
-                    ${platformOptionsHtml}
-                </select>
+            
+            <div class="filters glass" style="display:flex; gap:1rem; padding:1rem; border-radius:var(--radius-md); margin: 1rem var(--space-lg) 1rem var(--space-lg); flex-wrap:wrap; border:1px solid var(--accent-glow); flex-shrink:0;">
+                <div style="flex:1; min-width: 120px;">
+                    <label style="font-size:0.8rem; color:var(--accent-secondary)">Tipo</label>
+                    <select id="filter-type">
+                        <option value="all" ${state.filterType === 'all' ? 'selected' : ''}>Tudo</option>
+                        <option value="games" ${state.filterType === 'games' ? 'selected' : ''}>Jogos</option>
+                        <option value="consoles" ${state.filterType === 'consoles' ? 'selected' : ''}>Consolas</option>
+                    </select>
+                </div>
+                <div style="flex:1; min-width: 120px;">
+                    <label style="font-size:0.8rem; color:var(--accent-secondary)">Plataforma</label>
+                    <select id="filter-platform">
+                        <option value="all" ${state.filterPlatform === 'all' ? 'selected' : ''}>Todas</option>
+                        ${platformOptionsHtml}
+                    </select>
+                </div>
+                <div style="flex:2; min-width: 200px;">
+                    <label style="font-size:0.8rem; color:var(--accent-secondary)">Pesquisa</label>
+                    <input type="text" id="search-input" placeholder="Nome do item..." value="${state.filterSearch}">
+                </div>
             </div>
-            <div style="flex:2; min-width: 200px;">
-                <label style="font-size:0.8rem; color:var(--accent-secondary)">Pesquisa</label>
-                <input type="text" id="search-input" placeholder="Nome do item..." value="${state.filterSearch}">
-            </div>
-        </div>
 
-        <div id="grid-scroll-area" style="flex:1; overflow-y:auto; padding: 0 var(--space-lg) var(--space-lg) var(--space-lg); min-height:0;">
-            <div class="collection-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem;">
-                <p style="color:white">A carregar...</p>
+            <div id="grid-scroll-area" style="overflow-y:auto; padding: 0 var(--space-lg) var(--space-lg) var(--space-lg); min-height:0;">
+                <div class="collection-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem;">
+                    <p style="color:white">A carregar...</p>
+                </div>
             </div>
-        </div>
 
-        <!-- Float toggle for Mobile -->
-        <button id="view-toggle" class="glass" style="position:fixed; bottom:80px; right:20px; width:50px; height:50px; border_radius:50%; z-index:90; display:none; align-items:center; justify-content:center; font-size:1.2rem; border:1px solid var(--accent-color);">
-            ${state.viewMode === 'grid' ? '📄' : '🔲'}
-        </button>
+            <!-- Float toggle for Mobile -->
+            <button id="view-toggle" class="glass" style="position:fixed; bottom:80px; right:20px; width:50px; height:50px; border-radius:50%; z-index:90; display:none; align-items:center; justify-content:center; font-size:1.2rem; border:1px solid var(--accent-color);">
+                ${state.viewMode === 'grid' ? '📄' : '🔲'}
+            </button>
+        </div>
     `;
 
     const games = await dbService.getAll('games');
@@ -874,8 +876,8 @@ async function renderSyncView() {
             <div class="glass" style="padding: 2rem; border-radius: var(--radius-lg); display:flex; flex-direction:column; gap:1.5rem;">
                 <div style="text-align:center;">
                     <span style="font-size:3rem; filter: drop-shadow(0 0 10px var(--accent-secondary));">💾</span>
-                    <p style="margin-top:0.5rem; color:var(--accent-secondary); font-weight:600;">Modo Sem API (v23)</p>
-                    <button id="btn-force-update" style="font-size:0.6rem; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border_radius:4px; padding:2px 6px; cursor:pointer; color:var(--text-secondary); margin-top:5px;">🔄 Forçar Atualização da App</button>
+                    <p style="margin-top:0.5rem; color:var(--accent-secondary); font-weight:600;">Modo Sem API (v24)</p>
+                    <button id="btn-force-update" style="font-size:0.6rem; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:4px; padding:2px 6px; cursor:pointer; color:var(--text-secondary); margin-top:5px;">🔄 Forçar Atualização da App</button>
                 </div>
 
                 <div style="background: rgba(255,255,255,0.05); padding:1.2rem; border-radius:var(--radius-md); font-size:0.85rem; line-height:1.5;">
