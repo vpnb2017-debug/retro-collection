@@ -256,25 +256,25 @@
             return false;
         };
 
-        log("Arranque v47 iniciado...");
+        log("Arranque v48 iniciado...");
 
-        // v47 AGGRESSIVE UPDATE
+        // v48 AGGRESSIVE UPDATE
         const urlParams = new URLSearchParams(window.location.search);
         const forceUpdate = urlParams.get('update');
 
-        if (localStorage.getItem('app_v') !== '47' || forceUpdate === '47') {
-            log("Actualização Crítica v47...");
+        if (localStorage.getItem('app_v') !== '48' || forceUpdate === '48') {
+            log("Actualização Crítica v48...");
             localStorage.clear();
-            localStorage.setItem('app_v', '47');
+            localStorage.setItem('app_v', '48');
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.getRegistrations().then(rs => {
                     Promise.all(rs.map(r => r.unregister())).then(() => {
                         log("Cache renovado. A reiniciar...");
-                        location.href = location.href.split('?')[0] + '?v=47';
+                        location.href = location.href.split('?')[0] + '?v=48';
                     });
                 });
             } else {
-                location.href = location.href.split('?')[0] + '?v=47';
+                location.href = location.href.split('?')[0] + '?v=48';
             }
         }
 
