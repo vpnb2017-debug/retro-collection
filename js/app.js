@@ -2,7 +2,7 @@ import { dbService } from './services/db.js';
 import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js';
 import { coverSearchService } from './services/coverSearch.js';
 import WebuyService from './services/webuyService.js';
-import { localFileSync } from './services/localFileSync.js?v=62';
+import { localFileSync } from './services/localFileSync.js?v=63';
 
 // Global Exposure
 window.navigate = navigate;
@@ -129,7 +129,7 @@ async function renderDashboard() {
         const ownedTotal = ownedGames.length + ownedConsoles.length;
         const wishlistTotal = games.filter(g => g.isWishlist).length + consoles.filter(c => c.isWishlist).length;
 
-        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v62</span></h2>`;
+        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v63</span></h2>`;
 
         const platData = await getPlatformOptions();
 
@@ -147,7 +147,7 @@ async function renderDashboard() {
 
             <div style="margin-top:25px; background:rgba(255,255,255,0.03); padding:24px; border-radius:20px; border:1px solid rgba(255,255,255,0.05);">
                 <h3 style="margin-bottom:15px; font-size:1rem; color:#ffc978; font-weight:800;">📊 Stats por Consola</h3>
-                <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap:10px;">
+                <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap:10px;">
                     ${Object.entries(groupBy(games.concat(consoles), 'platform'))
                 .sort((a, b) => b[1].length - a[1].length)
                 .map(([p, items]) => {
@@ -634,7 +634,7 @@ async function exportCollection() {
         const platforms = await dbService.getAll('platforms');
 
         const data = {
-            version: "v62",
+            version: "v63",
             timestamp: new Date().toISOString(),
             games,
             consoles,
@@ -705,15 +705,15 @@ async function importCollection() {
 
 /** INITIALIZATION **/
 async function init() {
-    logger("Iniciando RetroCollection v62...");
+    logger("Iniciando RetroCollection v63...");
     try {
         await dbService.open();
         logger("DB Conectado.");
 
-        // Auto-Sync Logos logic for v62
-        if (!localStorage.getItem('logos_synced_v62')) {
+        // Auto-Sync Logos logic for v63
+        if (!localStorage.getItem('logos_synced_v63')) {
             await autoSyncLogos();
-            localStorage.setItem('logos_synced_v62', 'true');
+            localStorage.setItem('logos_synced_v63', 'true');
         }
         await navigate('nav-dashboard');
 
