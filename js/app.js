@@ -2,13 +2,7 @@ import { dbService } from './services/db.js';
 import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js';
 import { coverSearchService } from './services/coverSearch.js';
 import WebuyService from './services/webuyService.js';
-import { localFileSync } from './services/localFileSync.js?v=32';
-
-// Global Exposure
-window.navigate = navigate;
-window.openAddModal = openAddModal;
-window.saveItem = saveItem;
-window.deleteItem = deleteItem;
+import { localFileSync } from './services/localFileSync.js?v=33';
 
 // Utility for logging 
 const logger = (msg) => { if (window.log) window.log(msg); else console.log(msg); };
@@ -108,7 +102,7 @@ async function renderDashboard() {
         const ownedTotal = games.filter(g => !g.isWishlist).length + consoles.filter(c => !c.isWishlist).length;
         const wishlistTotal = games.filter(g => g.isWishlist).length + consoles.filter(c => c.isWishlist).length;
 
-        titleEl.innerHTML = `<h2>Olá! <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v32</span></h2>`;
+        titleEl.innerHTML = `<h2>Olá! <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v33</span></h2>`;
 
         scrollEl.innerHTML = `
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-top:5px;">
@@ -285,6 +279,8 @@ async function deleteItem(id, store) {
     }
 }
 
+async function openAddModal() { navigate('nav-add'); }
+
 /** PLATFORM MANAGER **/
 async function renderPlatformManager() {
     const { titleEl, scrollEl } = getZones();
@@ -334,7 +330,7 @@ async function renderSyncView() {
             
             <div style="background:rgba(255,100,100,0.05); padding:20px; border-radius:18px; border:1px solid rgba(255,0,0,0.2); margin-top:20px;">
                  <p style="margin-bottom:15px; font-size:0.8rem; opacity:0.7;">Só use isto se a App estiver bloqueada ou se mudou de telemóvel recentemente.</p>
-                 <button id="btn-force-update" style="width:100%; background:#ff4d4d; color:white; border:none; padding:12px; border-radius:12px; font-weight:700; cursor:pointer;">🚨 FORÇAR RESET TOTAL (v32)</button>
+                 <button id="btn-force-update" style="width:100%; background:#ff4d4d; color:white; border:none; padding:12px; border-radius:12px; font-weight:700; cursor:pointer;">🚨 FORÇAR RESET TOTAL (v33)</button>
             </div>
         </div>
     `;
@@ -351,7 +347,7 @@ async function renderSyncView() {
 
 /** INITIALIZATION **/
 async function init() {
-    logger("Iniciando RetroCollection v32...");
+    logger("Iniciando RetroCollection v33...");
     try {
         await dbService.open();
         logger("DB Pronto.");
@@ -379,5 +375,11 @@ function groupBy(arr, key) {
         return acc;
     }, {});
 }
+
+// *** FIXED GLOBAL EXPOSURE AT BOTTOM ***
+window.navigate = navigate;
+window.openAddModal = openAddModal;
+window.saveItem = saveItem;
+window.deleteItem = deleteItem;
 
 init();
