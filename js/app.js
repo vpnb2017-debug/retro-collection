@@ -2,7 +2,7 @@ import { dbService } from './services/db.js';
 import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js';
 import { coverSearchService } from './services/coverSearch.js';
 import WebuyService from './services/webuyService.js';
-import { localFileSync } from './services/localFileSync.js?v=61';
+import { localFileSync } from './services/localFileSync.js?v=62';
 
 // Global Exposure
 window.navigate = navigate;
@@ -129,7 +129,7 @@ async function renderDashboard() {
         const ownedTotal = ownedGames.length + ownedConsoles.length;
         const wishlistTotal = games.filter(g => g.isWishlist).length + consoles.filter(c => c.isWishlist).length;
 
-        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v61</span></h2>`;
+        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v62</span></h2>`;
 
         const platData = await getPlatformOptions();
 
@@ -162,8 +162,8 @@ async function renderDashboard() {
                     return `
                         <div onclick="navigateByPlatform('${p}')" style="display:flex; align-items:center; gap:10px; background:rgba(255,255,255,0.05); padding:10px; border-radius:12px; border:1px solid rgba(255,255,255,0.03); cursor:pointer;">
                             ${logoHtml}
-                            <div style="display:flex; flex-direction:column; gap:2px;">
-                                <span style="font-size:0.6rem; opacity:0.6; text-transform:uppercase; letter-spacing:0.5px;">${p}</span>
+                            <div style="display:flex; flex-direction:column; gap:2px; min-width:0;">
+                                <span style="font-size:0.6rem; opacity:0.6; text-transform:uppercase; letter-spacing:0.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${p}</span>
                                 <span style="font-size:1rem; font-weight:800; color:#ff9f0a">${items.length}</span>
                             </div>
                         </div>
@@ -634,7 +634,7 @@ async function exportCollection() {
         const platforms = await dbService.getAll('platforms');
 
         const data = {
-            version: "v61",
+            version: "v62",
             timestamp: new Date().toISOString(),
             games,
             consoles,
@@ -705,15 +705,15 @@ async function importCollection() {
 
 /** INITIALIZATION **/
 async function init() {
-    logger("Iniciando RetroCollection v61...");
+    logger("Iniciando RetroCollection v62...");
     try {
         await dbService.open();
         logger("DB Conectado.");
 
-        // Auto-Sync Logos logic for v61
-        if (!localStorage.getItem('logos_synced_v61')) {
+        // Auto-Sync Logos logic for v62
+        if (!localStorage.getItem('logos_synced_v62')) {
             await autoSyncLogos();
-            localStorage.setItem('logos_synced_v61', 'true');
+            localStorage.setItem('logos_synced_v62', 'true');
         }
         await navigate('nav-dashboard');
 

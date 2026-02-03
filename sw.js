@@ -1,4 +1,4 @@
-const CACHE_NAME = 'retro-collection-v61';
+const CACHE_NAME = 'retro-collection-v62';
 const ASSETS = [
     './',
     './index.html',
