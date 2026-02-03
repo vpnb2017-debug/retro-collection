@@ -2,7 +2,8 @@ import { dbService } from './services/db.js';
 import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js';
 import { coverSearchService } from './services/coverSearch.js';
 import WebuyService from './services/webuyService.js';
-import { localFileSync } from './services/localFileSync.js?v=67';
+import { localFileSync } from './services/localFileSync.js?v=68';
+import { metadataService } from './services/metadataService.js?v=68';
 
 // Global Exposure
 window.navigate = navigate;
@@ -18,6 +19,7 @@ window.editPlatform = editPlatform;
 window.pickLogoForPlatform = pickLogoForPlatform;
 window.selectLogo = selectLogo;
 window.clearFilters = clearFilters;
+window.fetchMetadata = fetchMetadata;
 
 // Utility for logging 
 const logger = (msg) => { if (window.log) window.log(msg); else console.log(msg); };
@@ -141,7 +143,7 @@ async function renderDashboard() {
         const ownedTotal = ownedGames.length + ownedConsoles.length;
         const wishlistTotal = games.filter(g => g.isWishlist).length + consoles.filter(c => c.isWishlist).length;
 
-        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v67</span></h2>`;
+        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v68</span></h2>`;
 
         const platData = await getPlatformOptions();
 
@@ -154,6 +156,36 @@ async function renderDashboard() {
                 <div onclick="navigate('nav-wishlist')" style="background:rgba(255,255,255,0.05); padding:24px; border-radius:20px; border:1px solid rgba(255,255,255,0.1); cursor:pointer;">
                     <h3 style="font-size:0.85rem; opacity:0.8; margin-bottom:8px;">Pretendidos</h3>
                     <p style="font-size:2.2rem; font-weight:800;">${wishlistTotal}</p>
+                </div>
+            </div>
+
+            <div style="margin-top:25px; display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+                <div style="background:rgba(255,255,255,0.03); padding:20px; border-radius:20px; border:1px solid rgba(255,255,255,0.05);">
+                    <h3 style="margin-bottom:12px; font-size:0.85rem; color:#ffc978; font-weight:800;">🎨 Top Géneros</h3>
+                    <div style="display:flex; flex-direction:column; gap:8px;">
+                        ${Object.entries(groupBy(games.filter(g => g.genre), 'genre'))
+                .sort((a, b) => b[1].length - a[1].length)
+                .slice(0, 5)
+                .map(([g, items]) => `
+                                <div style="display:flex; justify-content:space-between; font-size:0.75rem;">
+                                    <span style="opacity:0.7;">${g}</span>
+                                    <span style="font-weight:800; color:#ff9f0a;">${items.length}</span>
+                                </div>
+                            `).join('') || '<p style="font-size:0.65rem; opacity:0.4;">Sem dados de género.</p>'}
+                    </div>
+                </div>
+                <div style="background:rgba(255,255,255,0.03); padding:20px; border-radius:20px; border:1px solid rgba(255,255,255,0.05);">
+                    <h3 style="margin-bottom:12px; font-size:0.85rem; color:#ffc978; font-weight:800;">📅 Décadas</h3>
+                    <div style="display:flex; flex-direction:column; gap:8px;">
+                        ${Object.entries(groupBy(games.filter(g => g.year), g => Math.floor(g.year / 10) * 10))
+                .sort((a, b) => b[0] - a[0])
+                .map(([d, items]) => `
+                                <div style="display:flex; justify-content:space-between; font-size:0.75rem;">
+                                    <span style="opacity:0.7;">Anos ${d}</span>
+                                    <span style="font-weight:800; color:#ff9f0a;">${items.length}</span>
+                                </div>
+                            `).join('') || '<p style="font-size:0.65rem; opacity:0.4;">Sem dados de ano.</p>'}
+                    </div>
                 </div>
             </div>
 
@@ -327,7 +359,8 @@ async function renderAddForm(item) {
                 <label style="font-size:0.75rem; color:#ff9f0a; font-weight:700; margin-left:5px;">Título / Nome</label>
                 <div style="display:flex; gap:10px;">
                     <input id="add-title" type="text" placeholder="Ex: God of War" value="${item ? item.title : ''}" style="flex:1; padding:14px; background:#2b2b36; border:1px solid #444; color:white; border-radius:12px; font-size:0.9rem;">
-                    <button onclick="searchCover()" style="background:#ff9f0a; border:none; color:white; padding:0 15px; border-radius:12px; font-weight:700;">🔍</button>
+                    <button onclick="fetchMetadata()" title="Auto-Preencher Metadados" style="background:rgba(255,159,10,0.1); border:1px solid #ff9f0a; color:#ff9f0a; padding:0 12px; border-radius:12px; font-size:1.1rem; cursor:pointer;">🤖</button>
+                    <button onclick="searchCover()" style="background:#ff9f0a; border:none; color:white; padding:0 15px; border-radius:12px; font-weight:700; cursor:pointer;">🔍</button>
                 </div>
             </div>
             
@@ -337,6 +370,22 @@ async function renderAddForm(item) {
                     <option value="">Selecionar Sistema</option>
                     ${pOptions}
                 </select>
+            </div>
+
+            <div style="display:flex; gap:12px;">
+                <div style="flex:1; display:flex; flex-direction:column; gap:5px;">
+                    <label style="font-size:0.75rem; color:#ff9f0a; font-weight:700; margin-left:5px;">Lançamento (Ano)</label>
+                    <input id="add-year" type="number" placeholder="Ex: 1991" value="${item ? (item.year || '') : ''}" style="padding:14px; background:#2b2b36; border:1px solid #444; color:white; border-radius:12px; font-size:0.9rem;">
+                </div>
+                <div style="flex:1; display:flex; flex-direction:column; gap:5px;">
+                    <label style="font-size:0.75rem; color:#ff9f0a; font-weight:700; margin-left:5px;">Género</label>
+                    <input id="add-genre" type="text" placeholder="Ex: RPG" value="${item ? (item.genre || '') : ''}" style="padding:14px; background:#2b2b36; border:1px solid #444; color:white; border-radius:12px; font-size:0.9rem;">
+                </div>
+            </div>
+
+            <div style="display:flex; flex-direction:column; gap:5px;">
+                <label style="font-size:0.75rem; color:#ff9f0a; font-weight:700; margin-left:5px;">Desenvolvedora</label>
+                <input id="add-developer" type="text" placeholder="Ex: SEGA" value="${item ? (item.developer || '') : ''}" style="padding:14px; background:#2b2b36; border:1px solid #444; color:white; border-radius:12px; font-size:0.9rem;">
             </div>
 
             <div style="display:flex; flex-direction:column; gap:5px;">
@@ -476,6 +525,9 @@ async function saveItem(id) {
         image: document.getElementById('add-image').value,
         price: parseFloat(document.getElementById('add-price').value) || 0,
         acquiredDate: acquiredDate,
+        year: parseInt(document.getElementById('add-year').value) || null,
+        genre: document.getElementById('add-genre').value.trim(),
+        developer: document.getElementById('add-developer').value.trim(),
         notes: document.getElementById('add-notes').value,
         isValidated: document.getElementById('add-validated').checked,
         validatedDate: document.getElementById('add-validation-date').innerText,
@@ -499,6 +551,32 @@ async function deleteItem(id, store) {
             await dbService.delete(store, id);
             navigate(state.view === 'nav-add' ? 'nav-collection' : state.view);
         } catch (err) { logger("DEL ERR: " + err.message); }
+    }
+}
+
+async function fetchMetadata() {
+    const title = document.getElementById('add-title').value;
+    const platform = document.getElementById('add-platform').value;
+    if (!title) return uiService.alert("Escreva o título primeiro!");
+
+    logger("A consultar Wikipedia... 🤖");
+    try {
+        const data = await metadataService.fetchMetadata(title, platform);
+        if (!data) return uiService.alert("Não encontrei dados para este título.");
+
+        if (data.year) document.getElementById('add-year').value = data.year;
+        if (data.genre) document.getElementById('add-genre').value = data.genre;
+        if (data.developer) document.getElementById('add-developer').value = data.developer;
+
+        if (data.description && !document.getElementById('add-notes').value) {
+            document.getElementById('add-notes').value = data.description;
+        }
+
+        logger("Metadados preenchidos!");
+        uiService.alert("Dados carregados da Wikipedia com sucesso!", "Inteligência 🤖");
+    } catch (err) {
+        logger("METADATA ERR: " + err.message);
+        uiService.alert("Erro ao consultar metadados.");
     }
 }
 
@@ -783,8 +861,11 @@ async function init() {
         await dbService.open();
         logger("DB Conectado.");
 
-        // Non-destructive auto-sync on every start for v67+
-        await autoSyncLogos();
+        // Auto-Sync Logos logic for v68
+        if (!localStorage.getItem('logos_synced_v68')) {
+            await autoSyncLogos();
+            localStorage.setItem('logos_synced_v68', 'true');
+        }
         await navigate('nav-dashboard');
 
         // Hide log after success
