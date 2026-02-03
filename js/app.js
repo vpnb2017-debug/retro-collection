@@ -2,7 +2,7 @@ import { dbService } from './services/db.js';
 import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js';
 import { coverSearchService } from './services/coverSearch.js';
 import WebuyService from './services/webuyService.js';
-import { localFileSync } from './services/localFileSync.js?v=58';
+import { localFileSync } from './services/localFileSync.js?v=59';
 
 // Global Exposure
 window.navigate = navigate;
@@ -17,6 +17,7 @@ window.importCollection = importCollection;
 window.editPlatform = editPlatform;
 window.pickLogoForPlatform = pickLogoForPlatform;
 window.selectLogo = selectLogo;
+window.getValidLogoUrl = getValidLogoUrl;
 
 // Utility for logging 
 const logger = (msg) => { if (window.log) window.log(msg); else console.log(msg); };
@@ -129,7 +130,7 @@ async function renderDashboard() {
         const ownedTotal = ownedGames.length + ownedConsoles.length;
         const wishlistTotal = games.filter(g => g.isWishlist).length + consoles.filter(c => c.isWishlist).length;
 
-        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v58</span></h2>`;
+        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v59</span></h2>`;
 
         const platData = await getPlatformOptions();
 
@@ -663,7 +664,7 @@ async function exportCollection() {
         const platforms = await dbService.getAll('platforms');
 
         const data = {
-            version: "v58",
+            version: "v59",
             timestamp: new Date().toISOString(),
             games,
             consoles,
@@ -734,15 +735,15 @@ async function importCollection() {
 
 /** INITIALIZATION **/
 async function init() {
-    logger("Iniciando RetroCollection v58...");
+    logger("Iniciando RetroCollection v59...");
     try {
         await dbService.open();
         logger("DB Conectado.");
 
-        // Auto-Sync Logos logic for v58
-        if (!localStorage.getItem('logos_synced_v58')) {
+        // Auto-Sync Logos logic for v59
+        if (!localStorage.getItem('logos_synced_v59')) {
             await autoSyncLogos();
-            localStorage.setItem('logos_synced_v58', 'true');
+            localStorage.setItem('logos_synced_v59', 'true');
         }
         await navigate('nav-dashboard');
 
