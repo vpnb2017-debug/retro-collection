@@ -2,7 +2,7 @@ import { dbService } from './services/db.js';
 import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js';
 import { coverSearchService } from './services/coverSearch.js';
 import WebuyService from './services/webuyService.js';
-import { localFileSync } from './services/localFileSync.js?v=18';
+import { localFileSync } from './services/localFileSync.js?v=19';
 
 // Premium UI Service for Modals
 const uiService = {
@@ -67,6 +67,7 @@ const state = {
     loading: false,
     filterType: 'all',
     filterPlatform: 'all',
+    filterSearch: '',
     viewMode: 'grid', // 'grid' or 'list'
     deferredPrompt: null // To store PWA install prompt
 };
@@ -219,7 +220,7 @@ async function renderDashboard() {
         contentEl.innerHTML = `
         <div class="header-section">
             <h2>Olá, Colecionador! 👋</h2>
-            <p class="subtitle">Aqui está o resumo do teu império. <span style="opacity:0.3; font-size:0.7rem; font-weight:400;">v18</span></p>
+            <p class="subtitle">Aqui está o resumo do teu império. <span style="opacity:0.3; font-size:0.7rem; font-weight:400;">v19</span></p>
             ${installNotice}
         </div>
 
@@ -272,32 +273,35 @@ async function renderDashboard() {
 
 async function renderGenericGrid(viewTitle, itemsFilter) {
     const platforms = await getPlatformOptions();
-    const platformOptionsHtml = platforms.map(p => `<option value="${p.name}">${p.name}</option>`).join('');
+    const platformOptionsHtml = platforms.map(p => {
+        const selected = state.filterPlatform === p.name ? 'selected' : '';
+        return `<option value="${p.name}" ${selected}>${p.name}</option>`;
+    }).join('');
 
     contentEl.innerHTML = `
         <div class="header-section">
              <h2>${viewTitle}</h2>
         </div>
         
-        <div class="filters glass" style="display:flex; gap:1rem; padding:1rem; border-radius:var(--radius-md); margin-bottom:2rem; flex-wrap:wrap;">
-            <div style="flex:1; min-width: 150px;">
+        <div class="filters glass" style="display:flex; gap:1rem; padding:1rem; border-radius:var(--radius-md); margin-bottom:2rem; flex-wrap:wrap; position:sticky; top:10px; z-index:40; backdrop-filter:blur(20px); border:1px solid var(--accent-glow);">
+            <div style="flex:1; min-width: 120px;">
                 <label style="font-size:0.8rem; color:var(--accent-secondary)">Tipo</label>
                 <select id="filter-type">
-                    <option value="all">Tudo</option>
-                    <option value="games">Jogos</option>
-                    <option value="consoles">Consolas</option>
+                    <option value="all" ${state.filterType === 'all' ? 'selected' : ''}>Tudo</option>
+                    <option value="games" ${state.filterType === 'games' ? 'selected' : ''}>Jogos</option>
+                    <option value="consoles" ${state.filterType === 'consoles' ? 'selected' : ''}>Consolas</option>
                 </select>
             </div>
-            <div style="flex:1; min-width: 150px;">
+            <div style="flex:1; min-width: 120px;">
                 <label style="font-size:0.8rem; color:var(--accent-secondary)">Plataforma</label>
                 <select id="filter-platform">
-                    <option value="all">Todas</option>
+                    <option value="all" ${state.filterPlatform === 'all' ? 'selected' : ''}>Todas</option>
                     ${platformOptionsHtml}
                 </select>
             </div>
             <div style="flex:2; min-width: 200px;">
                 <label style="font-size:0.8rem; color:var(--accent-secondary)">Pesquisa</label>
-                <input type="text" id="search-input" placeholder="Nome do item...">
+                <input type="text" id="search-input" placeholder="Nome do item..." value="${state.filterSearch}">
             </div>
         </div>
 
@@ -306,7 +310,7 @@ async function renderGenericGrid(viewTitle, itemsFilter) {
         </div>
 
         <!-- Float toggle for Mobile -->
-        <button id="view-toggle" class="glass" style="position:fixed; bottom:80px; right:20px; width:50px; height:50px; border-radius:50%; z-index:90; display:none; align-items:center; justify-content:center; font-size:1.2rem; border:1px solid var(--accent-color);">
+        <button id="view-toggle" class="glass" style="position:fixed; bottom:80px; right:20px; width:50px; height:50px; border_radius:50%; z-index:90; display:none; align-items:center; justify-content:center; font-size:1.2rem; border:1px solid var(--accent-color);">
             ${state.viewMode === 'grid' ? '📄' : '🔲'}
         </button>
     `;
@@ -330,17 +334,16 @@ async function renderGenericGrid(viewTitle, itemsFilter) {
     const filterPlatformEl = document.getElementById('filter-platform');
     const searchInput = document.getElementById('search-input');
 
-    filterTypeEl.value = state.filterType;
-
     function applyFilters() {
-        const fType = filterTypeEl.value;
-        const fPlat = filterPlatformEl.value;
-        const fSearch = searchInput.value.toLowerCase();
-        state.filterType = fType;
+        state.filterType = filterTypeEl.value;
+        state.filterPlatform = filterPlatformEl.value;
+        state.filterSearch = searchInput.value;
+
+        const fSearch = state.filterSearch.toLowerCase();
 
         const filtered = allItems.filter(item => {
-            if (fType !== 'all' && item._type !== fType) return false;
-            if (fPlat !== 'all' && item.platform !== fPlat) return false;
+            if (state.filterType !== 'all' && item._type !== state.filterType) return false;
+            if (state.filterPlatform !== 'all' && item.platform !== state.filterPlatform) return false;
             if (fSearch && !item.title.toLowerCase().includes(fSearch)) return false;
             return true;
         });
@@ -868,7 +871,7 @@ async function renderSyncView() {
             <div class="glass" style="padding: 2rem; border-radius: var(--radius-lg); display:flex; flex-direction:column; gap:1.5rem;">
                 <div style="text-align:center;">
                     <span style="font-size:3rem; filter: drop-shadow(0 0 10px var(--accent-secondary));">💾</span>
-                    <p style="margin-top:0.5rem; color:var(--accent-secondary); font-weight:600;">Modo Sem API (v18)</p>
+                    <p style="margin-top:0.5rem; color:var(--accent-secondary); font-weight:600;">Modo Sem API (v19)</p>
                     <button id="btn-force-update" style="font-size:0.6rem; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border_radius:4px; padding:2px 6px; cursor:pointer; color:var(--text-secondary); margin-top:5px;">🔄 Forçar Atualização da App</button>
                 </div>
 
