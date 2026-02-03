@@ -2,7 +2,7 @@ import { dbService } from './services/db.js';
 import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js';
 import { coverSearchService } from './services/coverSearch.js';
 import WebuyService from './services/webuyService.js';
-import { localFileSync } from './services/localFileSync.js?v=37';
+import { localFileSync } from './services/localFileSync.js?v=38';
 
 // Global Exposure
 window.navigate = navigate;
@@ -124,7 +124,7 @@ async function renderDashboard() {
         const ownedTotal = ownedGames.length + ownedConsoles.length;
         const wishlistTotal = games.filter(g => g.isWishlist).length + consoles.filter(c => c.isWishlist).length;
 
-        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v37</span></h2>`;
+        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v38</span></h2>`;
 
         scrollEl.innerHTML = `
             <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:15px; margin-top:5px;">
@@ -177,6 +177,7 @@ async function renderGenericGrid(viewTitle, itemsFilter) {
                 </select>
                 <select id="f-plat" style="background:#1e1e24; border:1px solid #444; color:white; padding:10px; border-radius:10px; font-size:0.85rem; min-width:120px;">
                     <option value="all" ${state.filterPlatform === 'all' ? 'selected' : ''}>Plataformas</option>
+                    <option value="(Sem Consola)" ${state.filterPlatform === '(Sem Consola)' ? 'selected' : ''}>(Sem Consola)</option>
                     ${platformOptions}
                 </select>
                 <input id="f-search" type="text" placeholder="🔍 Procurar..." value="${state.filterSearch}" style="flex:1; background:#1e1e24; border:1px solid #444; color:white; padding:10px; border-radius:10px; font-size:0.85rem; min-width:120px;">
@@ -194,7 +195,10 @@ async function renderGenericGrid(viewTitle, itemsFilter) {
 
             const filtered = all.filter(i => {
                 if (state.filterType !== 'all' && i._t !== state.filterType) return false;
-                if (state.filterPlatform !== 'all' && i.platform !== state.filterPlatform) return false;
+
+                const itemPlat = i.platform || '(Sem Consola)';
+                if (state.filterPlatform !== 'all' && itemPlat !== state.filterPlatform) return false;
+
                 if (state.filterSearch && !i.title.toLowerCase().includes(state.filterSearch)) return false;
                 return true;
             }).sort((a, b) => a.title.localeCompare(b.title));
@@ -443,7 +447,7 @@ async function renderSyncView() {
             <div style="background:rgba(255,100,100,0.05); padding:24px; border-radius:20px; border:1px solid rgba(255,0,0,0.2); margin-top:20px;">
                  <h3 style="margin-bottom:10px; font-size:1rem; color:#ff4d4d;">Zona de Perigo 🚨</h3>
                  <p style="margin-bottom:20px; font-size:0.8rem; opacity:0.65; line-height:1.4;">Se a App estiver a falhar ou se quiseres limpar tudo para começar do zero.</p>
-                 <button id="btn-force-update" style="width:100%; background:#ff4d4d; color:white; border:none; padding:14px; border-radius:14px; font-weight:800; cursor:pointer;">WIPE TOTAL DA APP (v37)</button>
+                 <button id="btn-force-update" style="width:100%; background:#ff4d4d; color:white; border:none; padding:14px; border-radius:14px; font-weight:800; cursor:pointer;">WIPE TOTAL DA APP (v38)</button>
             </div>
         </div>
     `;
@@ -460,7 +464,7 @@ async function renderSyncView() {
 
 /** INITIALIZATION **/
 async function init() {
-    logger("Iniciando RetroCollection v37...");
+    logger("Iniciando RetroCollection v38...");
     try {
         await dbService.open();
         logger("DB Conectado.");
@@ -485,7 +489,7 @@ async function init() {
 // Helpers
 function groupBy(arr, key) {
     return arr.reduce((acc, obj) => {
-        const k = obj[key] || 'Geral';
+        const k = obj[key] || '(Sem Consola)';
         if (!acc[k]) acc[k] = [];
         acc[k].push(obj);
         return acc;
