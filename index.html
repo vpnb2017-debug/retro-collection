@@ -3,96 +3,205 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>RetroCollection</title>
-    <meta name="description" content="Gestor de coleção de jogos e consolas retro">
-    <meta name="theme-color" content="#0f172a">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>RetroCollection v29 🎮</title>
 
-    <!-- PWA Meta Tags -->
     <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="assets/icon-192.png">
+    <meta name="theme-color" content="#1e1e24">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
     <!-- Styles -->
     <link rel="stylesheet" href="css/variables.css">
-    <script>
-        // NUCLEAR CACHE BYPASS v28
-        if (localStorage.getItem('app_version') !== '28') {
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.getRegistrations().then(regs => {
-                    for (let reg of regs) reg.unregister();
-                });
-            }
-            caches.keys().then(names => {
-                for (let name of names) caches.delete(name);
-            });
-            localStorage.setItem('app_version', '28');
-            console.log('Cache Nuclear Wipe Done for v28');
+
+    <style>
+        /* v29 FINAL STAND - INLINED FOR ZERO CACHE ISSUES */
+        :root {
+            --h-header: 60px;
+            --h-bottom: 60px;
         }
-    </script>
-    <link rel="stylesheet" href="css/style_v28.css?v=28">
 
-    <!-- Fonts -->
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        html,
+        body {
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden !important;
+            background: #1e1e24;
+            color: white;
+            position: fixed;
+            inset: 0;
+        }
+
+        /* MASTER GRID LAYOUT */
+        #app {
+            display: grid;
+            grid-template-rows: var(--h-header) 1fr;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+        }
+
+        .main-header {
+            background: #1e1e24;
+            border-bottom: 2px solid #ff9f0a;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            z-index: 1000;
+        }
+
+        #main-content {
+            display: grid;
+            grid-template-rows: auto auto 1fr;
+            /* Title, Filters, List */
+            overflow: hidden;
+            background: #1e1e24;
+        }
+
+        /* These containers are inside #main-content and are NOT scrollable */
+        .v29-title-zone {
+            padding: 10px 20px;
+            background: #1e1e24;
+        }
+
+        .v29-filter-zone {
+            padding: 0 20px 10px 20px;
+            background: #1e1e24;
+        }
+
+        /* THIS IS THE ONLY SCROLLABLE AREA IN THE ENTIRE APP */
+        .v29-scroll-zone {
+            overflow-y: auto !important;
+            padding: 10px 20px 80px 20px;
+            -webkit-overflow-scrolling: touch;
+            background: #1e1e24;
+        }
+
+        @media (max-width: 600px) {
+            #app {
+                grid-template-rows: var(--h-header) 1fr var(--h-bottom);
+            }
+
+            .bottom-nav {
+                display: flex !important;
+                background: #1e1e24;
+                border-top: 1px solid rgba(255, 159, 10, 0.2);
+                align-items: center;
+                justify-content: space-around;
+            }
+
+            .desktop-nav {
+                display: none !important;
+            }
+        }
+
+        .logo h1 {
+            font-size: 1.2rem;
+            color: #ff9f0a;
+        }
+
+        .desktop-nav button {
+            background: none;
+            border: none;
+            color: #ffc978;
+            font-weight: 600;
+            margin-left: 15px;
+            cursor: pointer;
+        }
+
+        .desktop-nav button.active {
+            color: white;
+            border-bottom: 2px solid #ff9f0a;
+        }
+
+        .btn-new {
+            background: linear-gradient(135deg, #ff9f0a 0%, #ff7950 100%);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        /* Custom Scrollbar */
+        .v29-scroll-zone::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .v29-scroll-zone::-webkit-scrollbar-thumb {
+            background: #ff9f0a;
+            border-radius: 4px;
+        }
+    </style>
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
-
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
 </head>
 
 <body>
     <div id="app">
-        <header class="app-header">
+        <header class="main-header">
             <div class="logo">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                    class="lucide lucide-gamepad-2">
-                    <line x1="6" x2="10" y1="12" y2="12" />
-                    <line x1="8" x2="8" y1="10" y2="14" />
-                    <line x1="15" x2="15.01" y1="13" y2="13" />
-                    <line x1="18" x2="18.01" y1="11" y2="11" />
-                    <rect width="20" height="12" x="2" y="6" rx="2" />
-                </svg>
                 <h1>RetroCollection</h1>
             </div>
-            <nav class="main-nav">
-                <button id="nav-dashboard" class="active">Dashboard</button>
-                <button id="nav-collection">Coleção</button>
-                <button id="nav-wishlist">Wishlist</button>
-                <button id="nav-platforms">Plataformas</button>
-                <button id="nav-import">Importar</button>
-                <button id="nav-add" class="btn-primary">+ Novo</button>
+            <nav class="desktop-nav">
+                <button onclick="navigate('nav-dashboard')">Dashboard</button>
+                <button onclick="navigate('nav-collection')">Coleção</button>
+                <button onclick="navigate('nav-platforms')">Plataformas</button>
+                <button onclick="navigate('nav-sync')">Nuvem</button>
+                <button class="btn-new" onclick="openAddModal()">+ Novo</button>
             </nav>
         </header>
 
         <main id="main-content">
-            <div class="loading-state">
-                <div class="spinner"></div>
-                <p>A carregar a tua coleção...</p>
-                <p style="font-size:0.8rem; color: #666; margin-top:1rem;">(Se isto demorar muito, recarregue a página)
-                </p>
+            <!-- Dynamically injected by app.js -->
+            <div class="v29-title-zone">
+                <h2>A carregar...</h2>
             </div>
+            <div class="v29-filter-zone"></div>
+            <div class="v29-scroll-zone"></div>
         </main>
 
-        <!-- Bottom Nav for Mobile -->
-        <nav class="bottom-nav">
-            <button id="mobile-home" class="active">🏠</button>
-            <button id="mobile-collection">🎮</button>
-            <button id="mobile-wishlist">📝</button>
-            <button id="mobile-add">➕</button>
-            <button id="mobile-sync">☁️</button>
+        <nav class="bottom-nav" style="display:none;">
+            <button onclick="navigate('nav-dashboard')">🏠</button>
+            <button onclick="navigate('nav-collection')">🎮</button>
+            <button onclick="navigate('nav-platforms')">🕹️</button>
+            <button onclick="navigate('nav-sync')">☁️</button>
         </nav>
     </div>
 
     <!-- External Libs -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 
-    <!-- Main Entry Point v28 -->
-    <script type="module" src="js/app.js?v=28"></script>
+    <script>
+        // CACHE NUCLEAR WIPE v29
+        if (localStorage.getItem('v29_wipe') !== 'done') {
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations().then(rs => rs.forEach(r => r.unregister()));
+            }
+            caches.keys().then(ks => ks.forEach(k => caches.delete(k)));
+            localStorage.clear();
+            localStorage.setItem('v29_wipe', 'done');
+            setTimeout(() => location.reload(), 500);
+        }
+    </script>
+
+    <script type="module" src="js/app.js?v=29"></script>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js?v=28').catch(err => console.log('SW failed', err));
+                navigator.serviceWorker.register('sw.js?v=29');
             });
         }
     </script>

@@ -2,7 +2,7 @@ import { dbService } from './services/db.js';
 import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js';
 import { coverSearchService } from './services/coverSearch.js';
 import WebuyService from './services/webuyService.js';
-import { localFileSync } from './services/localFileSync.js?v=28';
+import { localFileSync } from './services/localFileSync.js?v=29';
 
 // Premium UI Service for Modals
 const uiService = {
@@ -85,6 +85,9 @@ window.addEventListener('beforeinstallprompt', (e) => {
 
 // DOM Elements & Nav
 const contentEl = document.getElementById('main-content');
+const titleZone = document.querySelector('.v29-title-zone');
+const filterZone = document.querySelector('.v29-filter-zone');
+const scrollZone = document.querySelector('.v29-scroll-zone');
 const navIds = ['nav-dashboard', 'nav-collection', 'nav-wishlist', 'nav-platforms', 'nav-import', 'nav-add'];
 const mobileNavIds = ['mobile-home', 'mobile-collection', 'mobile-wishlist', 'mobile-add', 'mobile-sync'];
 
@@ -120,6 +123,11 @@ function navigate(id, params = null) {
         const el = document.getElementById(navId);
         if (el) el.classList.remove('active');
     });
+
+    // Clear zones first
+    if (filterZone) filterZone.innerHTML = '';
+    if (titleZone) titleZone.innerHTML = '';
+    if (scrollZone) scrollZone.innerHTML = '';
 
     if (id === 'nav-dashboard' || id === 'mobile-home') {
         renderDashboard();
@@ -217,11 +225,12 @@ async function renderDashboard() {
             </div>
         `).join('');
 
-        contentEl.innerHTML = `
-        <div class="view-scroll">
+        titleZone.innerHTML = `
+            <h2>Olá, Colecionador! 👋 <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px;">v29</span></h2>
+            <p style="opacity:0.7; font-size:0.9rem;">Aqui está o resumo do teu império.</p>
+        `;
+        scrollZone.innerHTML = `
             <div class="header-section">
-                <h2>Olá, Colecionador! 👋 <span style="font-size:0.6rem; color:var(--accent-secondary); vertical-align:middle; border:1px solid; padding:2px 4px; border-radius:4px;">v28</span></h2>
-                <p class="subtitle">Aqui está o resumo do teu império.</p>
                 ${installNotice}
             </div>
 
@@ -279,46 +288,34 @@ async function renderGenericGrid(viewTitle, itemsFilter) {
         return `<option value="${p.name}" ${selected}>${p.name}</option>`;
     }).join('');
 
-    contentEl.innerHTML = `
-        <div class="collection-view-container">
-            <div class="collection-header-static">
-                 <h2>${viewTitle} <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px; border-radius:3px;">v28-HARDCODED</span></h2>
-            </div>
-            
-            <div class="filters-static">
-                <div class="filters glass" style="display:flex; gap:1rem; padding:1rem; border-radius:var(--radius-md); flex-wrap:wrap; border:1px solid var(--accent-glow);">
-                    <div style="flex:1; min-width: 110px;">
-                        <label style="font-size:0.7rem; color:var(--accent-secondary); display:block; margin-bottom:4px;">TIPO</label>
-                        <select id="filter-type">
-                            <option value="all" ${state.filterType === 'all' ? 'selected' : ''}>Tudo</option>
-                            <option value="games" ${state.filterType === 'games' ? 'selected' : ''}>Jogos</option>
-                            <option value="consoles" ${state.filterType === 'consoles' ? 'selected' : ''}>Consolas</option>
-                        </select>
-                    </div>
-                    <div style="flex:1; min-width: 140px;">
-                        <label style="font-size:0.7rem; color:var(--accent-secondary); display:block; margin-bottom:4px;">PLATAFORMA</label>
-                        <select id="filter-platform">
-                            <option value="all" ${state.filterPlatform === 'all' ? 'selected' : ''}>Todas</option>
-                            ${platformOptionsHtml}
-                        </select>
-                    </div>
-                    <div style="flex:2; min-width: 180px;">
-                        <label style="font-size:0.7rem; color:var(--accent-secondary); display:block; margin-bottom:4px;">PESQUISA</label>
-                        <input type="text" id="search-input" placeholder="🛒 Procurar item..." value="${state.filterSearch}">
-                    </div>
-                </div>
-            </div>
+    titleZone.innerHTML = `
+        <h2 style="display:flex; align-items:center; gap:1ch;">${viewTitle} <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px; border-radius:3px;">FINAL-FIX v29</span></h2>
+    `;
 
-            <div id="grid-scroll-area" class="scrollable-list-area">
-                <div class="collection-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 1.5rem;">
-                    <p style="color:white; padding: 2rem; text-align:center;">A carregar coleção...</p>
-                </div>
+    filterZone.innerHTML = `
+        <div class="filters" style="display:flex; gap:0.5rem; padding:10px; border-radius:10px; flex-wrap:wrap; background:rgba(255,159,10,0.05); border:1px solid rgba(255,159,10,0.2);">
+            <div style="flex:1; min-width: 100px;">
+                <select id="filter-type">
+                    <option value="all" ${state.filterType === 'all' ? 'selected' : ''}>Tudo</option>
+                    <option value="games" ${state.filterType === 'games' ? 'selected' : ''}>Jogos</option>
+                    <option value="consoles" ${state.filterType === 'consoles' ? 'selected' : ''}>Consolas</option>
+                </select>
             </div>
+            <div style="flex:1; min-width: 120px;">
+                <select id="filter-platform">
+                    <option value="all" ${state.filterPlatform === 'all' ? 'selected' : ''}>Todas</option>
+                    ${platformOptionsHtml}
+                </select>
+            </div>
+            <div style="flex:2; min-width: 150px;">
+                <input type="text" id="search-input" placeholder="🔍 Pesquisar..." value="${state.filterSearch}">
+            </div>
+        </div>
+    `;
 
-            <!-- Float toggle for Mobile -->
-            <button id="view-toggle" class="glass" style="position:fixed; bottom:80px; right:20px; width:54px; height:54px; border-radius:50%; z-index:900; display:none; align-items:center; justify-content:center; font-size:1.4rem; border:2px solid var(--accent-color); box-shadow: 0 0 15px var(--accent-glow);">
-                ${state.viewMode === 'grid' ? '📄' : '🔲'}
-            </button>
+    scrollZone.innerHTML = `
+        <div class="collection-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 1rem;">
+            <p style="color:white; padding: 2rem; text-align:center;">A carregar coleção...</p>
         </div>
     `;
 
@@ -878,8 +875,8 @@ async function renderSyncView() {
             <div class="glass" style="padding: 2rem; border-radius: var(--radius-lg); display:flex; flex-direction:column; gap:1.5rem;">
                 <div style="text-align:center;">
                     <span style="font-size:3rem; filter: drop-shadow(0 0 10px var(--accent-secondary));">💾</span>
-                    <p style="margin-top:0.5rem; color:var(--accent-secondary); font-weight:600;">Modo Sem API (v28)</p>
-                    <button id="btn-force-update" style="font-size:0.6rem; background:rgba(255,100,100,0.2); border:1px solid rgba(255,0,0,0.4); border-radius:4px; padding:4px 8px; cursor:pointer; color:white; margin-top:5px; font-weight:bold;">🚨 FORÇAR RESET TOTAL (v28)</button>
+                    <p style="margin-top:0.5rem; color:#ff9f0a; font-weight:600;">Modo Sem API (v29)</p>
+                    <button id="btn-force-update" style="font-size:0.6rem; background:rgba(255,100,100,0.2); border:1px solid #ff4d4d; border-radius:4px; padding:4px 8px; cursor:pointer; color:white; margin-top:5px; font-weight:bold;">🚨 FORÇAR RESET TOTAL (v29)</button>
                 </div>
 
                 <div style="background: rgba(255,255,255,0.05); padding:1.2rem; border-radius:var(--radius-md); font-size:0.85rem; line-height:1.5;">
@@ -1019,15 +1016,14 @@ async function renderSyncView() {
     const btnForce = document.getElementById('btn-force-update');
     if (btnForce) {
         btnForce.onclick = async () => {
-            if (confirm('ATENÇÃO: Isto irá apagar TODOS os dados locais e cache para garantir a v28. Tem a certeza?')) {
-                if ('serviceWorker' in navigator) {
-                    const regs = await navigator.serviceWorker.getRegistrations();
-                    for (let reg of regs) await reg.unregister();
-                }
-                const names = await caches.keys();
-                for (let name of names) await caches.delete(name);
+            if (confirm('ATENÇÃO: Isto irá apagar TODOS os dados locais e cache para garantir a v29. Tem a certeza?')) {
                 localStorage.clear();
-                alert('Limpeza v28 concluída. A reiniciar...');
+                if ('serviceWorker' in navigator) {
+                    const rs = await navigator.serviceWorker.getRegistrations();
+                    for (let r of rs) await r.unregister();
+                }
+                const ks = await caches.keys();
+                for (let k of ks) await caches.delete(k);
                 location.href = location.href.split('?')[0] + '?v=' + Date.now();
             }
         };
