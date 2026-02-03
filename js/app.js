@@ -2,7 +2,7 @@ import { dbService } from './services/db.js';
 import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js';
 import { coverSearchService } from './services/coverSearch.js';
 import WebuyService from './services/webuyService.js';
-import { localFileSync } from './services/localFileSync.js?v=59';
+import { localFileSync } from './services/localFileSync.js?v=60';
 
 // Global Exposure
 window.navigate = navigate;
@@ -17,6 +17,8 @@ window.importCollection = importCollection;
 window.editPlatform = editPlatform;
 window.pickLogoForPlatform = pickLogoForPlatform;
 window.selectLogo = selectLogo;
+window.discoverLogos = discoverLogos;
+window.getValidLogoUrl = getValidLogoUrl;
 window.getValidLogoUrl = getValidLogoUrl;
 
 // Utility for logging 
@@ -130,7 +132,7 @@ async function renderDashboard() {
         const ownedTotal = ownedGames.length + ownedConsoles.length;
         const wishlistTotal = games.filter(g => g.isWishlist).length + consoles.filter(c => c.isWishlist).length;
 
-        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v59</span></h2>`;
+        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v60</span></h2>`;
 
         const platData = await getPlatformOptions();
 
@@ -572,10 +574,21 @@ async function pickLogoForPlatform(id) {
 
     grid.innerHTML = icons.map(name => `
         <div data-icon-name="${name}" onclick="window.selectLogo('${id}', this.querySelector('img').src)" style="background:rgba(255,255,255,0.05); padding:10px; border-radius:12px; cursor:pointer; display:flex; align-items:center; justify-content:center; border:1px solid rgba(255,255,255,0.1); aspect-ratio:1/1;">
-            <img src="" onerror="window.getValidLogoUrl(this, '${name}')" style="width:100%; height:100%; object-fit:contain; display:none;">
+            <img class="picker-icon-img" src="" style="width:100%; height:100%; object-fit:contain; display:none;">
             <div class="loader-placeholder" style="width:20px; height:20px; border:2px solid #444; border-top-color:#ff9f0a; border-radius:50%; animation: spin 1s linear infinite;"></div>
         </div>
     `).join('');
+
+    // Trigger discovery AFTER rendering
+    setTimeout(() => window.discoverLogos(), 100);
+}
+
+function discoverLogos() {
+    const images = document.querySelectorAll('.picker-icon-img');
+    images.forEach(img => {
+        const name = img.closest('[data-icon-name]').dataset.iconName;
+        window.getValidLogoUrl(img, name);
+    });
 }
 
 async function getValidLogoUrl(imgEl, name) {
@@ -664,7 +677,7 @@ async function exportCollection() {
         const platforms = await dbService.getAll('platforms');
 
         const data = {
-            version: "v59",
+            version: "v60",
             timestamp: new Date().toISOString(),
             games,
             consoles,
@@ -735,15 +748,15 @@ async function importCollection() {
 
 /** INITIALIZATION **/
 async function init() {
-    logger("Iniciando RetroCollection v59...");
+    logger("Iniciando RetroCollection v60...");
     try {
         await dbService.open();
         logger("DB Conectado.");
 
-        // Auto-Sync Logos logic for v59
-        if (!localStorage.getItem('logos_synced_v59')) {
+        // Auto-Sync Logos logic for v60
+        if (!localStorage.getItem('logos_synced_v60')) {
             await autoSyncLogos();
-            localStorage.setItem('logos_synced_v59', 'true');
+            localStorage.setItem('logos_synced_v60', 'true');
         }
         await navigate('nav-dashboard');
 
