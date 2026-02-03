@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport"
         content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>RetroCollection v40 🎮</title>
+    <title>RetroCollection v41 🎮</title>
 
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1e1e24">
@@ -60,9 +60,11 @@
         #main-content {
             display: grid;
             grid-template-rows: auto auto 1fr;
-            overflow: hidden;
+            overflow-y: hidden;
+            overflow-x: hidden;
             background: var(--bg-app);
             position: relative;
+            width: 100%;
         }
 
         .v29-title-zone,
@@ -256,17 +258,17 @@
             return false;
         };
 
-        log("Arranque v40 iniciado...");
+        log("Arranque v41 iniciado...");
 
-        // v40 FINAL WIPE
-        if (localStorage.getItem('app_v') !== '40') {
-            log("Limpando cache v39...");
+        // v41 FINAL WIPE
+        if (localStorage.getItem('app_v') !== '41') {
+            log("Limpando cache v40...");
             localStorage.clear();
-            localStorage.setItem('app_v', '40');
+            localStorage.setItem('app_v', '41');
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.getRegistrations().then(rs => {
                     Promise.all(rs.map(r => r.unregister())).then(() => {
-                        log("Cache limpo. A recarregar v40...");
+                        log("Cache limpo. A recarregar v41...");
                         location.reload();
                     });
                 });
@@ -280,17 +282,17 @@
             const title = document.querySelector('.v29-title-zone h2');
             if (title && title.innerText.includes('A carregar')) {
                 log("Hanging detetado! Tentando bypass...");
-                location.href = location.href.split('?')[0] + '?force_v40=' + Date.now();
+                location.href = location.href.split('?')[0] + '?force_v41=' + Date.now();
             }
         }, 8000);
     </script>
 
-    <script type="module" src="js/app.js?v=40"></script>
+    <script type="module" src="js/app.js?v=41"></script>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js?v=40')
-                    .then(() => log("v40 Pronta."))
+                navigator.serviceWorker.register('sw.js?v=41')
+                    .then(() => log("v41 Pronta."))
                     .catch(e => log("Falha: " + e.message));
             });
         }
