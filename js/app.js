@@ -2,7 +2,7 @@ import { dbService } from './services/db.js';
 import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js';
 import { coverSearchService } from './services/coverSearch.js';
 import WebuyService from './services/webuyService.js';
-import { localFileSync } from './services/localFileSync.js?v=24';
+import { localFileSync } from './services/localFileSync.js?v=25';
 
 // Premium UI Service for Modals
 const uiService = {
@@ -220,8 +220,8 @@ async function renderDashboard() {
         contentEl.innerHTML = `
         <div class="view-scroll">
             <div class="header-section">
-                <h2>Olá, Colecionador! 👋</h2>
-                <p class="subtitle">Aqui está o resumo do teu império. <span style="opacity:0.3; font-size:0.7rem; font-weight:400;">v24</span></p>
+                <h2>Olá, Colecionador! 👋 <span style="font-size:0.6rem; color:var(--accent-secondary); vertical-align:middle; border:1px solid; padding:2px 4px; border-radius:4px;">v25</span></h2>
+                <p class="subtitle">Aqui está o resumo do teu império.</p>
                 ${installNotice}
             </div>
 
@@ -280,41 +280,43 @@ async function renderGenericGrid(viewTitle, itemsFilter) {
     }).join('');
 
     contentEl.innerHTML = `
-        <div class="fortress-view">
-            <div class="header-section" style="padding: var(--space-lg) var(--space-lg) 0 var(--space-lg);">
-                 <h2>${viewTitle}</h2>
+        <div class="collection-view-container">
+            <div class="collection-header-static">
+                 <h2>${viewTitle} <span style="font-size:0.6rem; color:var(--accent-color); border:1px solid; padding:2px; border-radius:3px;">v25-FIXED</span></h2>
             </div>
             
-            <div class="filters glass" style="display:flex; gap:1rem; padding:1rem; border-radius:var(--radius-md); margin: 1rem var(--space-lg) 1rem var(--space-lg); flex-wrap:wrap; border:1px solid var(--accent-glow); flex-shrink:0;">
-                <div style="flex:1; min-width: 120px;">
-                    <label style="font-size:0.8rem; color:var(--accent-secondary)">Tipo</label>
-                    <select id="filter-type">
-                        <option value="all" ${state.filterType === 'all' ? 'selected' : ''}>Tudo</option>
-                        <option value="games" ${state.filterType === 'games' ? 'selected' : ''}>Jogos</option>
-                        <option value="consoles" ${state.filterType === 'consoles' ? 'selected' : ''}>Consolas</option>
-                    </select>
-                </div>
-                <div style="flex:1; min-width: 120px;">
-                    <label style="font-size:0.8rem; color:var(--accent-secondary)">Plataforma</label>
-                    <select id="filter-platform">
-                        <option value="all" ${state.filterPlatform === 'all' ? 'selected' : ''}>Todas</option>
-                        ${platformOptionsHtml}
-                    </select>
-                </div>
-                <div style="flex:2; min-width: 200px;">
-                    <label style="font-size:0.8rem; color:var(--accent-secondary)">Pesquisa</label>
-                    <input type="text" id="search-input" placeholder="Nome do item..." value="${state.filterSearch}">
+            <div class="filters-static">
+                <div class="filters glass" style="display:flex; gap:1rem; padding:1rem; border-radius:var(--radius-md); flex-wrap:wrap; border:1px solid var(--accent-glow);">
+                    <div style="flex:1; min-width: 110px;">
+                        <label style="font-size:0.7rem; color:var(--accent-secondary); display:block; margin-bottom:4px;">TIPO</label>
+                        <select id="filter-type">
+                            <option value="all" ${state.filterType === 'all' ? 'selected' : ''}>Tudo</option>
+                            <option value="games" ${state.filterType === 'games' ? 'selected' : ''}>Jogos</option>
+                            <option value="consoles" ${state.filterType === 'consoles' ? 'selected' : ''}>Consolas</option>
+                        </select>
+                    </div>
+                    <div style="flex:1; min-width: 140px;">
+                        <label style="font-size:0.7rem; color:var(--accent-secondary); display:block; margin-bottom:4px;">PLATAFORMA</label>
+                        <select id="filter-platform">
+                            <option value="all" ${state.filterPlatform === 'all' ? 'selected' : ''}>Todas</option>
+                            ${platformOptionsHtml}
+                        </select>
+                    </div>
+                    <div style="flex:2; min-width: 180px;">
+                        <label style="font-size:0.7rem; color:var(--accent-secondary); display:block; margin-bottom:4px;">PESQUISA</label>
+                        <input type="text" id="search-input" placeholder="🛒 Procurar item..." value="${state.filterSearch}">
+                    </div>
                 </div>
             </div>
 
-            <div id="grid-scroll-area" style="overflow-y:auto; padding: 0 var(--space-lg) var(--space-lg) var(--space-lg); min-height:0;">
-                <div class="collection-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem;">
-                    <p style="color:white">A carregar...</p>
+            <div id="grid-scroll-area" class="scrollable-list-area">
+                <div class="collection-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 1.5rem;">
+                    <p style="color:white; padding: 2rem; text-align:center;">A carregar coleção...</p>
                 </div>
             </div>
 
             <!-- Float toggle for Mobile -->
-            <button id="view-toggle" class="glass" style="position:fixed; bottom:80px; right:20px; width:50px; height:50px; border-radius:50%; z-index:90; display:none; align-items:center; justify-content:center; font-size:1.2rem; border:1px solid var(--accent-color);">
+            <button id="view-toggle" class="glass" style="position:fixed; bottom:80px; right:20px; width:54px; height:54px; border-radius:50%; z-index:900; display:none; align-items:center; justify-content:center; font-size:1.4rem; border:2px solid var(--accent-color); box-shadow: 0 0 15px var(--accent-glow);">
                 ${state.viewMode === 'grid' ? '📄' : '🔲'}
             </button>
         </div>
@@ -876,8 +878,8 @@ async function renderSyncView() {
             <div class="glass" style="padding: 2rem; border-radius: var(--radius-lg); display:flex; flex-direction:column; gap:1.5rem;">
                 <div style="text-align:center;">
                     <span style="font-size:3rem; filter: drop-shadow(0 0 10px var(--accent-secondary));">💾</span>
-                    <p style="margin-top:0.5rem; color:var(--accent-secondary); font-weight:600;">Modo Sem API (v24)</p>
-                    <button id="btn-force-update" style="font-size:0.6rem; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:4px; padding:2px 6px; cursor:pointer; color:var(--text-secondary); margin-top:5px;">🔄 Forçar Atualização da App</button>
+                    <p style="margin-top:0.5rem; color:var(--accent-secondary); font-weight:600;">Modo Sem API (v25)</p>
+                    <button id="btn-force-update" style="font-size:0.6rem; background:rgba(255,100,100,0.2); border:1px solid rgba(255,0,0,0.4); border-radius:4px; padding:4px 8px; cursor:pointer; color:white; margin-top:5px; font-weight:bold;">🚨 FORÇAR RESET TOTAL (v25)</button>
                 </div>
 
                 <div style="background: rgba(255,255,255,0.05); padding:1.2rem; border-radius:var(--radius-md); font-size:0.85rem; line-height:1.5;">
@@ -1017,7 +1019,7 @@ async function renderSyncView() {
     const btnForce = document.getElementById('btn-force-update');
     if (btnForce) {
         btnForce.onclick = async () => {
-            if (confirm('Isto irá limpar cache e reiniciar a App (v24). Continuar?')) {
+            if (confirm('ATENÇÃO: Isto irá apagar TODOS os dados locais e cache para garantir a v25. Tem a certeza?')) {
                 if ('serviceWorker' in navigator) {
                     const regs = await navigator.serviceWorker.getRegistrations();
                     for (let reg of regs) await reg.unregister();
@@ -1025,6 +1027,7 @@ async function renderSyncView() {
                 const names = await caches.keys();
                 for (let name of names) await caches.delete(name);
                 localStorage.clear();
+                alert('Limpeza concluída. A reiniciar...');
                 location.href = location.href.split('?')[0] + '?v=' + Date.now();
             }
         };
