@@ -2,7 +2,7 @@ import { dbService } from './services/db.js';
 import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js';
 import { coverSearchService } from './services/coverSearch.js';
 import WebuyService from './services/webuyService.js';
-import { localFileSync } from './services/localFileSync.js?v=47';
+import { localFileSync } from './services/localFileSync.js?v=48';
 
 // Global Exposure
 window.navigate = navigate;
@@ -126,7 +126,7 @@ async function renderDashboard() {
         const ownedTotal = ownedGames.length + ownedConsoles.length;
         const wishlistTotal = games.filter(g => g.isWishlist).length + consoles.filter(c => c.isWishlist).length;
 
-        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v47</span></h2>`;
+        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v48</span></h2>`;
 
         scrollEl.innerHTML = `
             <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap:12px; margin-top:5px;">
@@ -400,6 +400,11 @@ async function saveItem(id) {
     const title = document.getElementById('add-title').value;
     if (!title) return uiService.alert("O título é obrigatório!");
 
+    const acquiredDate = document.getElementById('add-date').value;
+    if (acquiredDate && !isValidDate(acquiredDate)) {
+        return uiService.alert("A data inserida é inválida. Use o formato DD/MM/AAAA (ex: 31/12/2023).", "Data Inválida 📅🛑");
+    }
+
     const store = document.getElementById('add-type').value;
     const newItem = {
         id: id || crypto.randomUUID(),
@@ -407,7 +412,7 @@ async function saveItem(id) {
         platform: document.getElementById('add-platform').value,
         image: document.getElementById('add-image').value,
         price: parseFloat(document.getElementById('add-price').value) || 0,
-        acquiredDate: document.getElementById('add-date').value,
+        acquiredDate: acquiredDate,
         notes: document.getElementById('add-notes').value,
         isValidated: document.getElementById('add-validated').checked,
         validatedDate: document.getElementById('add-validation-date').innerText,
@@ -493,7 +498,7 @@ async function renderSyncView() {
             <div style="background:rgba(255,100,100,0.05); padding:24px; border-radius:20px; border:1px solid rgba(255,0,0,0.2); margin-top:20px;">
                  <h3 style="margin-bottom:10px; font-size:1rem; color:#ff4d4d;">Zona de Perigo 🚨</h3>
                  <p style="margin-bottom:20px; font-size:0.8rem; opacity:0.65; line-height:1.4;">Se a App estiver a falhar ou se quiseres limpar tudo para começar do zero.</p>
-                 <button id="btn-force-update" style="width:100%; background:#ff4d4d; color:white; border:none; padding:14px; border-radius:14px; font-weight:800; cursor:pointer;">WIPE TOTAL DA APP (v47)</button>
+                 <button id="btn-force-update" style="width:100%; background:#ff4d4d; color:white; border:none; padding:14px; border-radius:14px; font-weight:800; cursor:pointer;">WIPE TOTAL DA APP (v48)</button>
             </div>
         </div>
     `;
@@ -516,7 +521,7 @@ async function exportCollection() {
         const platforms = await dbService.getAll('platforms');
 
         const data = {
-            version: "v47",
+            version: "v48",
             timestamp: new Date().toISOString(),
             games,
             consoles,
@@ -587,7 +592,7 @@ async function importCollection() {
 
 /** INITIALIZATION **/
 async function init() {
-    logger("Iniciando RetroCollection v47...");
+    logger("Iniciando RetroCollection v48...");
     try {
         await dbService.open();
         logger("DB Conectado.");
@@ -610,6 +615,16 @@ async function init() {
 }
 
 // Helpers
+function isValidDate(dateString) {
+    if (!dateString) return true;
+    const regex = /^\d{2}\/\d{2}\/\d{4}$/;
+    if (!dateString.match(regex)) return false;
+
+    const [day, month, year] = dateString.split('/').map(Number);
+    const date = new Date(year, month - 1, day);
+    return date.getFullYear() === year && (date.getMonth() + 1) === month && date.getDate() === day;
+}
+
 function groupBy(arr, key) {
     return arr.reduce((acc, obj) => {
         const k = obj[key] || '(Sem Consola)';
