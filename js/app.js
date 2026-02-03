@@ -901,24 +901,43 @@ async function renderSyncView() {
                 
                 <p style="font-size:0.7rem; color:var(--text-secondary); text-align:center; margin-top:1rem;">O seu ficheiro: <span id="sync-filename" style="color:var(--text-primary); font-weight:600;">(Não ligado)</span></p>
             </div>
-            
+
             <div id="pwa-install-container" class="glass" style="margin-top:2rem; padding:1.5rem; border-radius:var(--radius-lg); text-align:center; display: ${state.deferredPrompt ? 'block' : 'none'};">
                 <h4 style="color:var(--accent-color);">📲 Instalar como App</h4>
                 <p style="font-size:0.85rem; color:var(--text-secondary); margin:0.5rem 0;">A instalação está pronta! Clique no botão abaixo para colocar no seu ecrã.</p>
                 <button id="btn-pwa-install" class="btn-primary" style="margin-top:1rem; width:100%;">Instalar Agora</button>
             </div>
-
-            <div class="glass" style="margin-top:1.5rem; padding:1.5rem; border-radius:var(--radius-lg); text-align:left;">
-                <h4 style="color:var(--text-secondary); margin-bottom:0.5rem;">🔍 Diagnóstico da App</h4>
-                <ul style="font-size:0.75rem; color:var(--text-secondary); list-style:none; padding:0;">
-                    <li>📡 Protocolo: <span id="diag-https">Verificando...</span></li>
-                    <li>⚙️ Service Worker: <span id="diag-sw">Verificando...</span></li>
-                    <li>📦 Manifest: ✅ Detetado</li>
-                </ul>
-                <p style="font-size:0.7rem; color:var(--text-secondary); margin-top:0.5rem;">Nota: A instalação <b>exige</b> HTTPS (Site Seguro).</p>
-            </div>
         </div>
     `;
+
+    // Force Update Logic
+    const btnForce = document.getElementById('btn-force-update');
+    if (btnForce) {
+        btnForce.onclick = async () => {
+            if (confirm('Isto irá limpar cache e reiniciar a App (v24). Continuar?')) {
+                if ('serviceWorker' in navigator) {
+                    const regs = await navigator.serviceWorker.getRegistrations();
+                    for (let reg of regs) await reg.unregister();
+                }
+                const names = await caches.keys();
+                for (let name of names) await caches.delete(name);
+                localStorage.setItem('force_refresh', 'true');
+                location.href = location.href.split('?')[0] + '?v=' + Date.now();
+            }
+        };
+    }
+
+    <div class="glass" style="margin-top:1.5rem; padding:1.5rem; border-radius:var(--radius-lg); text-align:left;">
+        <h4 style="color:var(--text-secondary); margin-bottom:0.5rem;">🔍 Diagnóstico da App</h4>
+        <ul style="font-size:0.75rem; color:var(--text-secondary); list-style:none; padding:0;">
+            <li>📡 Protocolo: <span id="diag-https">Verificando...</span></li>
+            <li>⚙️ Service Worker: <span id="diag-sw">Verificando...</span></li>
+            <li>📦 Manifest: ✅ Detetado</li>
+        </ul>
+        <p style="font-size:0.7rem; color:var(--text-secondary); margin-top:0.5rem;">Nota: A instalação <b>exige</b> HTTPS (Site Seguro).</p>
+    </div>
+        </div >
+        `;
 
     // Fill diagnostics
     const httpsOk = window.location.protocol === 'https:' || window.location.hostname === 'localhost';
@@ -938,7 +957,7 @@ async function renderSyncView() {
             const promptEvent = state.deferredPrompt;
             promptEvent.prompt();
             const { outcome } = await promptEvent.userChoice;
-            console.log(`User response to install prompt: ${outcome}`);
+            console.log(`User response to install prompt: ${ outcome } `);
             state.deferredPrompt = null;
             document.getElementById('pwa-install-container').style.display = 'none';
         };
@@ -977,7 +996,7 @@ async function renderSyncView() {
                 // Desktop
                 const fileName = await localFileSync.selectFileForSave();
                 if (fileName) {
-                    uiService.alert(`A guardar em ${fileName}...`, "Sincronizando");
+                    uiService.alert(`A guardar em ${ fileName }...`, "Sincronizando");
                     await localFileSync.save({ games, consoles, platforms, timestamp: Date.now() });
 
                     const nowString = new Date().toLocaleString('pt-PT');
