@@ -2,7 +2,7 @@ import { dbService } from './services/db.js';
 import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js';
 import { coverSearchService } from './services/coverSearch.js';
 import WebuyService from './services/webuyService.js';
-import { localFileSync } from './services/localFileSync.js?v=34';
+import { localFileSync } from './services/localFileSync.js?v=35';
 
 // Global Exposure
 window.navigate = navigate;
@@ -110,7 +110,7 @@ async function renderDashboard() {
         const ownedTotal = ownedGames.length + ownedConsoles.length;
         const wishlistTotal = games.filter(g => g.isWishlist).length + consoles.filter(c => c.isWishlist).length;
 
-        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v34</span></h2>`;
+        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v35</span></h2>`;
 
         scrollEl.innerHTML = `
             <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:15px; margin-top:5px;">
@@ -186,13 +186,13 @@ async function renderGenericGrid(viewTitle, itemsFilter) {
             }).sort((a, b) => a.title.localeCompare(b.title));
 
             scrollEl.innerHTML = `
-                <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap:15px;">
+                <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap:12px;">
                     ${filtered.map(item => `
-                        <div onclick="navigate('nav-add', ${JSON.stringify(item).replace(/"/g, '&quot;')})" style="background:rgba(255,255,255,0.05); border-radius:14px; overflow:hidden; border:1px solid rgba(255,255,255,0.1); height:240px; cursor:pointer; display:flex; flex-direction:column; transition: transform 0.2s;">
-                            <div style="height:160px; background:#000 url(${item.image || ''}) center/contain no-repeat;"></div>
-                            <div style="padding:12px; flex:1; display:flex; flex-direction:column; justify-content:space-between;">
-                                <h4 style="font-size:0.85rem; overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; line-height:1.2; font-weight:600;">${item.title}</h4>
-                                <span style="font-size:0.7rem; color:#ffc978; font-weight:800; text-transform:uppercase;">${item.platform || 'Geral'}</span>
+                        <div onclick="navigate('nav-add', ${JSON.stringify(item).replace(/"/g, '&quot;')})" style="background:rgba(255,255,255,0.05); border-radius:12px; overflow:hidden; border:1px solid rgba(255,255,255,0.1); height:210px; cursor:pointer; display:flex; flex-direction:column; transition: transform 0.2s;">
+                            <div style="height:130px; background:#000 url(${item.image || ''}) center/contain no-repeat;"></div>
+                            <div style="padding:10px; flex:1; display:flex; flex-direction:column; justify-content:space-between;">
+                                <h4 style="font-size:0.75rem; overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; line-height:1.2; font-weight:600;">${item.title}</h4>
+                                <span style="font-size:0.65rem; color:#ffc978; font-weight:800; text-transform:uppercase;">${item.platform || 'Geral'}</span>
                             </div>
                         </div>
                     `).join('')}
@@ -348,7 +348,7 @@ async function renderSyncView() {
             <div style="background:rgba(255,100,100,0.05); padding:24px; border-radius:20px; border:1px solid rgba(255,0,0,0.2); margin-top:20px;">
                  <h3 style="margin-bottom:10px; font-size:1rem; color:#ff4d4d;">Zona de Perigo 🚨</h3>
                  <p style="margin-bottom:20px; font-size:0.8rem; opacity:0.65; line-height:1.4;">Se a App estiver a falhar ou se quiseres limpar tudo para começar do zero.</p>
-                 <button id="btn-force-update" style="width:100%; background:#ff4d4d; color:white; border:none; padding:14px; border-radius:14px; font-weight:800; cursor:pointer;">WIPE TOTAL DA APP (v34)</button>
+                 <button id="btn-force-update" style="width:100%; background:#ff4d4d; color:white; border:none; padding:14px; border-radius:14px; font-weight:800; cursor:pointer;">WIPE TOTAL DA APP (v35)</button>
             </div>
         </div>
     `;
@@ -365,7 +365,7 @@ async function renderSyncView() {
 
 /** INITIALIZATION **/
 async function init() {
-    logger("Iniciando RetroCollection v34...");
+    logger("Iniciando RetroCollection v35...");
     try {
         await dbService.open();
         logger("DB Conectado.");
