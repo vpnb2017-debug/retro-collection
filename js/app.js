@@ -2,7 +2,7 @@ import { dbService } from './services/db.js';
 import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js';
 import { coverSearchService } from './services/coverSearch.js';
 import WebuyService from './services/webuyService.js';
-import { localFileSync } from './services/localFileSync.js?v=57';
+import { localFileSync } from './services/localFileSync.js?v=58';
 
 // Global Exposure
 window.navigate = navigate;
@@ -129,7 +129,7 @@ async function renderDashboard() {
         const ownedTotal = ownedGames.length + ownedConsoles.length;
         const wishlistTotal = games.filter(g => g.isWishlist).length + consoles.filter(c => c.isWishlist).length;
 
-        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v57</span></h2>`;
+        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v58</span></h2>`;
 
         const platData = await getPlatformOptions();
 
@@ -559,22 +559,60 @@ async function pickLogoForPlatform(id) {
     modal.style.display = 'flex';
     grid.innerHTML = '<p style="grid-column:1/-1; text-align:center; opacity:0.5;">A carregar sugestões...</p>';
 
-    const base = 'https://raw.githubusercontent.com/KyleBing/retro-game-console-icons/main/art/';
     const icons = [
-        'PS.png', 'PS2.png', 'PS3.png', 'PS4.png', 'PS5.png', 'PSP.png', 'VITA.png',
-        'FC.png', 'SFC.png', 'N64.png', 'NGC.png', 'WII.png', 'WIIU.png', 'SWITCH.png',
-        'GB.png', 'GBC.png', 'GBA.png', 'DS.png', '3DS.png',
-        'MD.png', 'MS.png', 'SATURN.png', 'DC.png', 'GG.png',
-        'XBOX.png', 'XBOX360.png', 'XBOXONE.png', 'XBOXSERIES.png',
-        'ATARI2600.png', 'ATARI5200.png', 'ATARI7800.png', 'ATARI800.png', 'ATARIST.png',
-        'AMIGA.png', 'C64.png', 'MSX.png', 'PC.png', 'DOS.png'
+        'PS', 'PS2', 'PS3', 'PS4', 'PS5', 'PSP', 'VITA',
+        'FC', 'SFC', 'N64', 'NGC', 'WII', 'WIIU', 'SWITCH',
+        'GB', 'GBC', 'GBA', 'DS', '3DS',
+        'MD', 'MS', 'SATURN', 'DC', 'GG',
+        'XBOX', 'XBOX360', 'XBOXONE', 'XBOXSERIES',
+        'ATARI2600', 'ATARI5200', 'ATARI7800', 'ATARI800', 'ATARIST',
+        'AMIGA', 'C64', 'MSX', 'PC', 'DOS'
     ];
 
-    grid.innerHTML = icons.map(icon => `
-        <div onclick="window.selectLogo('${id}', '${base}${icon}')" style="background:rgba(255,255,255,0.05); padding:10px; border-radius:12px; cursor:pointer; display:flex; align-items:center; justify-content:center; border:1px solid rgba(255,255,255,0.1); aspect-ratio:1/1;">
-            <img src="${base}${icon}" style="width:100%; height:100%; object-fit:contain;">
+    grid.innerHTML = icons.map(name => `
+        <div data-icon-name="${name}" onclick="window.selectLogo('${id}', this.querySelector('img').src)" style="background:rgba(255,255,255,0.05); padding:10px; border-radius:12px; cursor:pointer; display:flex; align-items:center; justify-content:center; border:1px solid rgba(255,255,255,0.1); aspect-ratio:1/1;">
+            <img src="" onerror="window.getValidLogoUrl(this, '${name}')" style="width:100%; height:100%; object-fit:contain; display:none;">
+            <div class="loader-placeholder" style="width:20px; height:20px; border:2px solid #444; border-top-color:#ff9f0a; border-radius:50%; animation: spin 1s linear infinite;"></div>
         </div>
     `).join('');
+}
+
+async function getValidLogoUrl(imgEl, name) {
+    const bases = [
+        'https://raw.githubusercontent.com/KyleBing/retro-game-console-icons/main/art/',
+        'https://raw.githubusercontent.com/KyleBing/retro-game-console-icons/master/icons/',
+        'https://raw.githubusercontent.com/KyleBing/retro-game-console-icons/main/icons/',
+        'https://raw.githubusercontent.com/KyleBing/retro-game-console-icons/master/art/'
+    ];
+
+    const formats = [
+        `${name}.png`,
+        `${name.toLowerCase()}.png`,
+        `${name.toUpperCase()}.png`
+    ];
+
+    for (const b of bases) {
+        for (const f of formats) {
+            const url = b + f;
+            try {
+                const ok = await new Promise(res => {
+                    const test = new Image();
+                    test.onload = () => res(true);
+                    test.onerror = () => res(false);
+                    test.src = url;
+                });
+                if (ok) {
+                    imgEl.src = url;
+                    imgEl.style.display = 'block';
+                    if (imgEl.nextElementSibling) imgEl.nextElementSibling.style.display = 'none';
+                    return;
+                }
+            } catch (e) { }
+        }
+    }
+    // Final fallback
+    imgEl.style.display = 'none';
+    if (imgEl.nextElementSibling) imgEl.innerHTML = `<span style="font-size:0.5rem; opacity:0.3;">${name}</span>`;
 }
 
 function selectLogo(id, url) {
@@ -625,7 +663,7 @@ async function exportCollection() {
         const platforms = await dbService.getAll('platforms');
 
         const data = {
-            version: "v57",
+            version: "v58",
             timestamp: new Date().toISOString(),
             games,
             consoles,
@@ -696,15 +734,15 @@ async function importCollection() {
 
 /** INITIALIZATION **/
 async function init() {
-    logger("Iniciando RetroCollection v57...");
+    logger("Iniciando RetroCollection v58...");
     try {
         await dbService.open();
         logger("DB Conectado.");
 
-        // Auto-Sync Logos logic for v57
-        if (!localStorage.getItem('logos_synced_v57')) {
+        // Auto-Sync Logos logic for v58
+        if (!localStorage.getItem('logos_synced_v58')) {
             await autoSyncLogos();
-            localStorage.setItem('logos_synced_v57', 'true');
+            localStorage.setItem('logos_synced_v58', 'true');
         }
         await navigate('nav-dashboard');
 
@@ -725,6 +763,8 @@ async function init() {
 }
 
 async function autoSyncLogos() {
+    // We update base iteratively in getValidLogoUrl logic
+    // But for autoSync, we'll try a common one first and let the user manual pick if it fails
     const platforms = await getPlatformOptions();
     const base = 'https://raw.githubusercontent.com/KyleBing/retro-game-console-icons/main/art/';
     const map = {
