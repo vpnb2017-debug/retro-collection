@@ -2,7 +2,7 @@ import { dbService } from './services/db.js';
 import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js';
 import { coverSearchService } from './services/coverSearch.js';
 import WebuyService from './services/webuyService.js';
-import { localFileSync } from './services/localFileSync.js?v=41';
+import { localFileSync } from './services/localFileSync.js?v=42';
 
 // Global Exposure
 window.navigate = navigate;
@@ -126,11 +126,11 @@ async function renderDashboard() {
         const ownedTotal = ownedGames.length + ownedConsoles.length;
         const wishlistTotal = games.filter(g => g.isWishlist).length + consoles.filter(c => c.isWishlist).length;
 
-        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v41</span></h2>`;
+        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v42</span></h2>`;
 
         scrollEl.innerHTML = `
-            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:15px; margin-top:5px;">
-                <div onclick="navigate('nav-collection')" style="background:rgba(255,159,10,0.12); padding:24px; border-radius:20px; border:1px solid rgba(255,159,10,0.25); cursor:pointer; transition: transform 0.2s;">
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap:12px; margin-top:5px;">
+                <div onclick="navigate('nav-collection')" style="background:rgba(255,159,10,0.12); padding:20px; border-radius:18px; border:1px solid rgba(255,159,10,0.25); cursor:pointer;">
                     <h3 style="font-size:0.85rem; opacity:0.8; margin-bottom:8px;">Coleção</h3>
                     <p style="font-size:2.2rem; font-weight:800; color:#ff9f0a;">${ownedTotal}</p>
                 </div>
@@ -171,18 +171,18 @@ async function renderGenericGrid(viewTitle, itemsFilter) {
 
         titleEl.innerHTML = `<h2>${viewTitle}</h2>`;
         filterEl.innerHTML = `
-            <div style="display:flex; gap:8px; flex-wrap:nowrap; overflow-x:auto; background:rgba(255,159,10,0.05); padding:10px; border-radius:14px; border:1px solid rgba(255,159,10,0.15);">
-                <select id="f-type" style="background:#1e1e24; border:1px solid #444; color:white; padding:10px; border-radius:10px; font-size:0.85rem; min-width:95px;">
+            <div style="display:flex; gap:8px; flex-wrap:wrap; background:rgba(255,159,10,0.05); padding:10px; border-radius:14px; border:1px solid rgba(255,159,10,0.15);">
+                <select id="f-type" style="flex:1; background:#1e1e24; border:1px solid #444; color:white; padding:10px; border-radius:10px; font-size:0.85rem; min-width:90px;">
                     <option value="all" ${state.filterType === 'all' ? 'selected' : ''}>Tudo</option>
                     <option value="games" ${state.filterType === 'games' ? 'selected' : ''}>Jogos</option>
                     <option value="consoles" ${state.filterType === 'consoles' ? 'selected' : ''}>Hardware</option>
                 </select>
-                <select id="f-plat" style="background:#1e1e24; border:1px solid #444; color:white; padding:10px; border-radius:10px; font-size:0.85rem; min-width:120px;">
+                <select id="f-plat" style="flex:1; background:#1e1e24; border:1px solid #444; color:white; padding:10px; border-radius:10px; font-size:0.85rem; min-width:110px;">
                     <option value="all" ${state.filterPlatform === 'all' ? 'selected' : ''}>Plataformas</option>
                     <option value="(Sem Consola)" ${state.filterPlatform === '(Sem Consola)' ? 'selected' : ''}>(Sem Consola)</option>
                     ${platformOptions}
                 </select>
-                <input id="f-search" type="text" placeholder="🔍 Procurar..." value="${state.filterSearch}" style="flex:1; background:#1e1e24; border:1px solid #444; color:white; padding:10px; border-radius:10px; font-size:0.85rem; min-width:120px;">
+                <input id="f-search" type="text" placeholder="🔍 Procurar..." value="${state.filterSearch}" style="width:100%; background:#1e1e24; border:1px solid #444; color:white; padding:10px; border-radius:10px; font-size:0.85rem; margin-top:2px;">
             </div>
         `;
 
@@ -206,7 +206,7 @@ async function renderGenericGrid(viewTitle, itemsFilter) {
             }).sort((a, b) => a.title.localeCompare(b.title));
 
             scrollEl.innerHTML = `
-                <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap:12px;">
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap:12px;">
                     ${filtered.map(item => `
                         <div onclick="navigate('nav-add', ${JSON.stringify(item).replace(/"/g, '&quot;')})" style="background:rgba(255,255,255,0.05); border-radius:12px; overflow:hidden; border:1px solid rgba(255,255,255,0.1); height:210px; cursor:pointer; display:flex; flex-direction:column; transition: transform 0.2s;">
                             <div style="height:130px; background:#000 url(${item.image || ''}) center/contain no-repeat;"></div>
@@ -453,7 +453,7 @@ async function renderSyncView() {
             <div style="background:rgba(255,100,100,0.05); padding:24px; border-radius:20px; border:1px solid rgba(255,0,0,0.2); margin-top:20px;">
                  <h3 style="margin-bottom:10px; font-size:1rem; color:#ff4d4d;">Zona de Perigo 🚨</h3>
                  <p style="margin-bottom:20px; font-size:0.8rem; opacity:0.65; line-height:1.4;">Se a App estiver a falhar ou se quiseres limpar tudo para começar do zero.</p>
-                 <button id="btn-force-update" style="width:100%; background:#ff4d4d; color:white; border:none; padding:14px; border-radius:14px; font-weight:800; cursor:pointer;">WIPE TOTAL DA APP (v41)</button>
+                 <button id="btn-force-update" style="width:100%; background:#ff4d4d; color:white; border:none; padding:14px; border-radius:14px; font-weight:800; cursor:pointer;">WIPE TOTAL DA APP (v42)</button>
             </div>
         </div>
     `;
@@ -476,7 +476,7 @@ async function exportCollection() {
         const platforms = await dbService.getAll('platforms');
 
         const data = {
-            version: "v41",
+            version: "v42",
             timestamp: new Date().toISOString(),
             games,
             consoles,
@@ -547,7 +547,7 @@ async function importCollection() {
 
 /** INITIALIZATION **/
 async function init() {
-    logger("Iniciando RetroCollection v41...");
+    logger("Iniciando RetroCollection v42...");
     try {
         await dbService.open();
         logger("DB Conectado.");

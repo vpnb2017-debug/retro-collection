@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport"
         content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>RetroCollection v41 🎮</title>
+    <title>RetroCollection v42 🎮</title>
 
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1e1e24">
@@ -30,20 +30,19 @@
 
         html,
         body {
-            height: 100vh;
-            width: 100vw;
-            overflow: hidden !important;
+            height: 100%;
+            width: 100%;
             background: var(--bg-app);
             color: white;
-            position: fixed;
-            inset: 0;
+            overflow: hidden;
+            -webkit-text-size-adjust: 100%;
         }
 
         #app {
             display: grid;
             grid-template-rows: var(--h-header) 1fr;
             height: 100vh;
-            width: 100vw;
+            width: 100%;
             overflow: hidden;
         }
 
@@ -60,11 +59,10 @@
         #main-content {
             display: grid;
             grid-template-rows: auto auto 1fr;
-            overflow-y: hidden;
-            overflow-x: hidden;
             background: var(--bg-app);
-            position: relative;
+            overflow: hidden;
             width: 100%;
+            position: relative;
         }
 
         .v29-title-zone,
@@ -258,17 +256,17 @@
             return false;
         };
 
-        log("Arranque v41 iniciado...");
+        log("Arranque v42 iniciado...");
 
-        // v41 FINAL WIPE
-        if (localStorage.getItem('app_v') !== '41') {
-            log("Limpando cache v40...");
+        // v42 FINAL WIPE
+        if (localStorage.getItem('app_v') !== '42') {
+            log("Limpando cache v41...");
             localStorage.clear();
-            localStorage.setItem('app_v', '41');
+            localStorage.setItem('app_v', '42');
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.getRegistrations().then(rs => {
                     Promise.all(rs.map(r => r.unregister())).then(() => {
-                        log("Cache limpo. A recarregar v41...");
+                        log("Cache limpo. A recarregar v42...");
                         location.reload();
                     });
                 });
@@ -282,17 +280,17 @@
             const title = document.querySelector('.v29-title-zone h2');
             if (title && title.innerText.includes('A carregar')) {
                 log("Hanging detetado! Tentando bypass...");
-                location.href = location.href.split('?')[0] + '?force_v41=' + Date.now();
+                location.href = location.href.split('?')[0] + '?force_v42=' + Date.now();
             }
         }, 8000);
     </script>
 
-    <script type="module" src="js/app.js?v=41"></script>
+    <script type="module" src="js/app.js?v=42"></script>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js?v=41')
-                    .then(() => log("v41 Pronta."))
+                navigator.serviceWorker.register('sw.js?v=42')
+                    .then(() => log("v42 Pronta."))
                     .catch(e => log("Falha: " + e.message));
             });
         }
