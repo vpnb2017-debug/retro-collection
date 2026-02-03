@@ -2,7 +2,7 @@ import { dbService } from './services/db.js';
 import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js';
 import { coverSearchService } from './services/coverSearch.js';
 import WebuyService from './services/webuyService.js';
-import { localFileSync } from './services/localFileSync.js?v=42';
+import { localFileSync } from './services/localFileSync.js?v=43';
 
 // Global Exposure
 window.navigate = navigate;
@@ -126,7 +126,7 @@ async function renderDashboard() {
         const ownedTotal = ownedGames.length + ownedConsoles.length;
         const wishlistTotal = games.filter(g => g.isWishlist).length + consoles.filter(c => c.isWishlist).length;
 
-        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v42</span></h2>`;
+        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v43</span></h2>`;
 
         scrollEl.innerHTML = `
             <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap:12px; margin-top:5px;">
@@ -453,7 +453,7 @@ async function renderSyncView() {
             <div style="background:rgba(255,100,100,0.05); padding:24px; border-radius:20px; border:1px solid rgba(255,0,0,0.2); margin-top:20px;">
                  <h3 style="margin-bottom:10px; font-size:1rem; color:#ff4d4d;">Zona de Perigo 🚨</h3>
                  <p style="margin-bottom:20px; font-size:0.8rem; opacity:0.65; line-height:1.4;">Se a App estiver a falhar ou se quiseres limpar tudo para começar do zero.</p>
-                 <button id="btn-force-update" style="width:100%; background:#ff4d4d; color:white; border:none; padding:14px; border-radius:14px; font-weight:800; cursor:pointer;">WIPE TOTAL DA APP (v42)</button>
+                 <button id="btn-force-update" style="width:100%; background:#ff4d4d; color:white; border:none; padding:14px; border-radius:14px; font-weight:800; cursor:pointer;">WIPE TOTAL DA APP (v43)</button>
             </div>
         </div>
     `;
@@ -476,7 +476,7 @@ async function exportCollection() {
         const platforms = await dbService.getAll('platforms');
 
         const data = {
-            version: "v42",
+            version: "v43",
             timestamp: new Date().toISOString(),
             games,
             consoles,
@@ -547,7 +547,7 @@ async function importCollection() {
 
 /** INITIALIZATION **/
 async function init() {
-    logger("Iniciando RetroCollection v42...");
+    logger("Iniciando RetroCollection v43...");
     try {
         await dbService.open();
         logger("DB Conectado.");
