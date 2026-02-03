@@ -39,11 +39,12 @@ export async function deletePlatform(id) {
 
 export async function ensurePlatformExists(name) {
     if (!name) return;
+    const cleanName = name.trim();
     const all = await getPlatformOptions();
-    const exists = all.some(p => p.name.toLowerCase() === name.toLowerCase());
+    const exists = all.some(p => p.name.toLowerCase() === cleanName.toLowerCase());
 
     if (!exists) {
-        await addPlatform({ name: name });
-        console.log(`Auto-created platform: ${name}`);
+        await addPlatform({ name: cleanName });
+        console.log(`Auto-created platform: ${cleanName}`);
     }
 }

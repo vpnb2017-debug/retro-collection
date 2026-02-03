@@ -2,7 +2,7 @@ import { dbService } from './services/db.js';
 import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js';
 import { coverSearchService } from './services/coverSearch.js';
 import WebuyService from './services/webuyService.js';
-import { localFileSync } from './services/localFileSync.js?v=66';
+import { localFileSync } from './services/localFileSync.js?v=67';
 
 // Global Exposure
 window.navigate = navigate;
@@ -141,7 +141,7 @@ async function renderDashboard() {
         const ownedTotal = ownedGames.length + ownedConsoles.length;
         const wishlistTotal = games.filter(g => g.isWishlist).length + consoles.filter(c => c.isWishlist).length;
 
-        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v66</span></h2>`;
+        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v67</span></h2>`;
 
         const platData = await getPlatformOptions();
 
@@ -707,7 +707,7 @@ async function exportCollection() {
         const platforms = await dbService.getAll('platforms');
 
         const data = {
-            version: "v66",
+            version: "v67",
             timestamp: new Date().toISOString(),
             games,
             consoles,
@@ -778,16 +778,13 @@ async function importCollection() {
 
 /** INITIALIZATION **/
 async function init() {
-    logger("Iniciando RetroCollection v66...");
+    logger("Iniciando RetroCollection v67...");
     try {
         await dbService.open();
         logger("DB Conectado.");
 
-        // Auto-Sync Logos logic for v66
-        if (!localStorage.getItem('logos_synced_v66')) {
-            await autoSyncLogos();
-            localStorage.setItem('logos_synced_v66', 'true');
-        }
+        // Non-destructive auto-sync on every start for v67+
+        await autoSyncLogos();
         await navigate('nav-dashboard');
 
         // Hide log after success
@@ -837,11 +834,13 @@ async function autoSyncLogos() {
     };
 
     for (const p of platforms) {
-        // Clean and match
-        const key = p.name.trim().toLowerCase();
-        if (map[key]) {
-            p.logo = base + map[key];
-            await updatePlatform(p);
+        // Only sync if logo is missing or is just a placeholder
+        if (!p.logo || p.logo.includes('flaticon.com')) {
+            const key = p.name.trim().toLowerCase();
+            if (map[key]) {
+                p.logo = base + map[key];
+                await updatePlatform(p);
+            }
         }
     }
 }

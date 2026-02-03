@@ -1,4 +1,4 @@
-const CACHE_NAME = 'retro-collection-v66';
+const CACHE_NAME = 'retro-collection-v67';
 const ASSETS = [
     './',
     './index.html',
@@ -17,7 +17,7 @@ const ASSETS = [
 self.addEventListener('install', (event) => {
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
-            console.log('SW: Pre-caching v31');
+            console.log('SW: Pre-caching v67');
             return cache.addAll(ASSETS);
         })
     );
@@ -34,6 +34,27 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
+    const url = new URL(event.request.url);
+
+    // Dynamic Caching for Images (CDN Logos & Static Assets)
+    if (url.origin.includes('jsdelivr.net') ||
+        url.pathname.match(/\.(png|jpg|jpeg|gif|svg|webp)$/i) ||
+        event.request.destination === 'image') {
+
+        event.respondWith(
+            caches.open('retro-images-cache').then((cache) => {
+                return cache.match(event.request).then((response) => {
+                    const fetchPromise = fetch(event.request).then((networkResponse) => {
+                        cache.put(event.request, networkResponse.clone());
+                        return networkResponse;
+                    });
+                    return response || fetchPromise;
+                });
+            })
+        );
+        return;
+    }
+
     event.respondWith(
         caches.match(event.request).then((response) => {
             return response || fetch(event.request);
