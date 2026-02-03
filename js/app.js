@@ -2,7 +2,7 @@ import { dbService } from './services/db.js';
 import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js';
 import { coverSearchService } from './services/coverSearch.js';
 import WebuyService from './services/webuyService.js';
-import { localFileSync } from './services/localFileSync.js?v=64';
+import { localFileSync } from './services/localFileSync.js?v=65';
 
 // Global Exposure
 window.navigate = navigate;
@@ -17,6 +17,7 @@ window.importCollection = importCollection;
 window.editPlatform = editPlatform;
 window.pickLogoForPlatform = pickLogoForPlatform;
 window.selectLogo = selectLogo;
+window.clearFilters = clearFilters;
 
 // Utility for logging 
 const logger = (msg) => { if (window.log) window.log(msg); else console.log(msg); };
@@ -83,7 +84,8 @@ const state = {
     filterType: 'all',
     filterPlatform: 'all',
     filterSearch: '',
-    viewMode: 'grid'
+    viewMode: 'grid',
+    lastFilteredList: []
 };
 
 /** NAVIGATE **/
@@ -129,7 +131,7 @@ async function renderDashboard() {
         const ownedTotal = ownedGames.length + ownedConsoles.length;
         const wishlistTotal = games.filter(g => g.isWishlist).length + consoles.filter(c => c.isWishlist).length;
 
-        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v64</span></h2>`;
+        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v65</span></h2>`;
 
         const platData = await getPlatformOptions();
 
@@ -201,6 +203,7 @@ async function renderGenericGrid(viewTitle, itemsFilter) {
                     ${platformOptions}
                 </select>
                 <input id="f-search" type="text" placeholder="🔍 Procurar..." value="${state.filterSearch}" style="width:100%; background:#1e1e24; border:1px solid #444; color:white; padding:10px; border-radius:10px; font-size:0.85rem; margin-top:2px;">
+                <button onclick="window.clearFilters()" style="width:100%; background:rgba(255,159,10,0.1); border:1px dashed rgba(255,159,10,0.3); color:#ff9f0a; padding:8px; border-radius:10px; font-size:0.75rem; font-weight:700; cursor:pointer; margin-top:5px;">Limpar Filtros 🧹</button>
             </div>
         `;
 
@@ -222,6 +225,8 @@ async function renderGenericGrid(viewTitle, itemsFilter) {
                 if (state.filterSearch && !i.title.toLowerCase().includes(state.filterSearch)) return false;
                 return true;
             }).sort((a, b) => a.title.localeCompare(b.title));
+
+            state.lastFilteredList = filtered;
 
             scrollEl.innerHTML = `
                 <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap:12px;">
@@ -246,6 +251,14 @@ async function renderGenericGrid(viewTitle, itemsFilter) {
     } catch (err) { logger("GRID ERR: " + err.message); }
 }
 
+function clearFilters() {
+    state.filterType = 'all';
+    state.filterPlatform = 'all';
+    state.filterSearch = '';
+    const view = state.view === 'nav-collection' ? renderCollection : renderWishlist;
+    view();
+}
+
 async function renderCollection() { await renderGenericGrid('Minha Coleção', i => !i.isWishlist); }
 async function renderWishlist() { await renderGenericGrid('Lista de Desejos', i => !!i.isWishlist); }
 
@@ -254,7 +267,29 @@ async function renderAddForm(item) {
     const { titleEl, scrollEl } = getZones();
     const platforms = await getPlatformOptions();
 
-    titleEl.innerHTML = `<h2>${item ? '✏️ Editar Item' : '➕ Novo Item'}</h2>`;
+    // Sequential Navigation Logic
+    let navArrows = '';
+    if (item && state.lastFilteredList.length > 1) {
+        const idx = state.lastFilteredList.findIndex(x => x.id === item.id);
+        if (idx !== -1) {
+            const prev = state.lastFilteredList[idx - 1];
+            const next = state.lastFilteredList[idx + 1];
+            navArrows = `
+                <div style="display:flex; gap:10px; align-items:center; margin-left:auto;">
+                    <button onclick="navigate('nav-add', ${JSON.stringify(prev).replace(/"/g, '&quot;')})" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:white; width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; opacity:${prev ? 1 : 0.2}; pointer-events:${prev ? 'auto' : 'none'};">⬅️</button>
+                    <span style="font-size:0.7rem; opacity:0.5;">${idx + 1} / ${state.lastFilteredList.length}</span>
+                    <button onclick="navigate('nav-add', ${JSON.stringify(next).replace(/"/g, '&quot;')})" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:white; width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; opacity:${next ? 1 : 0.2}; pointer-events:${next ? 'auto' : 'none'};">➡️</button>
+                </div>
+            `;
+        }
+    }
+
+    titleEl.innerHTML = `
+        <div style="display:flex; align-items:center; width:100%;">
+            <h2 style="margin:0;">${item ? '✏️ Editar Item' : '➕ Novo Item'}</h2>
+            ${navArrows}
+        </div>
+    `;
 
     const pOptions = platforms.map(p => `<option value="${p.name}" ${(item && item.platform === p.name) ? 'selected' : ''}>${p.name}</option>`).join('');
     const type = item ? (item._t || (item.isConsole ? 'consoles' : 'games')) : 'games';
@@ -662,7 +697,7 @@ async function exportCollection() {
         const platforms = await dbService.getAll('platforms');
 
         const data = {
-            version: "v64",
+            version: "v65",
             timestamp: new Date().toISOString(),
             games,
             consoles,
@@ -733,15 +768,15 @@ async function importCollection() {
 
 /** INITIALIZATION **/
 async function init() {
-    logger("Iniciando RetroCollection v64...");
+    logger("Iniciando RetroCollection v65...");
     try {
         await dbService.open();
         logger("DB Conectado.");
 
-        // Auto-Sync Logos logic for v64
-        if (!localStorage.getItem('logos_synced_v64')) {
+        // Auto-Sync Logos logic for v65
+        if (!localStorage.getItem('logos_synced_v65')) {
             await autoSyncLogos();
-            localStorage.setItem('logos_synced_v64', 'true');
+            localStorage.setItem('logos_synced_v65', 'true');
         }
         await navigate('nav-dashboard');
 
