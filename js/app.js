@@ -2,7 +2,7 @@ import { dbService } from './services/db.js';
 import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js';
 import { coverSearchService } from './services/coverSearch.js';
 import WebuyService from './services/webuyService.js';
-import { localFileSync } from './services/localFileSync.js';
+import { localFileSync } from './services/localFileSync.js?v=11';
 
 // Premium UI Service for Modals
 const uiService = {
@@ -855,19 +855,26 @@ async function renderSyncView() {
                     <p style="margin-top:0.5rem; color:var(--accent-secondary); font-weight:600;">Modo Sem API (Privacidade Total)</p>
                 </div>
 
-                <div style="background: rgba(255,255,255,0.05); padding:1rem; border-radius:var(--radius-md); font-size:0.85rem; line-height:1.4;">
-                    <p><b>Como funciona?</b></p>
-                    <ul style="margin-top:0.5rem; margin-left:1rem; color:var(--text-secondary);">
-                        <li>No PC: Escolha um ficheiro na sua pasta do Google Drive.</li>
-                        <li>A App guardará as alterações diretamente nesse ficheiro.</li>
-                        <li>No Telemóvel: Importe/Exporte o ficheiro para manter tudo igual.</li>
-                    </ul>
+                <div style="background: rgba(255,255,255,0.05); padding:1.2rem; border-radius:var(--radius-md); font-size:0.85rem; line-height:1.5;">
+                    <p style="margin-bottom:0.8rem;"><b>Guia Rápido:</b></p>
+                    <div style="display:flex; gap:0.8rem; align-items:flex-start; margin-bottom:0.8rem;">
+                        <span style="font-size:1.2rem;">📤</span>
+                        <span><b>Enviar:</b> Use quando acabar de adicionar jogos e quiser guardar na Nuvem.</span>
+                    </div>
+                    <div style="display:flex; gap:0.8rem; align-items:flex-start;">
+                        <span style="font-size:1.2rem;">📥</span>
+                        <span><b>Receber:</b> Use quando abrir a App e quiser ver o que adicionou noutro sítio.</span>
+                    </div>
                 </div>
 
-                <button id="btn-file-save" class="btn-primary" style="width:100%; padding:1rem !important; font-size:1rem;">📤 Ligar e Atualizar Ficheiro</button>
-                <button id="btn-file-load" class="glass glass-hover" style="width:100%; padding:1rem; border:1px solid var(--accent-secondary); border-radius:var(--radius-md); color:var(--accent-secondary); font-weight:700;">📥 Carregar de um Ficheiro</button>
+                <div id="sync-status" style="text-align:center; font-size:0.8rem; color:var(--accent-secondary); margin-bottom:0.5rem; display: ${localStorage.getItem('last_sync_date') ? 'block' : 'none'};">
+                    Último envio: ${localStorage.getItem('last_sync_date') || ''}
+                </div>
+
+                <button id="btn-file-save" class="btn-primary" style="width:100%; padding:1rem !important; font-size:1rem;">📤 Enviar Alterações (Guardar)</button>
+                <button id="btn-file-load" class="glass glass-hover" style="width:100%; padding:1rem; border:1px solid var(--accent-secondary); border-radius:var(--radius-md); color:var(--accent-secondary); font-weight:700;">📥 Receber Alterações (Carregar)</button>
                 
-                <p style="font-size:0.7rem; color:var(--text-secondary); text-align:center; margin-top:1rem;">Dica: Escolha um nome fixo como 'minha_colecao.json'</p>
+                <p style="font-size:0.7rem; color:var(--text-secondary); text-align:center; margin-top:1rem;">O seu ficheiro: <span id="sync-filename" style="color:var(--text-primary); font-weight:600;">(Não ligado)</span></p>
             </div>
             
             <div id="pwa-install-container" class="glass" style="margin-top:2rem; padding:1.5rem; border-radius:var(--radius-lg); text-align:center; display: ${state.deferredPrompt ? 'block' : 'none'};">
@@ -876,13 +883,30 @@ async function renderSyncView() {
                 <button id="btn-pwa-install" class="btn-primary" style="margin-top:1rem; width:100%;">Instalar Agora</button>
             </div>
 
-            <div class="glass" style="margin-top:2rem; padding:1.5rem; border-radius:var(--radius-lg); text-align:center;">
-                <h4 style="color:var(--text-secondary);">💡 Dica de Instalação</h4>
-                <p style="font-size:0.85rem; color:var(--text-secondary); margin-top:0.5rem;">Se o botão acima não aparecer:</p>
-                <p style="font-size:0.85rem; margin-top:0.5rem;">Vá ao menu <b>(⋮)</b> do Chrome e procure por: <br><b>"Instalar aplicação"</b> ou <b>"Adicionar ao ecrã principal"</b>.</p>
+            <div class="glass" style="margin-top:1.5rem; padding:1.5rem; border-radius:var(--radius-lg); text-align:left;">
+                <h4 style="color:var(--text-secondary); margin-bottom:0.5rem;">🔍 Diagnóstico da App</h4>
+                <ul style="font-size:0.75rem; color:var(--text-secondary); list-style:none; padding:0;">
+                    <li>📡 Protocolo: <span id="diag-https">Verificando...</span></li>
+                    <li>⚙️ Service Worker: <span id="diag-sw">Verificando...</span></li>
+                    <li>📦 Manifest: ✅ Detetado</li>
+                </ul>
+                <p style="font-size:0.7rem; color:var(--text-secondary); margin-top:0.5rem;">Nota: A instalação <b>exige</b> HTTPS (Site Seguro).</p>
             </div>
         </div>
     `;
+
+    // Fill diagnostics
+    const httpsOk = window.location.protocol === 'https:' || window.location.hostname === 'localhost';
+    document.getElementById('diag-https').innerHTML = httpsOk ? '✅ Seguro (HTTPS/Local)' : '❌ Inseguro (HTTP)';
+    document.getElementById('diag-https').style.color = httpsOk ? '#4ade80' : '#f87171';
+
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistration().then(reg => {
+            const swOk = !!reg;
+            document.getElementById('diag-sw').innerHTML = swOk ? '✅ Ativo' : '❌ Não Registado';
+            document.getElementById('diag-sw').style.color = swOk ? '#4ade80' : '#f87171';
+        });
+    }
 
     if (state.deferredPrompt) {
         document.getElementById('btn-pwa-install').onclick = async () => {
@@ -895,23 +919,39 @@ async function renderSyncView() {
         };
     }
 
+    // Display filename if known
+    const knownFile = localStorage.getItem('sync_filename');
+    if (knownFile) {
+        document.getElementById('sync-filename').textContent = knownFile;
+    }
+
     document.getElementById('btn-file-save').onclick = async () => {
         const games = await dbService.getAll('games');
         const consoles = await dbService.getAll('consoles');
         const platforms = await dbService.getAll('platforms');
 
         try {
-            if (!window.showOpenFilePicker) {
+            if (!window.showSaveFilePicker) {
                 // Mobile/Fallback
                 localFileSync.downloadFallback({ games, consoles, platforms, timestamp: Date.now() });
-                uiService.alert("Ficheiro gerado! Escolha a sua pasta do Drive para guardar.", "Exportar");
+                uiService.alert("Ficheiro de backup gerado! Guarde-o na sua pasta do Drive.", "Exportar");
             } else {
                 // Desktop
-                const fileName = await localFileSync.selectFile();
+                const fileName = await localFileSync.selectFileForSave();
                 if (fileName) {
                     uiService.alert(`A guardar em ${fileName}...`, "Sincronizando");
                     await localFileSync.save({ games, consoles, platforms, timestamp: Date.now() });
-                    uiService.alert("Ficheiro atualizado com sucesso! ✅", "Guardado");
+
+                    const nowString = new Date().toLocaleString('pt-PT');
+                    localStorage.setItem('last_sync_date', nowString);
+                    localStorage.setItem('sync_filename', fileName);
+
+                    const statusEl = document.getElementById('sync-status');
+                    statusEl.textContent = 'Último envio: ' + nowString;
+                    statusEl.style.display = 'block';
+                    document.getElementById('sync-filename').textContent = fileName;
+
+                    uiService.alert("Alterações enviadas com sucesso! ✅", "Feito");
                 }
             }
         } catch (e) {
@@ -920,7 +960,7 @@ async function renderSyncView() {
     };
 
     document.getElementById('btn-file-load').onclick = async () => {
-        if (await uiService.confirm("Isto irá substituir todos os dados locais. Continuar?", "Aviso ⚠️")) {
+        if (await uiService.confirm("Isto irá substituir todos os dados locais pelos que estão na Nuvem. Continuar?", "Aviso ⚠️")) {
             try {
                 let data;
                 if (!window.showOpenFilePicker) {
@@ -935,11 +975,16 @@ async function renderSyncView() {
                     input.click();
                 } else {
                     // Desktop
-                    data = await localFileSync.load();
-                    await applyImport(data);
+                    const fileName = await localFileSync.selectFileForLoad();
+                    if (fileName) {
+                        data = await localFileSync.load();
+                        await applyImport(data);
+                        localStorage.setItem('sync_filename', fileName);
+                        document.getElementById('sync-filename').textContent = fileName;
+                    }
                 }
             } catch (e) {
-                uiService.alert("Erro ao carregar ficheiro: " + e.message, "Erro ❌");
+                uiService.alert("Erro ao receber dados: " + e.message, "Erro ❌");
             }
         }
     };

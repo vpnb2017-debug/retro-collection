@@ -6,7 +6,26 @@
 let fileHandle = null;
 
 export const localFileSync = {
-    async selectFile() {
+    async selectFileForSave() {
+        if (!window.showSaveFilePicker) return null;
+        try {
+            const handle = await window.showSaveFilePicker({
+                suggestedName: 'retro_collection.json',
+                types: [{
+                    description: 'RetroCollection Database (JSON)',
+                    accept: { 'application/json': ['.json'] },
+                }]
+            });
+            fileHandle = handle;
+            return handle.name;
+        } catch (err) {
+            console.error(err);
+            return null;
+        }
+    },
+
+    async selectFileForLoad() {
+        if (!window.showOpenFilePicker) return null;
         try {
             const [handle] = await window.showOpenFilePicker({
                 types: [{
