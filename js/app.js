@@ -2,7 +2,7 @@ import { dbService } from './services/db.js';
 import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js';
 import { coverSearchService } from './services/coverSearch.js';
 import WebuyService from './services/webuyService.js';
-import { localFileSync } from './services/localFileSync.js?v=43';
+import { localFileSync } from './services/localFileSync.js?v=44';
 
 // Global Exposure
 window.navigate = navigate;
@@ -126,7 +126,7 @@ async function renderDashboard() {
         const ownedTotal = ownedGames.length + ownedConsoles.length;
         const wishlistTotal = games.filter(g => g.isWishlist).length + consoles.filter(c => c.isWishlist).length;
 
-        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v43</span></h2>`;
+        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v44</span></h2>`;
 
         scrollEl.innerHTML = `
             <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap:12px; margin-top:5px;">
@@ -154,7 +154,18 @@ async function renderDashboard() {
                 </div>
             </div>
             
-            <div style="margin-top:20px; display:flex; gap:10px;">
+            <div style="margin-top:15px;">
+                <label style="display:block; font-size:0.75rem; color:var(--accent-color); margin-bottom:5px; font-weight:800; text-transform:uppercase;">Notas</label>
+                <textarea id="modal-notes" placeholder="Apontamentos, estado do item, etc..." style="width:100%; background:#1e1e24; border:1px solid #444; color:white; padding:12px; border-radius:12px; font-size:0.9rem; min-height:80px; font-family:inherit;">${item.notes || ''}</textarea>
+            </div>
+
+            <div style="margin-top:20px; display:flex; align-items:center; gap:10px; background:rgba(255,159,10,0.05); padding:15px; border-radius:14px; border:1px solid rgba(255,159,10,0.1);">
+                <input type="checkbox" id="modal-validated" ${item.isValidated ? 'checked' : ''} style="width:20px; height:20px; accent-color:var(--accent-color); cursor:pointer;">
+                <label for="modal-validated" style="font-size:0.9rem; font-weight:600; cursor:pointer;">Validado</label>
+                <span id="validation-date-display" style="font-size:0.8rem; opacity:0.7; margin-left:auto; color:var(--accent-color); font-weight:800;">${item.isValidated ? (item.validatedDate || '') : ''}</span>
+            </div>
+
+            <div style="margin-top:25px; display:flex; gap:10px;">
                 <button onclick="navigate('nav-sync')" style="flex:1; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); padding:14px; border-radius:14px; color:white; font-size:0.85rem; cursor:pointer; font-weight:600;">Definições Cloud ☁️</button>
                 <button onclick="navigate('nav-platforms')" style="flex:1; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); padding:14px; border-radius:14px; color:white; font-size:0.85rem; cursor:pointer; font-weight:600;">Consolas 🕹️</button>
             </div>
@@ -340,7 +351,22 @@ async function searchCover() {
             <div onclick="selectCover('${r.image}')" style="aspect-ratio:3/4; background:#000 url(${r.image}) center/contain no-repeat; border-radius:8px; cursor:pointer; border:1px solid #333;"></div>
         `).join('');
 
-        modal.style.display = 'block';
+        // Validated toggle logic
+        const checkValidated = document.getElementById('modal-validated');
+        const dateDisplay = document.getElementById('validation-date-display');
+        checkValidated.addEventListener('change', (e) => {
+            if (e.target.checked) {
+                const now = new Date();
+                const day = String(now.getDate()).padStart(2, '0');
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                const year = now.getFullYear();
+                dateDisplay.innerText = `${day}/${month}/${year}`;
+            } else {
+                dateDisplay.innerText = '';
+            }
+        });
+
+        modal.style.display = 'flex';
     } catch (err) { logger("SEARCH ERR: " + err.message); }
 }
 
@@ -422,6 +448,12 @@ async function renderPlatformManager() {
     document.getElementById('btn-add-plat').onclick = async () => {
         const name = document.getElementById('plat-new-name').value;
         if (!name) return;
+        item.price = document.getElementById('modal-price').value;
+        item.notes = document.getElementById('modal-notes').value;
+        item.isValidated = document.getElementById('modal-validated').checked;
+        item.validatedDate = document.getElementById('validation-date-display').innerText;
+
+        if (!item.id) item.id = Date.now();
         await addPlatform({ name });
         renderPlatformManager();
     };
@@ -453,7 +485,7 @@ async function renderSyncView() {
             <div style="background:rgba(255,100,100,0.05); padding:24px; border-radius:20px; border:1px solid rgba(255,0,0,0.2); margin-top:20px;">
                  <h3 style="margin-bottom:10px; font-size:1rem; color:#ff4d4d;">Zona de Perigo 🚨</h3>
                  <p style="margin-bottom:20px; font-size:0.8rem; opacity:0.65; line-height:1.4;">Se a App estiver a falhar ou se quiseres limpar tudo para começar do zero.</p>
-                 <button id="btn-force-update" style="width:100%; background:#ff4d4d; color:white; border:none; padding:14px; border-radius:14px; font-weight:800; cursor:pointer;">WIPE TOTAL DA APP (v43)</button>
+                 <button id="btn-force-update" style="width:100%; background:#ff4d4d; color:white; border:none; padding:14px; border-radius:14px; font-weight:800; cursor:pointer;">WIPE TOTAL DA APP (v44)</button>
             </div>
         </div>
     `;
@@ -476,7 +508,7 @@ async function exportCollection() {
         const platforms = await dbService.getAll('platforms');
 
         const data = {
-            version: "v43",
+            version: "v44",
             timestamp: new Date().toISOString(),
             games,
             consoles,
@@ -547,7 +579,7 @@ async function importCollection() {
 
 /** INITIALIZATION **/
 async function init() {
-    logger("Iniciando RetroCollection v43...");
+    logger("Iniciando RetroCollection v44...");
     try {
         await dbService.open();
         logger("DB Conectado.");
