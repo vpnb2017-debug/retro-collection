@@ -5,28 +5,27 @@
     <meta charset="UTF-8">
     <meta name="viewport"
         content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>RetroCollection v29 🎮</title>
+    <title>RetroCollection v30 🎮</title>
 
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1e1e24">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
-    <!-- Styles -->
-    <link rel="stylesheet" href="css/variables.css">
-
+    <!-- Critical Styles Inlined for Zer-Cache Failure -->
     <style>
-        /* v29 FINAL STAND - INLINED FOR ZERO CACHE ISSUES */
         :root {
             --h-header: 60px;
             --h-bottom: 60px;
+            --accent-color: #ff9f0a;
+            --bg-app: #1e1e24;
         }
 
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Outfit', sans-serif;
+            font-family: 'Outfit', -apple-system, sans-serif;
         }
 
         html,
@@ -34,13 +33,12 @@
             height: 100vh;
             width: 100vw;
             overflow: hidden !important;
-            background: #1e1e24;
+            background: var(--bg-app);
             color: white;
             position: fixed;
             inset: 0;
         }
 
-        /* MASTER GRID LAYOUT */
         #app {
             display: grid;
             grid-template-rows: var(--h-header) 1fr;
@@ -51,39 +49,37 @@
 
         .main-header {
             background: #1e1e24;
-            border-bottom: 2px solid #ff9f0a;
+            border-bottom: 2px solid var(--accent-color);
             display: flex;
             align-items: center;
             justify-content: space-between;
             padding: 0 20px;
-            z-index: 1000;
+            z-index: 2000;
         }
 
         #main-content {
             display: grid;
             grid-template-rows: auto auto 1fr;
-            /* Title, Filters, List */
             overflow: hidden;
-            background: #1e1e24;
+            background: var(--bg-app);
+            position: relative;
         }
 
-        /* These containers are inside #main-content and are NOT scrollable */
         .v29-title-zone {
-            padding: 10px 20px;
-            background: #1e1e24;
+            padding: 15px 20px 5px 20px;
+            background: var(--bg-app);
         }
 
         .v29-filter-zone {
-            padding: 0 20px 10px 20px;
-            background: #1e1e24;
+            padding: 5px 20px 10px 20px;
+            background: var(--bg-app);
         }
 
-        /* THIS IS THE ONLY SCROLLABLE AREA IN THE ENTIRE APP */
         .v29-scroll-zone {
             overflow-y: auto !important;
-            padding: 10px 20px 80px 20px;
+            padding: 10px 20px 100px 20px;
             -webkit-overflow-scrolling: touch;
-            background: #1e1e24;
+            background: var(--bg-app);
         }
 
         @media (max-width: 600px) {
@@ -93,10 +89,16 @@
 
             .bottom-nav {
                 display: flex !important;
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                height: var(--h-bottom);
                 background: #1e1e24;
                 border-top: 1px solid rgba(255, 159, 10, 0.2);
                 align-items: center;
                 justify-content: space-around;
+                z-index: 2000;
             }
 
             .desktop-nav {
@@ -105,8 +107,10 @@
         }
 
         .logo h1 {
-            font-size: 1.2rem;
-            color: #ff9f0a;
+            font-size: 1.25rem;
+            color: var(--accent-color);
+            font-weight: 800;
+            letter-spacing: -0.5px;
         }
 
         .desktop-nav button {
@@ -114,58 +118,69 @@
             border: none;
             color: #ffc978;
             font-weight: 600;
-            margin-left: 15px;
+            margin-left: 20px;
             cursor: pointer;
+            font-size: 0.9rem;
         }
 
         .desktop-nav button.active {
             color: white;
-            border-bottom: 2px solid #ff9f0a;
+            border-bottom: 2px solid var(--accent-color);
         }
 
         .btn-new {
             background: linear-gradient(135deg, #ff9f0a 0%, #ff7950 100%);
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-weight: 700;
-            cursor: pointer;
+            color: white !important;
+            padding: 8px 18px !important;
+            border-radius: 20px !important;
         }
 
-        /* Custom Scrollbar */
-        .v29-scroll-zone::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        .v29-scroll-zone::-webkit-scrollbar-thumb {
-            background: #ff9f0a;
-            border-radius: 4px;
+        /* Error Overlay */
+        #error-display {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 9999;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            text-align: center;
         }
     </style>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
 </head>
 
 <body>
+    <div id="error-display">
+        <h2 style="color:#ff4d4d; margin-bottom: 1rem;">Ocorreu um Erro ☠️</h2>
+        <div id="error-content"
+            style="font-family: monospace; background: #000; padding: 1rem; border-radius: 8px; width: 100%; max-width: 600px; overflow: auto; margin-bottom: 1rem; text-align: left;">
+        </div>
+        <button onclick="location.reload()"
+            style="padding: 10px 20px; border-radius: 8px; border: none; background: #ff9f0a; color: white; font-weight: bold; cursor: pointer;">Recarregar
+            App</button>
+    </div>
+
     <div id="app">
         <header class="main-header">
             <div class="logo">
                 <h1>RetroCollection</h1>
             </div>
             <nav class="desktop-nav">
-                <button onclick="navigate('nav-dashboard')">Dashboard</button>
+                <button onclick="navigate('nav-dashboard')">Resumo</button>
                 <button onclick="navigate('nav-collection')">Coleção</button>
-                <button onclick="navigate('nav-platforms')">Plataformas</button>
+                <button onclick="navigate('nav-platforms')">Consolas</button>
                 <button onclick="navigate('nav-sync')">Nuvem</button>
                 <button class="btn-new" onclick="openAddModal()">+ Novo</button>
             </nav>
         </header>
 
         <main id="main-content">
-            <!-- Dynamically injected by app.js -->
             <div class="v29-title-zone">
                 <h2>A carregar...</h2>
             </div>
@@ -174,34 +189,49 @@
         </main>
 
         <nav class="bottom-nav" style="display:none;">
-            <button onclick="navigate('nav-dashboard')">🏠</button>
-            <button onclick="navigate('nav-collection')">🎮</button>
-            <button onclick="navigate('nav-platforms')">🕹️</button>
-            <button onclick="navigate('nav-sync')">☁️</button>
+            <button onclick="navigate('nav-dashboard')"
+                style="background:none; border:none; font-size:1.5rem;">🏠</button>
+            <button onclick="navigate('nav-collection')"
+                style="background:none; border:none; font-size:1.5rem;">🎮</button>
+            <button onclick="navigate('nav-platforms')"
+                style="background:none; border:none; font-size:1.5rem;">🕹️</button>
+            <button onclick="navigate('nav-sync')" style="background:none; border:none; font-size:1.5rem;">☁️</button>
         </nav>
     </div>
 
-    <!-- External Libs -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 
     <script>
-        // CACHE NUCLEAR WIPE v29
-        if (localStorage.getItem('v29_wipe') !== 'done') {
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.getRegistrations().then(rs => rs.forEach(r => r.unregister()));
+        // GLOBAL ERROR HANDLER
+        window.onerror = function (msg, url, line, col, error) {
+            const display = document.getElementById('error-display');
+            const content = document.getElementById('error-content');
+            if (display && content) {
+                display.style.display = 'flex';
+                content.innerText = `${msg}\nAt: ${url}:${line}:${col}\n\nStack: ${error ? error.stack : 'N/A'}`;
             }
-            caches.keys().then(ks => ks.forEach(k => caches.delete(k)));
+            return false;
+        };
+
+        // v30 NUCLEAR WIPE
+        if (localStorage.getItem('app_v') !== '30') {
             localStorage.clear();
-            localStorage.setItem('v29_wipe', 'done');
-            setTimeout(() => location.reload(), 500);
+            localStorage.setItem('app_v', '30');
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations().then(rs => {
+                    Promise.all(rs.map(r => r.unregister())).then(() => location.reload());
+                });
+            } else {
+                location.reload();
+            }
         }
     </script>
 
-    <script type="module" src="js/app.js?v=29"></script>
+    <script type="module" src="js/app.js?v=30"></script>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js?v=29');
+                navigator.serviceWorker.register('sw.js?v=30');
             });
         }
     </script>
