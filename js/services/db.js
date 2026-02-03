@@ -18,7 +18,19 @@ export const dbService = {
 
             request.onsuccess = (event) => {
                 this.db = event.target.result;
+
+                // Handle version changes from other tabs
+                this.db.onversionchange = () => {
+                    this.db.close();
+                    alert("A base de dados foi renovada noutra aba. Por favor, recarregue esta página.");
+                    location.reload();
+                };
+
                 resolve(this.db);
+            };
+
+            request.onblocked = () => {
+                alert("Atualização bloqueada! Por favor, feche todas as outras abas desta App e tente novamente.");
             };
 
             request.onupgradeneeded = (event) => {

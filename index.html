@@ -5,14 +5,14 @@
     <meta charset="UTF-8">
     <meta name="viewport"
         content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>RetroCollection v30 🎮</title>
+    <title>RetroCollection v31 🎮</title>
 
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1e1e24">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
-    <!-- Critical Styles Inlined for Zer-Cache Failure -->
+    <!-- Critical Styles Inlined -->
     <style>
         :root {
             --h-header: 60px;
@@ -139,7 +139,7 @@
         #error-display {
             position: fixed;
             inset: 0;
-            background: rgba(0, 0, 0, 0.9);
+            background: rgba(0, 0, 0, 0.95);
             z-index: 9999;
             display: none;
             flex-direction: column;
@@ -147,6 +147,25 @@
             justify-content: center;
             padding: 2rem;
             text-align: center;
+        }
+
+        /* Loading Diagnostics */
+        #loading-log {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 0.7rem;
+            color: #aaa;
+            z-index: 9000;
+            border: 1px solid #333;
+            text-align: left;
+            max-height: 100px;
+            overflow-y: auto;
+            display: none;
         }
     </style>
 
@@ -159,12 +178,14 @@
     <div id="error-display">
         <h2 style="color:#ff4d4d; margin-bottom: 1rem;">Ocorreu um Erro ☠️</h2>
         <div id="error-content"
-            style="font-family: monospace; background: #000; padding: 1rem; border-radius: 8px; width: 100%; max-width: 600px; overflow: auto; margin-bottom: 1rem; text-align: left;">
+            style="font-family: monospace; background: #000; padding: 1rem; border-radius: 8px; width: 100%; max-width: 600px; overflow: auto; margin-bottom: 1rem; text-align: left; font-size: 0.8rem;">
         </div>
         <button onclick="location.reload()"
-            style="padding: 10px 20px; border-radius: 8px; border: none; background: #ff9f0a; color: white; font-weight: bold; cursor: pointer;">Recarregar
-            App</button>
+            style="padding: 10px 20px; border-radius: 8px; border: none; background: #ff9f0a; color: white; font-weight: bold; cursor: pointer;">Tentar
+            Novamente</button>
     </div>
+
+    <div id="loading-log"></div>
 
     <div id="app">
         <header class="main-header">
@@ -202,36 +223,65 @@
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 
     <script>
+        // LOGGING TOOL
+        function log(msg) {
+            const logEl = document.getElementById('loading-log');
+            if (logEl) {
+                logEl.style.display = 'block';
+                const now = new Date().toLocaleTimeString();
+                logEl.innerHTML += `<div>[${now}] ${msg}</div>`;
+                logEl.scrollTop = logEl.scrollHeight;
+            }
+            console.log("APP LOG:", msg);
+        }
+
         // GLOBAL ERROR HANDLER
         window.onerror = function (msg, url, line, col, error) {
             const display = document.getElementById('error-display');
             const content = document.getElementById('error-content');
             if (display && content) {
                 display.style.display = 'flex';
-                content.innerText = `${msg}\nAt: ${url}:${line}:${col}\n\nStack: ${error ? error.stack : 'N/A'}`;
+                content.innerText = `${msg}\nLocal: ${line}:${col}\nFicheiro: ${url}\n\nStack: ${error ? error.stack : 'N/A'}`;
             }
             return false;
         };
 
-        // v30 NUCLEAR WIPE
-        if (localStorage.getItem('app_v') !== '30') {
+        log("Arranque v31 iniciado...");
+
+        // v31 RESILIENT WIPE
+        if (localStorage.getItem('app_v') !== '31') {
+            log("Limpando cache v30...");
             localStorage.clear();
-            localStorage.setItem('app_v', '30');
+            localStorage.setItem('app_v', '31');
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.getRegistrations().then(rs => {
-                    Promise.all(rs.map(r => r.unregister())).then(() => location.reload());
+                    Promise.all(rs.map(r => r.unregister())).then(() => {
+                        log("Cache limpo. A recarregar...");
+                        location.reload();
+                    });
                 });
             } else {
                 location.reload();
             }
         }
+
+        // HANG DETECTION
+        setTimeout(() => {
+            const title = document.querySelector('.v29-title-zone h2');
+            if (title && title.innerText.includes('A carregar')) {
+                log("Hanging detetado! Tentando bypass...");
+                location.href = location.href.split('?')[0] + '?force_v31=' + Date.now();
+            }
+        }, 8000);
     </script>
 
-    <script type="module" src="js/app.js?v=30"></script>
+    <script type="module" src="js/app.js?v=31"></script>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js?v=30');
+                navigator.serviceWorker.register('sw.js?v=31')
+                    .then(() => log("Service Worker Registado."))
+                    .catch(e => log("Falha no SW: " + e.message));
             });
         }
     </script>

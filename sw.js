@@ -1,9 +1,8 @@
-const CACHE_NAME = 'retro-collection-v30';
+const CACHE_NAME = 'retro-collection-v31-resilient';
 const ASSETS = [
     './',
     './index.html',
     './css/variables.css',
-    './css/style.css',
     './js/app.js',
     './js/services/db.js',
     './js/services/platforms.js',
@@ -17,7 +16,20 @@ const ASSETS = [
 
 self.addEventListener('install', (event) => {
     event.waitUntil(
-        caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))
+        caches.open(CACHE_NAME).then((cache) => {
+            console.log('SW: Pre-caching v31');
+            return cache.addAll(ASSETS);
+        })
+    );
+});
+
+self.addEventListener('activate', (event) => {
+    event.waitUntil(
+        caches.keys().then((keys) => {
+            return Promise.all(
+                keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))
+            );
+        })
     );
 });
 

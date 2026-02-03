@@ -2,11 +2,14 @@ import { dbService } from './services/db.js';
 import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js';
 import { coverSearchService } from './services/coverSearch.js';
 import WebuyService from './services/webuyService.js';
-import { localFileSync } from './services/localFileSync.js?v=30';
+import { localFileSync } from './services/localFileSync.js?v=31';
 
 // Global Exposure for HTML onclick usage
 window.navigate = navigate;
 window.openAddModal = openAddModal;
+
+// Utility for logging in UI (defined in index.html)
+const logger = (msg) => { if (window.log) window.log(msg); else console.log(msg); };
 
 // Utility to get Grid Zones safely
 function getZones() {
@@ -29,7 +32,6 @@ const uiService = {
         return new Promise((resolve) => {
             const overlay = document.createElement('div');
             overlay.className = 'modal-overlay';
-            // Simple inline styles to avoid CSS issues
             Object.assign(overlay.style, {
                 position: 'fixed', inset: '0', background: 'rgba(0,0,0,0.85)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: '5000',
@@ -79,7 +81,7 @@ const state = {
 };
 
 async function navigate(id, params = null) {
-    console.log("Navigating to:", id);
+    logger("Navegando: " + id);
     const { titleEl, filterEl, scrollEl } = getZones();
 
     // Clear zones
@@ -90,16 +92,21 @@ async function navigate(id, params = null) {
     // Update Nav UI
     document.querySelectorAll('.desktop-nav button, .bottom-nav button').forEach(b => b.classList.remove('active'));
 
-    if (id === 'nav-dashboard') {
-        renderDashboard();
-    } else if (id === 'nav-collection') {
-        renderCollection();
-    } else if (id === 'nav-platforms') {
-        renderPlatformManager();
-    } else if (id === 'nav-sync') {
-        renderSyncView();
-    } else if (id === 'nav-add') {
-        renderAddForm(params);
+    try {
+        if (id === 'nav-dashboard') {
+            await renderDashboard();
+        } else if (id === 'nav-collection') {
+            await renderCollection();
+        } else if (id === 'nav-platforms') {
+            await renderPlatformManager();
+        } else if (id === 'nav-sync') {
+            await renderSyncView();
+        } else if (id === 'nav-add') {
+            await renderAddForm(params);
+        }
+    } catch (e) {
+        logger("ERRO NAV: " + e.message);
+        throw e;
     }
 }
 
@@ -108,17 +115,17 @@ async function renderDashboard() {
     if (!titleEl || !scrollEl) return;
 
     try {
+        logger("Carregando Dashboard...");
         const games = await dbService.getAll('games');
         const consoles = await dbService.getAll('consoles');
-        const platformOptions = await getPlatformOptions();
 
         const total = games.length + consoles.length;
 
         titleEl.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:center;">
-                <h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:10px;">v30</span></h2>
+                <h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:10px;">v31</span></h2>
             </div>
-            <p style="opacity:0.7; font-size:0.85rem;">Pronto para catalogar o próximo?</p>
+            <p style="opacity:0.7; font-size:0.85rem;">Catalogar é um vício saudável.</p>
         `;
 
         scrollEl.innerHTML = `
@@ -129,24 +136,24 @@ async function renderDashboard() {
                 </div>
                 <div onclick="navigate('nav-sync')" style="background:rgba(255,255,255,0.05); padding:20px; border-radius:15px; border:1px solid rgba(255,255,255,0.1); cursor:pointer;">
                     <h3 style="font-size:0.9rem; opacity:0.8;">Nuvem ☁️</h3>
-                    <p style="font-size:1.5rem; font-weight:800;">Ativa</p>
+                    <p style="font-size:1.5rem; font-weight:800;">Status</p>
                 </div>
             </div>
 
             <div style="margin-top:25px; background:rgba(255,255,255,0.03); padding:20px; border-radius:15px; border:1px solid rgba(255,255,255,0.05);">
-                <h3 style="margin-bottom:15px; font-size:1rem; color:#ffc978;">📊 Por Consola</h3>
+                <h3 style="margin-bottom:15px; font-size:1rem; color:#ffc978;">📊 Stats por Consola</h3>
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
                     ${Object.entries(groupBy(games.concat(consoles), 'platform')).map(([p, items]) => `
                         <div style="display:flex; justify-content:space-between; font-size:0.8rem; background:rgba(0,0,0,0.2); padding:8px 12px; border-radius:8px;">
                             <span style="opacity:0.8">${p}</span>
                             <span style="font-weight:800; color:#ff9f0a">${items.length}</span>
                         </div>
-                    `).join('') || '<p>Ainda sem dados...</p>'}
+                    `).join('') || '<p>Ainda sem dados.</p>'}
                 </div>
             </div>
         `;
     } catch (err) {
-        console.error("Dashboard Render Failed:", err);
+        logger("ERRO DASH: " + err.message);
     }
 }
 
@@ -161,7 +168,7 @@ async function renderGenericGrid(viewTitle, itemsFilter) {
             return `<option value="${p.name}" ${selected}>${p.name}</option>`;
         }).join('');
 
-        titleEl.innerHTML = `<h2>${viewTitle} <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px; border-radius:3px;">FIXED v30</span></h2>`;
+        titleEl.innerHTML = `<h2>${viewTitle} <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px; border-radius:3px;">RESILIENT v31</span></h2>`;
 
         filterEl.innerHTML = `
             <div style="display:flex; gap:8px; flex-wrap:wrap; background:rgba(255,159,10,0.05); padding:10px; border-radius:10px; border:1px solid rgba(255,159,10,0.2);">
@@ -177,8 +184,6 @@ async function renderGenericGrid(viewTitle, itemsFilter) {
                 <input id="f-search" type="text" placeholder="🔍 Procurar..." value="${state.filterSearch}" style="flex:2; min-width:140px; background:#1e1e24; border:1px solid #444; color:white; padding:8px; border-radius:6px;">
             </div>
         `;
-
-        scrollEl.innerHTML = `<p style="text-align:center; padding-top:2rem;">A carregar lista...</p>`;
 
         const games = await dbService.getAll('games');
         const consoles = await dbService.getAll('consoles');
@@ -201,17 +206,17 @@ async function renderGenericGrid(viewTitle, itemsFilter) {
             }).sort((a, b) => a.title.localeCompare(b.title));
 
             scrollEl.innerHTML = `
-                <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap:15px;">
+                <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap:12px;">
                     ${filtered.map(item => `
-                        <div onclick="navigate('nav-add', ${JSON.stringify(item).replace(/"/g, '&quot;')})" style="background:rgba(255,255,255,0.05); border-radius:12px; overflow:hidden; border:1px solid rgba(255,255,255,0.1); display:flex; flex-direction:column; height:240px; cursor:pointer;">
-                            <div style="height:160px; background: #000 url(${item.image || ''}) center/contain no-repeat;"></div>
-                            <div style="padding:10px; flex:1; display:flex; flex-direction:column; justify-content:space-between;">
-                                <h4 style="font-size:0.85rem; line-height:1.2; overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;">${item.title}</h4>
-                                <span style="font-size:0.7rem; color:#ffc978; font-weight:700;">${item.platform || 'Geral'}</span>
+                        <div onclick="navigate('nav-add', ${JSON.stringify(item).replace(/"/g, '&quot;')})" style="background:rgba(255,255,255,0.05); border-radius:10px; overflow:hidden; border:1px solid rgba(255,255,255,0.08); display:flex; flex-direction:column; height:200px; cursor:pointer;">
+                            <div style="height:130px; background: #000 url(${item.image || ''}) center/contain no-repeat;"></div>
+                            <div style="padding:8px; flex:1; display:flex; flex-direction:column; justify-content:space-between;">
+                                <h4 style="font-size:0.8rem; line-height:1.2; overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;">${item.title}</h4>
+                                <span style="font-size:0.65rem; color:#ffc978; font-weight:700;">${item.platform || 'Geral'}</span>
                             </div>
                         </div>
                     `).join('')}
-                    ${filtered.length === 0 ? '<p style="grid-column:1/-1; text-align:center; padding:2rem; opacity:0.5;">Sem resultados.</p>' : ''}
+                    ${filtered.length === 0 ? '<p style="grid-column:1/-1; text-align:center; padding:2rem; opacity:0.5;">Filtros sem resultados.</p>' : ''}
                 </div>
             `;
         };
@@ -222,7 +227,7 @@ async function renderGenericGrid(viewTitle, itemsFilter) {
 
         updateUI();
     } catch (err) {
-        console.error("Grid Render Failed:", err);
+        logger("ERRO GRID: " + err.message);
     }
 }
 
@@ -238,14 +243,12 @@ function groupBy(arr, key) {
     }, {});
 }
 
-// Function to handle NEW items
 async function openAddModal() { navigate('nav-add'); }
 
-// Placeholder for other views to avoid crashes in v30 overhaul
 async function renderPlatformManager() {
     const { titleEl, scrollEl } = getZones();
-    titleEl.innerHTML = `<h2>Consolas</h2>`;
-    scrollEl.innerHTML = `<p style="padding:2rem;">Gestor de Plataformas em manutenção (v30).</p>`;
+    titleEl.innerHTML = `<h2>Plataformas</h2>`;
+    scrollEl.innerHTML = `<p style="opacity:0.6; padding:1rem;">Em breve na v31...</p>`;
 }
 
 async function renderSyncView() {
@@ -253,12 +256,12 @@ async function renderSyncView() {
     titleEl.innerHTML = `<h2>Nuvem ☁️</h2>`;
     scrollEl.innerHTML = `
         <div style="background:rgba(255,255,255,0.03); padding:20px; border-radius:15px; border:1px solid rgba(255,159,10,0.2); text-align:center;">
-             <p style="margin-bottom:20px;">Forçar atualização para garantir a estabilidade da v30.</p>
-             <button id="btn-force-update" style="background:#ff4d4d; color:white; border:none; padding:12px 24px; border-radius:12px; font-weight:700; cursor:pointer;">🚨 FORÇAR RESET TOTAL (v30)</button>
+             <p style="margin-bottom:20px; font-size:0.9rem;">Se o problema persistir, o reset é a única via.</p>
+             <button id="btn-force-update" style="background:#ff4d4d; color:white; border:none; padding:12px 24px; border-radius:12px; font-weight:700; cursor:pointer;">🚨 FORÇAR RESET TOTAL (v31)</button>
         </div>
     `;
     document.getElementById('btn-force-update').onclick = async () => {
-        if (confirm("Isto apagará cache e dados locais (backup antes!). Continuar?")) {
+        if (confirm("Isto apagará cache e dados locais! Continuar?")) {
             localStorage.clear();
             if ('serviceWorker' in navigator) {
                 const rs = await navigator.serviceWorker.getRegistrations();
@@ -271,24 +274,26 @@ async function renderSyncView() {
 
 async function renderAddForm(item) {
     const { titleEl, scrollEl } = getZones();
-    titleEl.innerHTML = `<h2>${item ? 'Editar Item' : 'Novo Item'}</h2>`;
-    scrollEl.innerHTML = `
-        <div style="display:flex; flex-direction:column; gap:15px; padding-bottom:50px;">
-            <p>Formulário simplificado v30...</p>
-            <input id="add-title" type="text" placeholder="Título" value="${item ? item.title : ''}" style="padding:12px; background:#2b2b36; border:1px solid #444; color:white; border-radius:8px;">
-            <button class="btn-primary" style="padding:15px; background:#ff9f0a; border:none; color:white; font-weight:700; border-radius:12px;" onclick="navigate('nav-dashboard')">Guardar (Simulação v30)</button>
-        </div>
-    `;
+    titleEl.innerHTML = `<h2>${item ? 'Editar' : 'Novo'}</h2>`;
+    scrollEl.innerHTML = `<p style="padding:1rem;">Formulário v31 em implementação.</p><button onclick="navigate('nav-dashboard')">Voltar</button>`;
 }
 
-// Init Function
+// Init Function with Timeout
 async function init() {
-    console.log("App Init v30...");
+    logger("Iniciando DB...");
+    const dbPromise = dbService.open();
+    const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("BD demorou muito a responder.")), 5000));
+
     try {
-        await dbService.open();
-        navigate('nav-dashboard');
+        await Promise.race([dbPromise, timeoutPromise]);
+        logger("DB Aberto com sucesso.");
+        await navigate('nav-dashboard');
     } catch (err) {
-        console.error("Init Failure:", err);
+        logger("FALHA CRÍTICA: " + err.message);
+        const { scrollEl } = getZones();
+        if (scrollEl) {
+            scrollEl.innerHTML = `<div style="padding:2rem; text-align:center; color:#ff4d4d;"><h3>Erro de Inicialização</h3><p>${err.message}</p></div>`;
+        }
     }
 }
 
