@@ -2,7 +2,7 @@ import { dbService } from './services/db.js';
 import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js';
 import { coverSearchService } from './services/coverSearch.js';
 import WebuyService from './services/webuyService.js';
-import { localFileSync } from './services/localFileSync.js?v=49';
+import { localFileSync } from './services/localFileSync.js?v=50';
 
 // Global Exposure
 window.navigate = navigate;
@@ -126,7 +126,7 @@ async function renderDashboard() {
         const ownedTotal = ownedGames.length + ownedConsoles.length;
         const wishlistTotal = games.filter(g => g.isWishlist).length + consoles.filter(c => c.isWishlist).length;
 
-        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v49</span></h2>`;
+        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v50</span></h2>`;
 
         const platData = await getPlatformOptions();
 
@@ -468,6 +468,7 @@ async function renderPlatformManager() {
                     <input id="plat-new-logo" type="text" placeholder="URL do Logo" style="flex:1; padding:12px; background:#1e1e24; border:1px solid #444; color:white; border-radius:12px; font-size:0.9rem;">
                     <button id="btn-add-plat" style="background:#ff9f0a; border:none; color:white; padding:0 25px; border-radius:12px; font-weight:800; font-size:1.2rem; cursor:pointer;">+</button>
                 </div>
+                <button onclick="window.syncPlatLogos()" style="width:100%; border:1px solid #ff9f0a; background:rgba(255,159,10,0.1); color:#ff9f0a; padding:10px; border-radius:10px; font-weight:700; font-size:0.8rem; cursor:pointer; margin-top:5px;">Sincronizar Logos 🤖</button>
             </div>
             <div style="display:flex; flex-direction:column; gap:10px;">
                 ${platforms.map(p => `
@@ -489,6 +490,13 @@ async function renderPlatformManager() {
         if (!name) return;
         await addPlatform({ name, logo });
         renderPlatformManager();
+    };
+
+    window.syncPlatLogos = async () => {
+        logger("Sincronizando logos...");
+        await autoSyncLogos();
+        renderPlatformManager();
+        uiService.alert("Logos sincronizados!", "Sucesso 🤖");
     };
 
     window.delPlatform = async (id) => {
@@ -518,7 +526,7 @@ async function renderSyncView() {
             <div style="background:rgba(255,100,100,0.05); padding:24px; border-radius:20px; border:1px solid rgba(255,0,0,0.2); margin-top:20px;">
                  <h3 style="margin-bottom:10px; font-size:1rem; color:#ff4d4d;">Zona de Perigo 🚨</h3>
                  <p style="margin-bottom:20px; font-size:0.8rem; opacity:0.65; line-height:1.4;">Se a App estiver a falhar ou se quiseres limpar tudo para começar do zero.</p>
-                 <button id="btn-force-update" style="width:100%; background:#ff4d4d; color:white; border:none; padding:14px; border-radius:14px; font-weight:800; cursor:pointer;">WIPE TOTAL DA APP (v49)</button>
+                 <button id="btn-force-update" style="width:100%; background:#ff4d4d; color:white; border:none; padding:14px; border-radius:14px; font-weight:800; cursor:pointer;">WIPE TOTAL DA APP (v50)</button>
             </div>
         </div>
     `;
@@ -541,7 +549,7 @@ async function exportCollection() {
         const platforms = await dbService.getAll('platforms');
 
         const data = {
-            version: "v49",
+            version: "v50",
             timestamp: new Date().toISOString(),
             games,
             consoles,
@@ -612,10 +620,15 @@ async function importCollection() {
 
 /** INITIALIZATION **/
 async function init() {
-    logger("Iniciando RetroCollection v49...");
+    logger("Iniciando RetroCollection v50...");
     try {
         await dbService.open();
         logger("DB Conectado.");
+
+        // Auto-Sync Logos once
+        if (localStorage.getItem('app_v') !== '50') {
+            await autoSyncLogos();
+        }
         await navigate('nav-dashboard');
 
         // Hide log after success
@@ -631,6 +644,43 @@ async function init() {
 
     } catch (err) {
         logger("FALHA CRÍTICA: " + err.message);
+    }
+}
+
+async function autoSyncLogos() {
+    const platforms = await getPlatformOptions();
+    const base = 'https://raw.githubusercontent.com/KyleBing/retro-game-console-icons/master/icons/';
+    const map = {
+        'playstation': 'ps.png', 'ps1': 'ps.png', 'psx': 'ps.png',
+        'playstation 2': 'ps2.png', 'ps2': 'ps2.png',
+        'playstation 3': 'ps3.png', 'ps3': 'ps3.png',
+        'playstation 4': 'ps4.png', 'ps4': 'ps4.png',
+        'playstation 5': 'ps5.png', 'ps5': 'ps5.png',
+        'psp': 'psp.png', 'ps vita': 'vita.png', 'psvita': 'vita.png',
+        'nes': 'fc.png', 'nintendo': 'fc.png', 'famicom': 'fc.png',
+        'snes': 'sfc.png', 'super nintendo': 'sfc.png',
+        'n64': 'n64.png', 'nintendo 64': 'n64.png',
+        'gamecube': 'ngc.png', 'ngc': 'ngc.png',
+        'wii': 'wii.png', 'wii u': 'wiiu.png', 'wiiu': 'wiiu.png',
+        'switch': 'switch.png', 'nintendo switch': 'switch.png',
+        'game boy': 'gb.png', 'gb': 'gb.png',
+        'game boy color': 'gbc.png', 'gbc': 'gbc.png',
+        'game boy advance': 'gba.png', 'gba': 'gba.png',
+        'ds': 'ds.png', 'nintendo ds': 'ds.png',
+        '3ds': '3ds.png', 'nintendo 3ds': '3ds.png',
+        'mega drive': 'md.png', 'megadrive': 'md.png', 'genesis': 'md.png',
+        'master system': 'ms.png', 'saturn': 'saturn.png', 'sega saturn': 'saturn.png',
+        'dreamcast': 'dc.png', 'game gear': 'gg.png'
+    };
+
+    for (const p of platforms) {
+        if (!p.logo) {
+            const key = p.name.toLowerCase();
+            if (map[key]) {
+                p.logo = base + map[key];
+                await updatePlatform(p);
+            }
+        }
     }
 }
 
