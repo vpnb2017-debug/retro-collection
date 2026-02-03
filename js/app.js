@@ -2,7 +2,7 @@ import { dbService } from './services/db.js';
 import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js';
 import { coverSearchService } from './services/coverSearch.js';
 import WebuyService from './services/webuyService.js';
-import { localFileSync } from './services/localFileSync.js?v=38';
+import { localFileSync } from './services/localFileSync.js?v=39';
 
 // Global Exposure
 window.navigate = navigate;
@@ -11,7 +11,9 @@ window.saveItem = saveItem;
 window.deleteItem = deleteItem;
 window.searchCover = searchCover;
 window.selectCover = selectCover;
-window.navigateByPlatform = navigateByPlatform; // Added for Dashboard clicks
+window.navigateByPlatform = navigateByPlatform;
+window.exportCollection = exportCollection;
+window.importCollection = importCollection;
 
 // Utility for logging 
 const logger = (msg) => { if (window.log) window.log(msg); else console.log(msg); };
@@ -124,7 +126,7 @@ async function renderDashboard() {
         const ownedTotal = ownedGames.length + ownedConsoles.length;
         const wishlistTotal = games.filter(g => g.isWishlist).length + consoles.filter(c => c.isWishlist).length;
 
-        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v38</span></h2>`;
+        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v39</span></h2>`;
 
         scrollEl.innerHTML = `
             <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:15px; margin-top:5px;">
@@ -440,14 +442,18 @@ async function renderSyncView() {
         <div style="display:flex; flex-direction:column; gap:18px; max-width:600px; margin:0 auto;">
             <div style="background:rgba(255,159,10,0.05); padding:24px; border-radius:20px; border:1px solid rgba(255,159,10,0.2);">
                  <h3 style="margin-bottom:10px; font-size:1rem; color:#ff9f0a;">Sync Cloud ☁️</h3>
-                 <p style="margin-bottom:20px; font-size:0.85rem; opacity:0.7; line-height:1.4;">A tua coleção está a ser guardada localmente e simulada na Cloud.</p>
-                 <button class="btn-primary" style="width:100%; border:none; padding:14px; border-radius:14px; background:#ff9f0a; color:white; font-weight:800; cursor:pointer;">Forçar Sincronização Now</button>
+                 <p style="margin-bottom:20px; font-size:0.85rem; opacity:0.7; line-height:1.4;">Usa estes botões para mover a tua coleção entre o PC e o Telemóvel.</p>
+                 
+                 <div style="display:flex; flex-direction:column; gap:10px;">
+                    <button onclick="exportCollection()" style="width:100%; border:none; padding:16px; border-radius:14px; background:#ff9f0a; color:white; font-weight:800; cursor:pointer; font-size:1rem;">📤 Exportar para Nuvem/Ficheiro</button>
+                    <button onclick="importCollection()" style="width:100%; border:none; padding:16px; border-radius:14px; background:rgba(255,159,10,0.1); border:2px solid #ff9f0a; color:#ff9f0a; font-weight:800; cursor:pointer; font-size:1rem;">📥 Importar da Nuvem/Ficheiro</button>
+                 </div>
             </div>
             
             <div style="background:rgba(255,100,100,0.05); padding:24px; border-radius:20px; border:1px solid rgba(255,0,0,0.2); margin-top:20px;">
                  <h3 style="margin-bottom:10px; font-size:1rem; color:#ff4d4d;">Zona de Perigo 🚨</h3>
                  <p style="margin-bottom:20px; font-size:0.8rem; opacity:0.65; line-height:1.4;">Se a App estiver a falhar ou se quiseres limpar tudo para começar do zero.</p>
-                 <button id="btn-force-update" style="width:100%; background:#ff4d4d; color:white; border:none; padding:14px; border-radius:14px; font-weight:800; cursor:pointer;">WIPE TOTAL DA APP (v38)</button>
+                 <button id="btn-force-update" style="width:100%; background:#ff4d4d; color:white; border:none; padding:14px; border-radius:14px; font-weight:800; cursor:pointer;">WIPE TOTAL DA APP (v39)</button>
             </div>
         </div>
     `;
@@ -462,9 +468,77 @@ async function renderSyncView() {
     };
 }
 
+async function exportCollection() {
+    logger("A exportar coleção...");
+    try {
+        const games = await dbService.getAll('games');
+        const consoles = await dbService.getAll('consoles');
+        const platforms = await dbService.getAll('platforms');
+
+        const data = {
+            version: "v39",
+            timestamp: new Date().toISOString(),
+            games,
+            consoles,
+            platforms
+        };
+
+        const result = await localFileSync.save(data);
+        if (result === "saved") {
+            uiService.alert("Ficheiro guardado com sucesso!", "Exportação Realizada 📤");
+        } else {
+            uiService.alert("Ficheiro gerado para download.", "Exportação Realizada 📤");
+        }
+        logger("Exportação concluída.");
+    } catch (err) {
+        logger("EXPORT ERR: " + err.message);
+        uiService.alert("Erro ao exportar: " + err.message);
+    }
+}
+
+async function importCollection() {
+    if (!await uiService.confirm("ATENÇÃO: Isto irá substituir toda a tua coleção local pelos dados do ficheiro. Continuar?", "Importação de Dados")) {
+        return;
+    }
+
+    logger("A importar coleção...");
+    try {
+        const data = await localFileSync.load();
+        if (!data || (!data.games && !data.consoles)) {
+            throw new Error("Ficheiro inválido ou vazio.");
+        }
+
+        // Wipe current db stores
+        await dbService.clear('games');
+        await dbService.clear('consoles');
+        await dbService.clear('platforms');
+
+        // Insert new data
+        if (data.games) {
+            for (const g of data.games) await dbService.add('games', g);
+        }
+        if (data.consoles) {
+            for (const c of data.consoles) await dbService.add('consoles', c);
+        }
+        if (data.platforms) {
+            // Platforms store uses 'id', but add helper might generate new ones if not careful.
+            // platforms.js has its own logic, but here we just put raw items.
+            for (const p of data.platforms) await dbService.add('platforms', p);
+        }
+
+        uiService.alert("Importação concluída com sucesso! A App vai recarregar.", "Sucesso 📥");
+        logger("Importação concluída. Recarregando...");
+        setTimeout(() => location.reload(), 2000);
+
+    } catch (err) {
+        logger("IMPORT ERR: " + err.message);
+        uiService.alert("Erro ao importar: " + err.message);
+    }
+}
+
 /** INITIALIZATION **/
 async function init() {
-    logger("Iniciando RetroCollection v38...");
+    logger("Iniciando RetroCollection v39...");
     try {
         await dbService.open();
         logger("DB Conectado.");
@@ -504,5 +578,7 @@ window.deleteItem = deleteItem;
 window.searchCover = searchCover;
 window.selectCover = selectCover;
 window.navigateByPlatform = navigateByPlatform;
+window.exportCollection = exportCollection;
+window.importCollection = importCollection;
 
 init();
