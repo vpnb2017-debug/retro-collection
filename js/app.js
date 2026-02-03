@@ -2,7 +2,7 @@ import { dbService } from './services/db.js';
 import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js';
 import { coverSearchService } from './services/coverSearch.js';
 import WebuyService from './services/webuyService.js';
-import { localFileSync } from './services/localFileSync.js?v=50';
+import { localFileSync } from './services/localFileSync.js?v=51';
 
 // Global Exposure
 window.navigate = navigate;
@@ -126,7 +126,7 @@ async function renderDashboard() {
         const ownedTotal = ownedGames.length + ownedConsoles.length;
         const wishlistTotal = games.filter(g => g.isWishlist).length + consoles.filter(c => c.isWishlist).length;
 
-        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v50</span></h2>`;
+        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v51</span></h2>`;
 
         const platData = await getPlatformOptions();
 
@@ -151,7 +151,7 @@ async function renderDashboard() {
                     const platInfo = platData.find(x => x.name === p);
                     const logo = platInfo?.logo;
                     const logoHtml = logo
-                        ? `<img src="${logo}" style="width:24px; height:24px; object-fit:contain; border-radius:4px;">`
+                        ? `<img src="${logo}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'" style="width:24px; height:24px; object-fit:contain; border-radius:4px;"><div style="display:none; width:24px; height:24px; background:rgba(255,159,10,0.2); border-radius:50%; align-items:center; justify-content:center; font-size:0.6rem; font-weight:800; color:#ff9f0a;">${p.substring(0, 2).toUpperCase()}</div>`
                         : `<div style="width:24px; height:24px; background:rgba(255,159,10,0.2); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.6rem; font-weight:800; color:#ff9f0a;">${p.substring(0, 2).toUpperCase()}</div>`;
 
                     return `
@@ -474,7 +474,7 @@ async function renderPlatformManager() {
                 ${platforms.map(p => `
                     <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.05); padding:14px; border-radius:14px; border:1px solid rgba(255,255,255,0.05);">
                         <div style="display:flex; align-items:center; gap:12px;">
-                            ${p.logo ? `<img src="${p.logo}" style="width:24px; height:24px; object-fit:contain;">` : `<div style="width:24px; height:24px; background:rgba(255,255,255,0.1); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.6rem;">${p.name.substring(0, 1)}</div>`}
+                            ${p.logo ? `<img src="${p.logo}" onerror="this.src='';" style="width:24px; height:24px; object-fit:contain;">` : `<div style="width:24px; height:24px; background:rgba(255,255,255,0.1); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.6rem;">${p.name.substring(0, 1)}</div>`}
                             <span style="font-weight:600;">${p.name}</span>
                         </div>
                         <button onclick="window.delPlatform('${p.id}')" style="background:none; border:none; opacity:0.4; color:white; cursor:pointer; font-size:1.1rem;">🗑️</button>
@@ -549,7 +549,7 @@ async function exportCollection() {
         const platforms = await dbService.getAll('platforms');
 
         const data = {
-            version: "v50",
+            version: "v51",
             timestamp: new Date().toISOString(),
             games,
             consoles,
@@ -620,14 +620,15 @@ async function importCollection() {
 
 /** INITIALIZATION **/
 async function init() {
-    logger("Iniciando RetroCollection v50...");
+    logger("Iniciando RetroCollection v51...");
     try {
         await dbService.open();
         logger("DB Conectado.");
 
-        // Auto-Sync Logos once
-        if (localStorage.getItem('app_v') !== '50') {
+        // Auto-Sync Logos with a proper flag
+        if (!localStorage.getItem('logos_synced_v51')) {
             await autoSyncLogos();
+            localStorage.setItem('logos_synced_v51', 'true');
         }
         await navigate('nav-dashboard');
 
@@ -651,35 +652,38 @@ async function autoSyncLogos() {
     const platforms = await getPlatformOptions();
     const base = 'https://raw.githubusercontent.com/KyleBing/retro-game-console-icons/master/icons/';
     const map = {
-        'playstation': 'ps.png', 'ps1': 'ps.png', 'psx': 'ps.png',
+        'playstation': 'ps.png', 'ps1': 'ps.png', 'psx': 'ps.png', 'playstation 1': 'ps.png', 'psone': 'ps.png',
         'playstation 2': 'ps2.png', 'ps2': 'ps2.png',
         'playstation 3': 'ps3.png', 'ps3': 'ps3.png',
         'playstation 4': 'ps4.png', 'ps4': 'ps4.png',
         'playstation 5': 'ps5.png', 'ps5': 'ps5.png',
         'psp': 'psp.png', 'ps vita': 'vita.png', 'psvita': 'vita.png',
-        'nes': 'fc.png', 'nintendo': 'fc.png', 'famicom': 'fc.png',
-        'snes': 'sfc.png', 'super nintendo': 'sfc.png',
+        'nes': 'fc.png', 'nintendo': 'fc.png', 'famicom': 'fc.png', 'nintendo entertainment system': 'fc.png',
+        'snes': 'sfc.png', 'super nintendo': 'sfc.png', 'super famicom': 'sfc.png',
         'n64': 'n64.png', 'nintendo 64': 'n64.png',
-        'gamecube': 'ngc.png', 'ngc': 'ngc.png',
+        'gamecube': 'ngc.png', 'ngc': 'ngc.png', 'nintendo gamecube': 'ngc.png',
         'wii': 'wii.png', 'wii u': 'wiiu.png', 'wiiu': 'wiiu.png',
         'switch': 'switch.png', 'nintendo switch': 'switch.png',
         'game boy': 'gb.png', 'gb': 'gb.png',
         'game boy color': 'gbc.png', 'gbc': 'gbc.png',
-        'game boy advance': 'gba.png', 'gba': 'gba.png',
-        'ds': 'ds.png', 'nintendo ds': 'ds.png',
-        '3ds': '3ds.png', 'nintendo 3ds': '3ds.png',
-        'mega drive': 'md.png', 'megadrive': 'md.png', 'genesis': 'md.png',
-        'master system': 'ms.png', 'saturn': 'saturn.png', 'sega saturn': 'saturn.png',
-        'dreamcast': 'dc.png', 'game gear': 'gg.png'
+        'game boy advance': 'gba.png', 'gba': 'gba.png', 'gba sp': 'gba.png',
+        'ds': 'ds.png', 'nintendo ds': 'ds.png', 'ds lite': 'ds.png',
+        '3ds': '3ds.png', 'nintendo 3ds': '3ds.png', 'new 3ds': '3ds.png',
+        'mega drive': 'md.png', 'megadrive': 'md.png', 'genesis': 'md.png', 'sega mega drive': 'md.png',
+        'master system': 'ms.png', 'mastersystem': 'ms.png', 'sega master system': 'ms.png',
+        'saturn': 'saturn.png', 'sega saturn': 'saturn.png',
+        'dreamcast': 'dc.png', 'sega dreamcast': 'dc.png',
+        'game gear': 'gg.png', 'sega game gear': 'gg.png',
+        'atari 2600': 'atari2600.png', 'atari': 'atari2600.png',
+        'xbox': 'xbox.png', 'xbox 360': 'xbox360.png', 'xbox one': 'xboxone.png', 'xbox series': 'xboxseries.png'
     };
 
     for (const p of platforms) {
-        if (!p.logo) {
-            const key = p.name.toLowerCase();
-            if (map[key]) {
-                p.logo = base + map[key];
-                await updatePlatform(p);
-            }
+        // Clean and match
+        const key = p.name.trim().toLowerCase();
+        if (map[key]) {
+            p.logo = base + map[key];
+            await updatePlatform(p);
         }
     }
 }
