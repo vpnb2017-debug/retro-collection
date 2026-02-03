@@ -2,7 +2,7 @@ import { dbService } from './services/db.js';
 import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js';
 import { coverSearchService } from './services/coverSearch.js';
 import WebuyService from './services/webuyService.js';
-import { localFileSync } from './services/localFileSync.js?v=60';
+import { localFileSync } from './services/localFileSync.js?v=61';
 
 // Global Exposure
 window.navigate = navigate;
@@ -17,9 +17,6 @@ window.importCollection = importCollection;
 window.editPlatform = editPlatform;
 window.pickLogoForPlatform = pickLogoForPlatform;
 window.selectLogo = selectLogo;
-window.discoverLogos = discoverLogos;
-window.getValidLogoUrl = getValidLogoUrl;
-window.getValidLogoUrl = getValidLogoUrl;
 
 // Utility for logging 
 const logger = (msg) => { if (window.log) window.log(msg); else console.log(msg); };
@@ -132,7 +129,7 @@ async function renderDashboard() {
         const ownedTotal = ownedGames.length + ownedConsoles.length;
         const wishlistTotal = games.filter(g => g.isWishlist).length + consoles.filter(c => c.isWishlist).length;
 
-        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v60</span></h2>`;
+        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v61</span></h2>`;
 
         const platData = await getPlatformOptions();
 
@@ -562,6 +559,7 @@ async function pickLogoForPlatform(id) {
     modal.style.display = 'flex';
     grid.innerHTML = '<p style="grid-column:1/-1; text-align:center; opacity:0.5;">A carregar sugestões...</p>';
 
+    const base = 'https://cdn.jsdelivr.net/gh/KyleBing/retro-game-console-icons@main/art/';
     const icons = [
         'PS', 'PS2', 'PS3', 'PS4', 'PS5', 'PSP', 'VITA',
         'FC', 'SFC', 'N64', 'NGC', 'WII', 'WIIU', 'SWITCH',
@@ -573,63 +571,22 @@ async function pickLogoForPlatform(id) {
     ];
 
     grid.innerHTML = icons.map(name => `
-        <div data-icon-name="${name}" onclick="window.selectLogo('${id}', this.querySelector('img').src)" style="background:rgba(255,255,255,0.05); padding:10px; border-radius:12px; cursor:pointer; display:flex; align-items:center; justify-content:center; border:1px solid rgba(255,255,255,0.1); aspect-ratio:1/1;">
-            <img class="picker-icon-img" src="" style="width:100%; height:100%; object-fit:contain; display:none;">
-            <div class="loader-placeholder" style="width:20px; height:20px; border:2px solid #444; border-top-color:#ff9f0a; border-radius:50%; animation: spin 1s linear infinite;"></div>
+        <div onclick="window.selectLogo('${id}', '${base}${name}.png')" style="background:rgba(255,255,255,0.05); padding:10px; border-radius:12px; cursor:pointer; display:flex; align-items:center; justify-content:center; border:1px solid rgba(255,255,255,0.1); aspect-ratio:1/1;">
+            <img src="${base}${name}.png" style="width:100%; height:100%; object-fit:contain;" onerror="this.src='https://cdn-icons-png.flaticon.com/512/681/681122.png'; this.style.opacity='0.2';">
         </div>
-    `).join('');
-
-    // Trigger discovery AFTER rendering
-    setTimeout(() => window.discoverLogos(), 100);
-}
-
-function discoverLogos() {
-    const images = document.querySelectorAll('.picker-icon-img');
-    images.forEach(img => {
-        const name = img.closest('[data-icon-name]').dataset.iconName;
-        window.getValidLogoUrl(img, name);
-    });
-}
-
-async function getValidLogoUrl(imgEl, name) {
-    const bases = [
-        'https://raw.githubusercontent.com/KyleBing/retro-game-console-icons/main/art/',
-        'https://raw.githubusercontent.com/KyleBing/retro-game-console-icons/master/icons/',
-        'https://raw.githubusercontent.com/KyleBing/retro-game-console-icons/main/icons/',
-        'https://raw.githubusercontent.com/KyleBing/retro-game-console-icons/master/art/'
-    ];
-
-    const formats = [
-        `${name}.png`,
-        `${name.toLowerCase()}.png`,
-        `${name.toUpperCase()}.png`
-    ];
-
-    for (const b of bases) {
-        for (const f of formats) {
-            const url = b + f;
-            try {
-                const ok = await new Promise(res => {
-                    const test = new Image();
-                    test.onload = () => res(true);
-                    test.onerror = () => res(false);
-                    test.src = url;
-                });
-                if (ok) {
-                    imgEl.src = url;
-                    imgEl.style.display = 'block';
-                    if (imgEl.nextElementSibling) imgEl.nextElementSibling.style.display = 'none';
-                    return;
-                }
-            } catch (e) { }
-        }
-    }
-    // Final fallback
-    imgEl.style.display = 'none';
-    if (imgEl.nextElementSibling) imgEl.innerHTML = `<span style="font-size:0.5rem; opacity:0.3;">${name}</span>`;
+    `).join('') + `
+        <div style="grid-column: 1 / -1; margin-top: 20px; padding: 15px; background: rgba(255,255,255,0.02); border-radius: 12px; border: 1px dashed rgba(255,255,255,0.1);">
+            <p style="font-size: 0.8rem; margin-bottom: 8px; opacity: 0.7;">Ou cola um link direto de imagem:</p>
+            <div style="display: flex; gap: 8px;">
+                <input type="text" id="manual-logo-url" placeholder="https://exemplo.com/logo.png" style="flex: 1; background: #111; border: 1px solid #333; color: #fff; padding: 8px; border-radius: 6px; font-size: 0.8rem;">
+                <button onclick="window.selectLogo('${id}', document.getElementById('manual-logo-url').value)" style="background: #ff9f0a; border: none; color: #000; padding: 8px 15px; border-radius: 6px; font-weight: bold; cursor: pointer;">OK</button>
+            </div>
+        </div>
+    `;
 }
 
 function selectLogo(id, url) {
+    if (!url) return;
     const input = document.getElementById(`edit-plat-logo-${id}`) || document.getElementById('plat-new-logo');
     if (input) input.value = url;
     document.getElementById('logo-picker-modal').style.display = 'none';
@@ -677,7 +634,7 @@ async function exportCollection() {
         const platforms = await dbService.getAll('platforms');
 
         const data = {
-            version: "v60",
+            version: "v61",
             timestamp: new Date().toISOString(),
             games,
             consoles,
@@ -748,15 +705,15 @@ async function importCollection() {
 
 /** INITIALIZATION **/
 async function init() {
-    logger("Iniciando RetroCollection v60...");
+    logger("Iniciando RetroCollection v61...");
     try {
         await dbService.open();
         logger("DB Conectado.");
 
-        // Auto-Sync Logos logic for v60
-        if (!localStorage.getItem('logos_synced_v60')) {
+        // Auto-Sync Logos logic for v61
+        if (!localStorage.getItem('logos_synced_v61')) {
             await autoSyncLogos();
-            localStorage.setItem('logos_synced_v60', 'true');
+            localStorage.setItem('logos_synced_v61', 'true');
         }
         await navigate('nav-dashboard');
 
@@ -777,10 +734,8 @@ async function init() {
 }
 
 async function autoSyncLogos() {
-    // We update base iteratively in getValidLogoUrl logic
-    // But for autoSync, we'll try a common one first and let the user manual pick if it fails
     const platforms = await getPlatformOptions();
-    const base = 'https://raw.githubusercontent.com/KyleBing/retro-game-console-icons/main/art/';
+    const base = 'https://cdn.jsdelivr.net/gh/KyleBing/retro-game-console-icons@main/art/';
     const map = {
         'playstation': 'PS.png', 'ps1': 'PS.png', 'psx': 'PS.png', 'playstation 1': 'PS.png', 'psone': 'PS.png',
         'playstation 2': 'PS2.png', 'ps2': 'PS2.png',
