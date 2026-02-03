@@ -9,9 +9,9 @@ export const coverSearchService = {
                 finalResponse = await fetch(url);
                 if (!finalResponse.ok) throw new Error("Direct fetch failed");
             } catch (directError) {
-                console.warn("Direct fetch failed (likely CORS), trying proxy...", directError);
-                // Fallback: Try local proxy
-                const proxyUrl = `/proxy?url=${encodeURIComponent(url)}`;
+                console.warn("Direct fetch failed (likely CORS), trying public proxy...", directError);
+                // Fallback: Use a public CORS proxy for static sites (GitHub Pages)
+                const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(url)}`;
                 finalResponse = await fetch(proxyUrl);
                 if (!finalResponse.ok) throw new Error(`Proxy fetch failed: ${finalResponse.status}`);
             }
@@ -21,7 +21,10 @@ export const coverSearchService = {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
                 reader.onload = () => resolve(reader.result);
-                reader.onerror = reject;
+                reader.onerror = (err) => {
+                    console.error("FileReader error:", err);
+                    reject(new Error("Erro ao converter imagem para dados locais."));
+                };
                 reader.readAsDataURL(blob);
             });
         } catch (e) {
