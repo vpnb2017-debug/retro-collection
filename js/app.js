@@ -2,7 +2,7 @@ import { dbService } from './services/db.js';
 import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js';
 import { coverSearchService } from './services/coverSearch.js';
 import WebuyService from './services/webuyService.js';
-import { localFileSync } from './services/localFileSync.js?v=19';
+import { localFileSync } from './services/localFileSync.js?v=20';
 
 // Premium UI Service for Modals
 const uiService = {
@@ -218,11 +218,12 @@ async function renderDashboard() {
         `).join('');
 
         contentEl.innerHTML = `
-        <div class="header-section">
-            <h2>Olá, Colecionador! 👋</h2>
-            <p class="subtitle">Aqui está o resumo do teu império. <span style="opacity:0.3; font-size:0.7rem; font-weight:400;">v19</span></p>
-            ${installNotice}
-        </div>
+        <div class="view-scroll">
+            <div class="header-section">
+                <h2>Olá, Colecionador! 👋</h2>
+                <p class="subtitle">Aqui está o resumo do teu império. <span style="opacity:0.3; font-size:0.7rem; font-weight:400;">v20</span></p>
+                ${installNotice}
+            </div>
 
         <div class="dashboard-stats" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-top: 2rem;">
             <div class="stat-card glass" style="padding: 1.5rem; border-radius: var(--radius-lg); border-left: 4px solid var(--accent-secondary); cursor:pointer;" id="dash-link-collection">
@@ -279,11 +280,11 @@ async function renderGenericGrid(viewTitle, itemsFilter) {
     }).join('');
 
     contentEl.innerHTML = `
-        <div class="header-section">
+        <div class="header-section" style="padding: var(--space-lg) var(--space-lg) 0 var(--space-lg);">
              <h2>${viewTitle}</h2>
         </div>
         
-        <div class="filters glass" style="display:flex; gap:1rem; padding:1rem; border-radius:var(--radius-md); margin-bottom:2rem; flex-wrap:wrap; position:sticky; top:10px; z-index:40; backdrop-filter:blur(20px); border:1px solid var(--accent-glow);">
+        <div class="filters glass" style="display:flex; gap:1rem; padding:1rem; border-radius:var(--radius-md); margin: 1rem var(--space-lg) 2rem var(--space-lg); flex-wrap:wrap; border:1px solid var(--accent-glow);">
             <div style="flex:1; min-width: 120px;">
                 <label style="font-size:0.8rem; color:var(--accent-secondary)">Tipo</label>
                 <select id="filter-type">
@@ -305,8 +306,10 @@ async function renderGenericGrid(viewTitle, itemsFilter) {
             </div>
         </div>
 
-        <div class="collection-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem;">
-            <p style="color:white">A carregar...</p>
+        <div id="grid-scroll-area" style="flex:1; overflow-y:auto; padding: 0 var(--space-lg) var(--space-lg) var(--space-lg);">
+            <div class="collection-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem;">
+                <p style="color:white">A carregar...</p>
+            </div>
         </div>
 
         <!-- Float toggle for Mobile -->
