@@ -2,7 +2,7 @@ import { dbService } from './services/db.js';
 import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js';
 import { coverSearchService } from './services/coverSearch.js';
 import WebuyService from './services/webuyService.js';
-import { localFileSync } from './services/localFileSync.js?v=53';
+import { localFileSync } from './services/localFileSync.js?v=54';
 
 // Global Exposure
 window.navigate = navigate;
@@ -126,7 +126,7 @@ async function renderDashboard() {
         const ownedTotal = ownedGames.length + ownedConsoles.length;
         const wishlistTotal = games.filter(g => g.isWishlist).length + consoles.filter(c => c.isWishlist).length;
 
-        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v53</span></h2>`;
+        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v54</span></h2>`;
 
         const platData = await getPlatformOptions();
 
@@ -474,14 +474,28 @@ async function renderPlatformManager() {
             </div>
             <div style="display:flex; flex-direction:column; gap:10px;">
                 ${platforms.map(p => `
-                    <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.05); padding:14px; border-radius:14px; border:1px solid rgba(255,255,255,0.05);">
+                    <div id="plat-row-${p.id}" style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.05); padding:14px; border-radius:14px; border:1px solid rgba(255,255,255,0.05);">
                         <div style="display:flex; align-items:center; gap:12px;">
                             ${p.logo ? `<img src="${p.logo}" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex'" style="width:24px; height:24px; object-fit:contain;"><div style="display:none; width:24px; height:24px; background:rgba(255,255,255,0.1); border-radius:50%; align-items:center; justify-content:center; font-size:0.6rem;">${p.name.substring(0, 1)}</div>` : `<div style="width:24px; height:24px; background:rgba(255,255,255,0.1); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.6rem;">${p.name.substring(0, 1)}</div>`}
                             <span style="font-weight:600;">${p.name}</span>
                         </div>
-                        <button onclick="window.delPlatform('${p.id}')" style="background:none; border:none; opacity:0.4; color:white; cursor:pointer; font-size:1.1rem;">🗑️</button>
+                        <div style="display:flex; gap:10px;">
+                            <button onclick="window.editPlatform('${p.id}')" style="background:none; border:none; opacity:0.6; color:white; cursor:pointer;">✏️</button>
+                            <button onclick="window.delPlatform('${p.id}')" style="background:none; border:none; opacity:0.4; color:white; cursor:pointer; font-size:1.1rem;">🗑️</button>
+                        </div>
                     </div>
                 `).join('')}
+            </div>
+        </div>
+
+        <!-- Logo Picker Modal -->
+        <div id="logo-picker-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.95); z-index:7000; padding:20px; flex-direction:column; align-items:center; backdrop-filter:blur(8px);">
+            <div style="width:100%; max-width:600px; display:flex; justify-content:space-between; margin-bottom:20px;">
+                <h3 style="color:#ff9f0a;">Selecionar Logo 🤖🎨</h3>
+                <button onclick="document.getElementById('logo-picker-modal').style.display='none'" style="background:none; border:none; color:white; font-size:1.5rem; cursor:pointer;">✕</button>
+            </div>
+            <div id="logo-grid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); gap:15px; width:100%; max-width:600px; overflow-y:auto; padding-bottom:40px;">
+                <!-- Logos will be injected here -->
             </div>
         </div>
     `;
@@ -507,6 +521,63 @@ async function renderPlatformManager() {
             renderPlatformManager();
         } catch (e) { uiService.alert(e.message); }
     };
+}
+
+async function editPlatform(id) {
+    const plat = (await getPlatformOptions()).find(p => p.id === id);
+    if (!plat) return;
+
+    const row = document.getElementById(`plat-row-${id}`);
+    row.innerHTML = `
+        <div style="display:flex; flex-direction:column; gap:8px; width:100%;">
+            <input id="edit-plat-name-${id}" type="text" value="${plat.name}" style="padding:10px; background:#1e1e24; border:1px solid #ff9f0a; color:white; border-radius:10px; font-size:0.85rem;">
+            <div style="display:flex; gap:8px;">
+                <input id="edit-plat-logo-${id}" type="text" value="${plat.logo || ''}" placeholder="URL do Logo" style="flex:1; padding:10px; background:#1e1e24; border:1px solid #444; color:white; border-radius:10px; font-size:0.85rem;">
+                <button onclick="window.pickLogoForPlatform('${id}')" style="background:#444; color:white; border:none; padding:10px; border-radius:10px; cursor:pointer;">🎨</button>
+            </div>
+            <div style="display:flex; gap:10px; margin-top:5px;">
+                <button onclick="renderPlatformManager()" style="flex:1; background:none; border:none; color:white; opacity:0.6; cursor:pointer;">Cancelar</button>
+                <button id="btn-save-plat-${id}" style="flex:2; background:#ff9f0a; border:none; color:white; padding:10px; border-radius:10px; font-weight:800; cursor:pointer;">Guardar ✅</button>
+            </div>
+        </div>
+    `;
+
+    document.getElementById(`btn-save-plat-${id}`).onclick = async () => {
+        plat.name = document.getElementById(`edit-plat-name-${id}`).value;
+        plat.logo = document.getElementById(`edit-plat-logo-${id}`).value;
+        await updatePlatform(plat);
+        renderPlatformManager();
+    };
+}
+
+async function pickLogoForPlatform(id) {
+    const modal = document.getElementById('logo-picker-modal');
+    const grid = document.getElementById('logo-grid');
+    modal.style.display = 'flex';
+    grid.innerHTML = '<p style="grid-column:1/-1; text-align:center; opacity:0.5;">A carregar sugestões...</p>';
+
+    const base = 'https://raw.githubusercontent.com/KyleBing/retro-game-console-icons/main/icons/';
+    const icons = [
+        'ps.png', 'ps2.png', 'ps3.png', 'ps4.png', 'ps5.png', 'psp.png', 'vita.png',
+        'fc.png', 'sfc.png', 'n64.png', 'ngc.png', 'wii.png', 'wiiu.png', 'switch.png',
+        'gb.png', 'gbc.png', 'gba.png', 'ds.png', '3ds.png',
+        'md.png', 'ms.png', 'saturn.png', 'dc.png', 'gg.png',
+        'xbox.png', 'xbox360.png', 'xboxone.png', 'xboxseries.png',
+        'atari2600.png', 'atari5200.png', 'atari7800.png', 'atari800.png', 'atarist.png',
+        'amiga.png', 'c64.png', 'msx.png', 'pc.png', 'dos.png'
+    ];
+
+    grid.innerHTML = icons.map(icon => `
+        <div onclick="window.selectLogo('${id}', '${base}${icon}')" style="background:rgba(255,255,255,0.05); padding:10px; border-radius:12px; cursor:pointer; display:flex; align-items:center; justify-content:center; border:1px solid rgba(255,255,255,0.1); aspect-ratio:1/1;">
+            <img src="${base}${icon}" style="width:100%; height:100%; object-fit:contain;">
+        </div>
+    `).join('');
+}
+
+function selectLogo(id, url) {
+    const input = document.getElementById(`edit-plat-logo-${id}`) || document.getElementById('plat-new-logo');
+    if (input) input.value = url;
+    document.getElementById('logo-picker-modal').style.display = 'none';
 }
 
 /** SYNC / SETTINGS **/
@@ -622,15 +693,15 @@ async function importCollection() {
 
 /** INITIALIZATION **/
 async function init() {
-    logger("Iniciando RetroCollection v53...");
+    logger("Iniciando RetroCollection v54...");
     try {
         await dbService.open();
         logger("DB Conectado.");
 
-        // Auto-Sync Logos with a proper flag for v53
-        if (!localStorage.getItem('logos_synced_v53')) {
+        // Auto-Sync Logos logic
+        if (!localStorage.getItem('logos_synced_v54')) {
             await autoSyncLogos();
-            localStorage.setItem('logos_synced_v53', 'true');
+            localStorage.setItem('logos_synced_v54', 'true');
         }
         await navigate('nav-dashboard');
 

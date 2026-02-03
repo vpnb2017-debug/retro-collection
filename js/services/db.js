@@ -72,6 +72,17 @@ export const dbService = {
         });
     },
 
+    async get(storeName, id) {
+        await this.open();
+        return new Promise((resolve, reject) => {
+            const transaction = this.db.transaction([storeName], 'readonly');
+            const store = transaction.objectStore(storeName);
+            const request = store.get(id);
+            request.onsuccess = () => resolve(request.result);
+            request.onerror = () => reject(request.error);
+        });
+    },
+
     async add(storeName, item) {
         await this.open();
         return new Promise((resolve, reject) => {
