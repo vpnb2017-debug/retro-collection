@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport"
         content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>RetroCollection v44 🎮</title>
+    <title>RetroCollection v45 🎮</title>
 
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1e1e24">
@@ -283,17 +283,17 @@
             const title = document.querySelector('.v29-title-zone h2');
             if (title && title.innerText.includes('A carregar')) {
                 log("Hanging detetado! Tentando bypass...");
-                location.href = location.href.split('?')[0] + '?force_v44=' + Date.now();
+                location.href = location.href.split('?')[0] + '?force_v45=' + Date.now();
             }
         }, 8000);
     </script>
 
-    <script type="module" src="js/app.js?v=44"></script>
+    <script type="module" src="js/app.js?v=45"></script>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js?v=44')
-                    .then(() => log("v44 Pronta."))
+                navigator.serviceWorker.register('sw.js?v=45')
+                    .then(() => log("v45 Pronta."))
                     .catch(e => log("Falha: " + e.message));
             });
         }
