@@ -2,13 +2,15 @@ import { dbService } from './services/db.js';
 import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js';
 import { coverSearchService } from './services/coverSearch.js';
 import WebuyService from './services/webuyService.js';
-import { localFileSync } from './services/localFileSync.js?v=35';
+import { localFileSync } from './services/localFileSync.js?v=36';
 
 // Global Exposure
 window.navigate = navigate;
 window.openAddModal = openAddModal;
 window.saveItem = saveItem;
 window.deleteItem = deleteItem;
+window.searchCover = searchCover;
+window.selectCover = selectCover;
 
 // Utility for logging 
 const logger = (msg) => { if (window.log) window.log(msg); else console.log(msg); };
@@ -83,11 +85,14 @@ async function navigate(id, params = null) {
     const { titleEl, filterEl, scrollEl } = getZones();
     if (!titleEl || !scrollEl) return;
 
+    // Reset zones if not coming back from edit
     titleEl.innerHTML = '';
     if (filterEl) filterEl.innerHTML = '';
     scrollEl.innerHTML = '';
 
     document.querySelectorAll('.desktop-nav button, .bottom-nav button').forEach(b => b.classList.remove('active'));
+
+    state.view = id;
 
     switch (id) {
         case 'nav-dashboard': await renderDashboard(); break;
@@ -110,7 +115,7 @@ async function renderDashboard() {
         const ownedTotal = ownedGames.length + ownedConsoles.length;
         const wishlistTotal = games.filter(g => g.isWishlist).length + consoles.filter(c => c.isWishlist).length;
 
-        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v35</span></h2>`;
+        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v36</span></h2>`;
 
         scrollEl.innerHTML = `
             <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:15px; margin-top:5px;">
@@ -223,6 +228,9 @@ async function renderAddForm(item) {
 
     scrollEl.innerHTML = `
         <div style="display:flex; flex-direction:column; gap:14px; padding-bottom:120px; max-width:600px; margin:0 auto;">
+            
+            <div id="cover-preview" style="height:200px; background:#000 url(${item?.image || ''}) center/contain no-repeat; border-radius:15px; border:1px solid rgba(255,255,255,0.1); display:${item?.image ? 'block' : 'none'};"></div>
+
             <div style="display:flex; gap:12px;">
                 <select id="add-type" style="flex:1; padding:14px; background:#2b2b36; border:1px solid #444; color:white; border-radius:12px; font-size:0.9rem;">
                     <option value="games" ${type === 'games' ? 'selected' : ''}>💾 Jogo</option>
@@ -234,7 +242,10 @@ async function renderAddForm(item) {
                 </div>
             </div>
 
-            <input id="add-title" type="text" placeholder="Título do Jogo / Consola" value="${item ? item.title : ''}" style="padding:14px; background:#2b2b36; border:1px solid #444; color:white; border-radius:12px; font-size:0.9rem;">
+            <div style="display:flex; gap:10px;">
+                <input id="add-title" type="text" placeholder="Título do Jogo / Consola" value="${item ? item.title : ''}" style="flex:1; padding:14px; background:#2b2b36; border:1px solid #444; color:white; border-radius:12px; font-size:0.9rem;">
+                <button onclick="searchCover()" style="background:#ff9f0a; border:none; color:white; padding:0 15px; border-radius:12px; font-weight:700;">🔍</button>
+            </div>
             
             <select id="add-platform" style="padding:14px; background:#2b2b36; border:1px solid #444; color:white; border-radius:12px; font-size:0.9rem;">
                 <option value="">Plataforma / Sistema</option>
@@ -242,8 +253,8 @@ async function renderAddForm(item) {
             </select>
 
             <div style="display:flex; gap:12px;">
-                <input id="add-image" type="text" placeholder="URL da Capa / Foto" value="${item ? (item.image || '') : ''}" style="flex:1; padding:14px; background:#2b2b36; border:1px solid #444; color:white; border-radius:12px; font-size:0.9rem;">
-                <button onclick="document.getElementById('add-image').value = ''" style="background:#444; border:none; color:white; padding:0 18px; border-radius:12px; font-size:1.1rem;">🗑️</button>
+                <input id="add-image" type="text" placeholder="URL da Capa / Foto" value="${item ? (item.image || '') : ''}" oninput="updatePreview(this.value)" style="flex:1; padding:14px; background:#2b2b36; border:1px solid #444; color:white; border-radius:12px; font-size:0.9rem;">
+                <button onclick="document.getElementById('add-image').value = ''; updatePreview('')" style="background:#444; border:none; color:white; padding:0 18px; border-radius:12px; font-size:1.1rem;">🗑️</button>
             </div>
 
             <div style="display:flex; gap:12px;">
@@ -254,11 +265,65 @@ async function renderAddForm(item) {
                 <input id="add-date" type="date" value="${item ? (item.acquiredDate || '') : ''}" style="flex:1; padding:12px; background:#2b2b36; border:1px solid #444; color:white; border-radius:12px; font-size:0.9rem;">
             </div>
 
-            <button onclick="saveItem('${item ? item.id : ''}')" class="btn-primary" style="padding:18px; background:#ff9f0a; border:none; color:white; font-weight:800; border-radius:18px; margin-top:15px; font-size:1rem; cursor:pointer;">💾 Guardar na Coleção</button>
+            <button onclick="saveItem('${item ? item.id : ''}')" class="btn-primary" style="padding:18px; background:#ff9f0a; border:none; color:white; font-weight:800; border-radius:18px; margin-top:15px; font-size:1rem; cursor:pointer;">💾 Guardar Alterações</button>
 
             ${item ? `<button onclick="deleteItem('${item.id}', '${type}')" style="background:#ff4d4d; border:none; color:white; padding:12px; border-radius:18px; margin-top:25px; font-weight:700; opacity:0.8; font-size:0.85rem; cursor:pointer;">Eliminar Permanente</button>` : ''}
         </div>
+
+        <div id="search-results-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:6000; padding:20px; overflow-y:auto;">
+            <div style="max-width:800px; margin:0 auto;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                    <h3>Escolha a Capa</h3>
+                    <button onclick="document.getElementById('search-results-modal').style.display='none'" style="background:none; border:none; color:white; font-size:1.5rem;">✕</button>
+                </div>
+                <div id="search-grid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap:10px;"></div>
+            </div>
+        </div>
     `;
+}
+
+window.updatePreview = (url) => {
+    const preview = document.getElementById('cover-preview');
+    if (preview) {
+        preview.style.display = url ? 'block' : 'none';
+        preview.style.backgroundImage = `url(${url})`;
+    }
+};
+
+async function searchCover() {
+    const title = document.getElementById('add-title').value;
+    const plat = document.getElementById('add-platform').value;
+    if (!title) return uiService.alert("Escreva o título primeiro!");
+
+    logger("A pesquisar capas...");
+    try {
+        const results = await WebuyService.search(`${title} ${plat}`);
+        const grid = document.getElementById('search-grid');
+        const modal = document.getElementById('search-results-modal');
+
+        if (results.length === 0) return uiService.alert("Nenhuma capa encontrada.");
+
+        grid.innerHTML = results.map(r => `
+            <div onclick="selectCover('${r.image}')" style="aspect-ratio:3/4; background:#000 url(${r.image}) center/contain no-repeat; border-radius:8px; cursor:pointer; border:1px solid #333;"></div>
+        `).join('');
+
+        modal.style.display = 'block';
+    } catch (err) { logger("SEARCH ERR: " + err.message); }
+}
+
+async function selectCover(url) {
+    document.getElementById('search-results-modal').style.display = 'none';
+    logger("A converter imagem...");
+    try {
+        const base64 = await coverSearchService.convertUrlToBase64(url);
+        document.getElementById('add-image').value = base64;
+        window.updatePreview(base64);
+        logger("Pronto.");
+    } catch (e) {
+        document.getElementById('add-image').value = url;
+        window.updatePreview(url);
+        logger("Guardado link (Base64 falhou)");
+    }
 }
 
 async function saveItem(id) {
@@ -280,7 +345,10 @@ async function saveItem(id) {
     try {
         await dbService.add(store, newItem);
         uiService.alert("Guardado com sucesso!", "Parabéns ✨");
-        navigate('nav-dashboard');
+
+        // Go back to the right view with filters preserved
+        const targetView = newItem.isWishlist ? 'nav-wishlist' : 'nav-collection';
+        navigate(targetView);
     } catch (err) { logger("SAVE ERR: " + err.message); }
 }
 
@@ -288,7 +356,7 @@ async function deleteItem(id, store) {
     if (await uiService.confirm("Tem a certeza que quer apagar este item permanentemente?", "Apagar Item")) {
         try {
             await dbService.delete(store, id);
-            navigate('nav-dashboard');
+            navigate(state.view === 'nav-add' ? 'nav-collection' : state.view);
         } catch (err) { logger("DEL ERR: " + err.message); }
     }
 }
@@ -348,7 +416,7 @@ async function renderSyncView() {
             <div style="background:rgba(255,100,100,0.05); padding:24px; border-radius:20px; border:1px solid rgba(255,0,0,0.2); margin-top:20px;">
                  <h3 style="margin-bottom:10px; font-size:1rem; color:#ff4d4d;">Zona de Perigo 🚨</h3>
                  <p style="margin-bottom:20px; font-size:0.8rem; opacity:0.65; line-height:1.4;">Se a App estiver a falhar ou se quiseres limpar tudo para começar do zero.</p>
-                 <button id="btn-force-update" style="width:100%; background:#ff4d4d; color:white; border:none; padding:14px; border-radius:14px; font-weight:800; cursor:pointer;">WIPE TOTAL DA APP (v35)</button>
+                 <button id="btn-force-update" style="width:100%; background:#ff4d4d; color:white; border:none; padding:14px; border-radius:14px; font-weight:800; cursor:pointer;">WIPE TOTAL DA APP (v36)</button>
             </div>
         </div>
     `;
@@ -365,7 +433,7 @@ async function renderSyncView() {
 
 /** INITIALIZATION **/
 async function init() {
-    logger("Iniciando RetroCollection v35...");
+    logger("Iniciando RetroCollection v36...");
     try {
         await dbService.open();
         logger("DB Conectado.");
@@ -402,5 +470,7 @@ window.navigate = navigate;
 window.openAddModal = openAddModal;
 window.saveItem = saveItem;
 window.deleteItem = deleteItem;
+window.searchCover = searchCover;
+window.selectCover = selectCover;
 
 init();
