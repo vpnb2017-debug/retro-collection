@@ -14,7 +14,7 @@
 
     <!-- Styles -->
     <link rel="stylesheet" href="css/variables.css">
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/style_v26.css?v=26">
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -72,12 +72,12 @@
     <!-- External Libs -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 
-    <!-- Main Entry Point v25 -->
-    <script type="module" src="js/app.js?v=25"></script>
+    <!-- Main Entry Point v26 -->
+    <script type="module" src="js/app.js?v=26"></script>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js?v=25').catch(err => console.log('SW failed', err));
+                navigator.serviceWorker.register('sw.js?v=26').catch(err => console.log('SW failed', err));
             });
         }
     </script>
