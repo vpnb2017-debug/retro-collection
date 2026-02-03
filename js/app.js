@@ -2,7 +2,7 @@ import { dbService } from './services/db.js';
 import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js';
 import { coverSearchService } from './services/coverSearch.js';
 import WebuyService from './services/webuyService.js';
-import { localFileSync } from './services/localFileSync.js?v=51';
+import { localFileSync } from './services/localFileSync.js?v=53';
 
 // Global Exposure
 window.navigate = navigate;
@@ -126,7 +126,7 @@ async function renderDashboard() {
         const ownedTotal = ownedGames.length + ownedConsoles.length;
         const wishlistTotal = games.filter(g => g.isWishlist).length + consoles.filter(c => c.isWishlist).length;
 
-        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v51</span></h2>`;
+        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v53</span></h2>`;
 
         const platData = await getPlatformOptions();
 
@@ -150,9 +150,11 @@ async function renderDashboard() {
                 .map(([p, items]) => {
                     const platInfo = platData.find(x => x.name === p);
                     const logo = platInfo?.logo;
+                    const fallbackHtml = `<div style="width:24px; height:24px; background:rgba(255,159,10,0.2); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.6rem; font-weight:800; color:#ff9f0a;">${p.substring(0, 2).toUpperCase()}</div>`;
+
                     const logoHtml = logo
-                        ? `<img src="${logo}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'" style="width:24px; height:24px; object-fit:contain; border-radius:4px;"><div style="display:none; width:24px; height:24px; background:rgba(255,159,10,0.2); border-radius:50%; align-items:center; justify-content:center; font-size:0.6rem; font-weight:800; color:#ff9f0a;">${p.substring(0, 2).toUpperCase()}</div>`
-                        : `<div style="width:24px; height:24px; background:rgba(255,159,10,0.2); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.6rem; font-weight:800; color:#ff9f0a;">${p.substring(0, 2).toUpperCase()}</div>`;
+                        ? `<img src="${logo}" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex'" style="width:24px; height:24px; object-fit:contain; border-radius:4px;"><div style="display:none; width:24px; height:24px; background:rgba(255,159,10,0.2); border-radius:50%; align-items:center; justify-content:center; font-size:0.6rem; font-weight:800; color:#ff9f0a;">${p.substring(0, 2).toUpperCase()}</div>`
+                        : fallbackHtml;
 
                     return `
                         <div onclick="navigateByPlatform('${p}')" style="display:flex; align-items:center; gap:10px; background:rgba(255,255,255,0.05); padding:10px; border-radius:12px; border:1px solid rgba(255,255,255,0.03); cursor:pointer;">
@@ -474,7 +476,7 @@ async function renderPlatformManager() {
                 ${platforms.map(p => `
                     <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(255,255,255,0.05); padding:14px; border-radius:14px; border:1px solid rgba(255,255,255,0.05);">
                         <div style="display:flex; align-items:center; gap:12px;">
-                            ${p.logo ? `<img src="${p.logo}" onerror="this.src='';" style="width:24px; height:24px; object-fit:contain;">` : `<div style="width:24px; height:24px; background:rgba(255,255,255,0.1); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.6rem;">${p.name.substring(0, 1)}</div>`}
+                            ${p.logo ? `<img src="${p.logo}" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex'" style="width:24px; height:24px; object-fit:contain;"><div style="display:none; width:24px; height:24px; background:rgba(255,255,255,0.1); border-radius:50%; align-items:center; justify-content:center; font-size:0.6rem;">${p.name.substring(0, 1)}</div>` : `<div style="width:24px; height:24px; background:rgba(255,255,255,0.1); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.6rem;">${p.name.substring(0, 1)}</div>`}
                             <span style="font-weight:600;">${p.name}</span>
                         </div>
                         <button onclick="window.delPlatform('${p.id}')" style="background:none; border:none; opacity:0.4; color:white; cursor:pointer; font-size:1.1rem;">🗑️</button>
@@ -526,7 +528,7 @@ async function renderSyncView() {
             <div style="background:rgba(255,100,100,0.05); padding:24px; border-radius:20px; border:1px solid rgba(255,0,0,0.2); margin-top:20px;">
                  <h3 style="margin-bottom:10px; font-size:1rem; color:#ff4d4d;">Zona de Perigo 🚨</h3>
                  <p style="margin-bottom:20px; font-size:0.8rem; opacity:0.65; line-height:1.4;">Se a App estiver a falhar ou se quiseres limpar tudo para começar do zero.</p>
-                 <button id="btn-force-update" style="width:100%; background:#ff4d4d; color:white; border:none; padding:14px; border-radius:14px; font-weight:800; cursor:pointer;">WIPE TOTAL DA APP (v50)</button>
+                 <button id="btn-force-update" style="width:100%; background:#ff4d4d; color:white; border:none; padding:14px; border-radius:14px; font-weight:800; cursor:pointer;">WIPE TOTAL DA APP (v53)</button>
             </div>
         </div>
     `;
@@ -549,7 +551,7 @@ async function exportCollection() {
         const platforms = await dbService.getAll('platforms');
 
         const data = {
-            version: "v51",
+            version: "v53",
             timestamp: new Date().toISOString(),
             games,
             consoles,
@@ -620,15 +622,15 @@ async function importCollection() {
 
 /** INITIALIZATION **/
 async function init() {
-    logger("Iniciando RetroCollection v51...");
+    logger("Iniciando RetroCollection v53...");
     try {
         await dbService.open();
         logger("DB Conectado.");
 
-        // Auto-Sync Logos with a proper flag
-        if (!localStorage.getItem('logos_synced_v51')) {
+        // Auto-Sync Logos with a proper flag for v53
+        if (!localStorage.getItem('logos_synced_v53')) {
             await autoSyncLogos();
-            localStorage.setItem('logos_synced_v51', 'true');
+            localStorage.setItem('logos_synced_v53', 'true');
         }
         await navigate('nav-dashboard');
 
@@ -650,7 +652,7 @@ async function init() {
 
 async function autoSyncLogos() {
     const platforms = await getPlatformOptions();
-    const base = 'https://raw.githubusercontent.com/KyleBing/retro-game-console-icons/master/icons/';
+    const base = 'https://raw.githubusercontent.com/KyleBing/retro-game-console-icons/main/icons/';
     const map = {
         'playstation': 'ps.png', 'ps1': 'ps.png', 'psx': 'ps.png', 'playstation 1': 'ps.png', 'psone': 'ps.png',
         'playstation 2': 'ps2.png', 'ps2': 'ps2.png',
