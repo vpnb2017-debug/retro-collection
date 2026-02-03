@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport"
         content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>RetroCollection v36 🎮</title>
+    <title>RetroCollection v37 🎮</title>
 
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1e1e24">
@@ -256,17 +256,17 @@
             return false;
         };
 
-        log("Arranque v36 iniciado...");
+        log("Arranque v37 iniciado...");
 
-        // v36 FINAL WIPE
-        if (localStorage.getItem('app_v') !== '36') {
-            log("Limpando cache v35...");
+        // v37 FINAL WIPE
+        if (localStorage.getItem('app_v') !== '37') {
+            log("Limpando cache v36...");
             localStorage.clear();
-            localStorage.setItem('app_v', '36');
+            localStorage.setItem('app_v', '37');
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.getRegistrations().then(rs => {
                     Promise.all(rs.map(r => r.unregister())).then(() => {
-                        log("Cache limpo. A recarregar v36...");
+                        log("Cache limpo. A recarregar v37...");
                         location.reload();
                     });
                 });
@@ -280,17 +280,17 @@
             const title = document.querySelector('.v29-title-zone h2');
             if (title && title.innerText.includes('A carregar')) {
                 log("Hanging detetado! Tentando bypass...");
-                location.href = location.href.split('?')[0] + '?force_v36=' + Date.now();
+                location.href = location.href.split('?')[0] + '?force_v37=' + Date.now();
             }
         }, 8000);
     </script>
 
-    <script type="module" src="js/app.js?v=36"></script>
+    <script type="module" src="js/app.js?v=37"></script>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js?v=36')
-                    .then(() => log("v36 Pronta."))
+                navigator.serviceWorker.register('sw.js?v=37')
+                    .then(() => log("v37 Pronta."))
                     .catch(e => log("Falha: " + e.message));
             });
         }

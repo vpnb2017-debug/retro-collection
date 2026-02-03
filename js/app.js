@@ -2,7 +2,7 @@ import { dbService } from './services/db.js';
 import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js';
 import { coverSearchService } from './services/coverSearch.js';
 import WebuyService from './services/webuyService.js';
-import { localFileSync } from './services/localFileSync.js?v=36';
+import { localFileSync } from './services/localFileSync.js?v=37';
 
 // Global Exposure
 window.navigate = navigate;
@@ -11,6 +11,7 @@ window.saveItem = saveItem;
 window.deleteItem = deleteItem;
 window.searchCover = searchCover;
 window.selectCover = selectCover;
+window.navigateByPlatform = navigateByPlatform; // Added for Dashboard clicks
 
 // Utility for logging 
 const logger = (msg) => { if (window.log) window.log(msg); else console.log(msg); };
@@ -104,6 +105,14 @@ async function navigate(id, params = null) {
     }
 }
 
+// Special navigation for Dashboard platform clicks
+async function navigateByPlatform(platform) {
+    state.filterPlatform = platform;
+    state.filterType = 'all';
+    state.filterSearch = '';
+    await navigate('nav-collection');
+}
+
 /** DASHBOARD **/
 async function renderDashboard() {
     const { titleEl, scrollEl } = getZones();
@@ -115,7 +124,7 @@ async function renderDashboard() {
         const ownedTotal = ownedGames.length + ownedConsoles.length;
         const wishlistTotal = games.filter(g => g.isWishlist).length + consoles.filter(c => c.isWishlist).length;
 
-        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v36</span></h2>`;
+        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v37</span></h2>`;
 
         scrollEl.innerHTML = `
             <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:15px; margin-top:5px;">
@@ -135,7 +144,7 @@ async function renderDashboard() {
                     ${Object.entries(groupBy(games.concat(consoles), 'platform'))
                 .sort((a, b) => b[1].length - a[1].length)
                 .map(([p, items]) => `
-                            <div style="display:flex; flex-direction:column; gap:4px; background:rgba(0,0,0,0.25); padding:10px; border-radius:10px; border:1px solid rgba(255,255,255,0.03);">
+                            <div onclick="navigateByPlatform('${p}')" style="display:flex; flex-direction:column; gap:4px; background:rgba(255,255,255,0.05); padding:10px; border-radius:10px; border:1px solid rgba(255,255,255,0.03); cursor:pointer;">
                                 <span style="font-size:0.65rem; opacity:0.6; text-transform:uppercase; letter-spacing:0.5px;">${p}</span>
                                 <span style="font-size:1.1rem; font-weight:800; color:#ff9f0a">${items.length}</span>
                             </div>
@@ -227,42 +236,60 @@ async function renderAddForm(item) {
     const type = item ? (item._t || (item.isConsole ? 'consoles' : 'games')) : 'games';
 
     scrollEl.innerHTML = `
-        <div style="display:flex; flex-direction:column; gap:14px; padding-bottom:120px; max-width:600px; margin:0 auto;">
+        <div style="display:flex; flex-direction:column; gap:16px; padding-bottom:120px; max-width:600px; margin:0 auto;">
             
             <div id="cover-preview" style="height:200px; background:#000 url(${item?.image || ''}) center/contain no-repeat; border-radius:15px; border:1px solid rgba(255,255,255,0.1); display:${item?.image ? 'block' : 'none'};"></div>
 
             <div style="display:flex; gap:12px;">
-                <select id="add-type" style="flex:1; padding:14px; background:#2b2b36; border:1px solid #444; color:white; border-radius:12px; font-size:0.9rem;">
-                    <option value="games" ${type === 'games' ? 'selected' : ''}>💾 Jogo</option>
-                    <option value="consoles" ${type === 'consoles' ? 'selected' : ''}>🕹️ Consola</option>
-                </select>
-                <div style="display:flex; align-items:center; gap:10px; background:#2b2b36; border:1px solid #444; padding:0 15px; border-radius:12px;">
+                <div style="flex:1; display:flex; flex-direction:column; gap:5px;">
+                    <label style="font-size:0.75rem; color:#ff9f0a; font-weight:700; margin-left:5px;">Tipo de Item</label>
+                    <select id="add-type" style="padding:14px; background:#2b2b36; border:1px solid #444; color:white; border-radius:12px; font-size:0.9rem;">
+                        <option value="games" ${type === 'games' ? 'selected' : ''}>💾 Jogo</option>
+                        <option value="consoles" ${type === 'consoles' ? 'selected' : ''}>🕹️ Consola</option>
+                    </select>
+                </div>
+                <div style="display:flex; align-items:flex-end; gap:10px; background:#2b2b36; border:1px solid #444; padding:12px 15px; border-radius:12px;">
                     <input type="checkbox" id="add-wishlist" style="width:18px; height:18px;" ${item && item.isWishlist ? 'checked' : ''}>
                     <label for="add-wishlist" style="font-size:0.85rem; font-weight:600;">Wishlist</label>
                 </div>
             </div>
 
-            <div style="display:flex; gap:10px;">
-                <input id="add-title" type="text" placeholder="Título do Jogo / Consola" value="${item ? item.title : ''}" style="flex:1; padding:14px; background:#2b2b36; border:1px solid #444; color:white; border-radius:12px; font-size:0.9rem;">
-                <button onclick="searchCover()" style="background:#ff9f0a; border:none; color:white; padding:0 15px; border-radius:12px; font-weight:700;">🔍</button>
+            <div style="display:flex; flex-direction:column; gap:5px;">
+                <label style="font-size:0.75rem; color:#ff9f0a; font-weight:700; margin-left:5px;">Título / Nome</label>
+                <div style="display:flex; gap:10px;">
+                    <input id="add-title" type="text" placeholder="Ex: God of War" value="${item ? item.title : ''}" style="flex:1; padding:14px; background:#2b2b36; border:1px solid #444; color:white; border-radius:12px; font-size:0.9rem;">
+                    <button onclick="searchCover()" style="background:#ff9f0a; border:none; color:white; padding:0 15px; border-radius:12px; font-weight:700;">🔍</button>
+                </div>
             </div>
             
-            <select id="add-platform" style="padding:14px; background:#2b2b36; border:1px solid #444; color:white; border-radius:12px; font-size:0.9rem;">
-                <option value="">Plataforma / Sistema</option>
-                ${pOptions}
-            </select>
+            <div style="display:flex; flex-direction:column; gap:5px;">
+                <label style="font-size:0.75rem; color:#ff9f0a; font-weight:700; margin-left:5px;">Plataforma / Consola</label>
+                <select id="add-platform" style="padding:14px; background:#2b2b36; border:1px solid #444; color:white; border-radius:12px; font-size:0.9rem;">
+                    <option value="">Selecionar Sistema</option>
+                    ${pOptions}
+                </select>
+            </div>
 
-            <div style="display:flex; gap:12px;">
-                <input id="add-image" type="text" placeholder="URL da Capa / Foto" value="${item ? (item.image || '') : ''}" oninput="updatePreview(this.value)" style="flex:1; padding:14px; background:#2b2b36; border:1px solid #444; color:white; border-radius:12px; font-size:0.9rem;">
-                <button onclick="document.getElementById('add-image').value = ''; updatePreview('')" style="background:#444; border:none; color:white; padding:0 18px; border-radius:12px; font-size:1.1rem;">🗑️</button>
+            <div style="display:flex; flex-direction:column; gap:5px;">
+                <label style="font-size:0.75rem; color:#ff9f0a; font-weight:700; margin-left:5px;">Capa (URL ou Base64)</label>
+                <div style="display:flex; gap:12px;">
+                    <input id="add-image" type="text" placeholder="URL da Capa" value="${item ? (item.image || '') : ''}" oninput="updatePreview(this.value)" style="flex:1; padding:14px; background:#2b2b36; border:1px solid #444; color:white; border-radius:12px; font-size:0.9rem;">
+                    <button onclick="document.getElementById('add-image').value = ''; updatePreview('')" style="background:#444; border:none; color:white; padding:0 18px; border-radius:12px; font-size:1.1rem;">🗑️</button>
+                </div>
             </div>
 
             <div style="display:flex; gap:12px;">
-                <div style="flex:1; position:relative;">
-                    <span style="position:absolute; left:12px; top:14px; opacity:0.5;">€</span>
-                    <input id="add-price" type="number" step="0.01" placeholder="0.00" value="${item ? (item.price || '') : ''}" style="width:100%; padding:14px 14px 14px 30px; background:#2b2b36; border:1px solid #444; color:white; border-radius:12px; font-size:0.9rem;">
+                <div style="flex:1; display:flex; flex-direction:column; gap:5px;">
+                    <label style="font-size:0.75rem; color:#ff9f0a; font-weight:700; margin-left:5px;">Preço Pago (€)</label>
+                    <div style="position:relative;">
+                        <span style="position:absolute; left:12px; top:14px; opacity:0.5;">€</span>
+                        <input id="add-price" type="number" step="0.01" placeholder="0.00" value="${item ? (item.price || '') : ''}" style="width:100%; padding:14px 14px 14px 30px; background:#2b2b36; border:1px solid #444; color:white; border-radius:12px; font-size:0.9rem;">
+                    </div>
                 </div>
-                <input id="add-date" type="date" value="${item ? (item.acquiredDate || '') : ''}" style="flex:1; padding:12px; background:#2b2b36; border:1px solid #444; color:white; border-radius:12px; font-size:0.9rem;">
+                <div style="flex:1; display:flex; flex-direction:column; gap:5px;">
+                    <label style="font-size:0.75rem; color:#ff9f0a; font-weight:700; margin-left:5px;">Data (DD/MM/AAAA)</label>
+                    <input id="add-date" type="date" value="${item ? (item.acquiredDate || '') : ''}" style="padding:12px; background:#2b2b36; border:1px solid #444; color:white; border-radius:12px; font-size:0.9rem;">
+                </div>
             </div>
 
             <button onclick="saveItem('${item ? item.id : ''}')" class="btn-primary" style="padding:18px; background:#ff9f0a; border:none; color:white; font-weight:800; border-radius:18px; margin-top:15px; font-size:1rem; cursor:pointer;">💾 Guardar Alterações</button>
@@ -416,7 +443,7 @@ async function renderSyncView() {
             <div style="background:rgba(255,100,100,0.05); padding:24px; border-radius:20px; border:1px solid rgba(255,0,0,0.2); margin-top:20px;">
                  <h3 style="margin-bottom:10px; font-size:1rem; color:#ff4d4d;">Zona de Perigo 🚨</h3>
                  <p style="margin-bottom:20px; font-size:0.8rem; opacity:0.65; line-height:1.4;">Se a App estiver a falhar ou se quiseres limpar tudo para começar do zero.</p>
-                 <button id="btn-force-update" style="width:100%; background:#ff4d4d; color:white; border:none; padding:14px; border-radius:14px; font-weight:800; cursor:pointer;">WIPE TOTAL DA APP (v36)</button>
+                 <button id="btn-force-update" style="width:100%; background:#ff4d4d; color:white; border:none; padding:14px; border-radius:14px; font-weight:800; cursor:pointer;">WIPE TOTAL DA APP (v37)</button>
             </div>
         </div>
     `;
@@ -433,7 +460,7 @@ async function renderSyncView() {
 
 /** INITIALIZATION **/
 async function init() {
-    logger("Iniciando RetroCollection v36...");
+    logger("Iniciando RetroCollection v37...");
     try {
         await dbService.open();
         logger("DB Conectado.");
@@ -472,5 +499,6 @@ window.saveItem = saveItem;
 window.deleteItem = deleteItem;
 window.searchCover = searchCover;
 window.selectCover = selectCover;
+window.navigateByPlatform = navigateByPlatform;
 
 init();
