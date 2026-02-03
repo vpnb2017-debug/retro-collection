@@ -2,7 +2,7 @@ import { dbService } from './services/db.js';
 import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js';
 import { coverSearchService } from './services/coverSearch.js';
 import WebuyService from './services/webuyService.js';
-import { localFileSync } from './services/localFileSync.js?v=63';
+import { localFileSync } from './services/localFileSync.js?v=64';
 
 // Global Exposure
 window.navigate = navigate;
@@ -129,7 +129,7 @@ async function renderDashboard() {
         const ownedTotal = ownedGames.length + ownedConsoles.length;
         const wishlistTotal = games.filter(g => g.isWishlist).length + consoles.filter(c => c.isWishlist).length;
 
-        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v63</span></h2>`;
+        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v64</span></h2>`;
 
         const platData = await getPlatformOptions();
 
@@ -557,32 +557,60 @@ async function pickLogoForPlatform(id) {
     const modal = document.getElementById('logo-picker-modal');
     const grid = document.getElementById('logo-grid');
     modal.style.display = 'flex';
-    grid.innerHTML = '<p style="grid-column:1/-1; text-align:center; opacity:0.5;">A carregar sugestões...</p>';
 
-    const base = 'https://cdn.jsdelivr.net/gh/KyleBing/retro-game-console-icons@main/art/';
-    const icons = [
-        'PS', 'PS2', 'PS3', 'PS4', 'PS5', 'PSP', 'VITA',
-        'FC', 'SFC', 'N64', 'NGC', 'WII', 'WIIU', 'SWITCH',
-        'GB', 'GBC', 'GBA', 'DS', '3DS',
-        'MD', 'MS', 'SATURN', 'DC', 'GG',
-        'XBOX', 'XBOX360', 'XBOXONE', 'XBOXSERIES',
-        'ATARI2600', 'ATARI5200', 'ATARI7800', 'ATARI800', 'ATARIST',
-        'AMIGA', 'C64', 'MSX', 'PC', 'DOS'
-    ];
-
-    grid.innerHTML = icons.map(name => `
-        <div onclick="window.selectLogo('${id}', '${base}${name}.png')" style="background:rgba(255,255,255,0.05); padding:10px; border-radius:12px; cursor:pointer; display:flex; align-items:center; justify-content:center; border:1px solid rgba(255,255,255,0.1); aspect-ratio:1/1;">
-            <img src="${base}${name}.png" style="width:100%; height:100%; object-fit:contain;" onerror="this.src='https://cdn-icons-png.flaticon.com/512/681/681122.png'; this.style.opacity='0.2';">
+    // Add Search UI at the top
+    grid.style.flexDirection = 'column';
+    grid.style.display = 'flex';
+    grid.innerHTML = `
+        <div style="margin-bottom:15px; width:100%;">
+            <input type="text" id="logo-search" placeholder="Procurar logo (ex: PSX, Nintendo...)" 
+                style="width:100%; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:white; padding:12px; border-radius:10px; font-size:0.9rem;"
+                oninput="window.filterLogos(this.value)">
         </div>
-    `).join('') + `
-        <div style="grid-column: 1 / -1; margin-top: 20px; padding: 15px; background: rgba(255,255,255,0.02); border-radius: 12px; border: 1px dashed rgba(255,255,255,0.1);">
-            <p style="font-size: 0.8rem; margin-bottom: 8px; opacity: 0.7;">Ou cola um link direto de imagem:</p>
+        <div id="logo-grid-inner" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap:10px; width:100%;">
+            <p style="grid-column:1/-1; text-align:center; opacity:0.5;">A carregar galeria...</p>
+        </div>
+        <div style="margin-top: 20px; padding: 15px; background: rgba(255,255,255,0.02); border-radius: 12px; border: 1px dashed rgba(255,255,255,0.1); width:100%;">
+            <p style="font-size: 0.8rem; margin-bottom: 8px; opacity: 0.7;">Ou cola um link direto:</p>
             <div style="display: flex; gap: 8px;">
                 <input type="text" id="manual-logo-url" placeholder="https://exemplo.com/logo.png" style="flex: 1; background: #111; border: 1px solid #333; color: #fff; padding: 8px; border-radius: 6px; font-size: 0.8rem;">
                 <button onclick="window.selectLogo('${id}', document.getElementById('manual-logo-url').value)" style="background: #ff9f0a; border: none; color: #000; padding: 8px 15px; border-radius: 6px; font-weight: bold; cursor: pointer;">OK</button>
             </div>
         </div>
     `;
+
+    const base = 'https://cdn.jsdelivr.net/gh/KyleBing/retro-game-console-icons@main/art/';
+    const icons = [
+        'PS', 'PS2', 'PS3', 'PS4', 'PS5', 'PSP', 'VITA', 'PSMINIS',
+        'FC', 'SFC', 'N64', 'N64DD', 'NGC', 'WII', 'WIIU', 'SWITCH',
+        'GB', 'GBC', 'GBA', 'DS', '3DS', 'GW', 'POKEMINI', 'VB',
+        'MD', 'MS', 'SATURN', 'DC', 'GG', 'SEGACD', 'SEGA32X', 'SG1000',
+        'XBOX', 'XBOX360', 'XBOXONE', 'XBOXSERIES',
+        'ATARI2600', 'ATARI5200', 'ATARI7800', 'ATARI800', 'ATARIST', 'LYNX',
+        'AMIGA', 'AMIGACD', 'C64', 'VIC20', 'CPC', 'MSX', 'MSX2', 'PC', 'DOS', 'PC88', 'PC98', 'PCE', 'PCECD', 'PCFX',
+        'ARCADE', 'MAME', 'NEOGEO', 'NEOCD', 'CPS1', 'CPS2', 'CPS3', 'NAOMI', 'ATOMISWAVE', 'PGM',
+        'COLECO', 'INTELLIVISION', 'VECTREX', 'MSX', 'SCUMMVM', 'PICO', 'TIC', 'ARDUBOY', 'UZEBOX'
+    ];
+
+    window.allIcons = icons; // Store for filtering
+    window.currentEditingId = id;
+
+    const renderInner = (list) => {
+        const inner = document.getElementById('logo-grid-inner');
+        inner.innerHTML = list.map(name => `
+            <div onclick="window.selectLogo('${id}', '${base}${name}.png')" style="background:rgba(255,255,255,0.05); padding:10px; border-radius:12px; cursor:pointer; display:flex; flex-direction:column; align-items:center; justify-content:center; border:1px solid rgba(255,255,255,0.1); aspect-ratio:1/1;">
+                <img src="${base}${name}.png" style="width:100%; height:70%; object-fit:contain;" onerror="this.src='https://cdn-icons-png.flaticon.com/512/681/681122.png'; this.style.opacity='0.2';">
+                <span style="font-size:0.5rem; margin-top:5px; opacity:0.4;">${name}</span>
+            </div>
+        `).join('') || '<p style="grid-column:1/-1; text-align:center; opacity:0.5; padding:20px;">Nenhum logo encontrado.</p>';
+    };
+
+    renderInner(icons);
+
+    window.filterLogos = (query) => {
+        const filtered = icons.filter(i => i.toLowerCase().includes(query.toLowerCase()));
+        renderInner(filtered);
+    };
 }
 
 function selectLogo(id, url) {
@@ -634,7 +662,7 @@ async function exportCollection() {
         const platforms = await dbService.getAll('platforms');
 
         const data = {
-            version: "v63",
+            version: "v64",
             timestamp: new Date().toISOString(),
             games,
             consoles,
@@ -705,15 +733,15 @@ async function importCollection() {
 
 /** INITIALIZATION **/
 async function init() {
-    logger("Iniciando RetroCollection v63...");
+    logger("Iniciando RetroCollection v64...");
     try {
         await dbService.open();
         logger("DB Conectado.");
 
-        // Auto-Sync Logos logic for v63
-        if (!localStorage.getItem('logos_synced_v63')) {
+        // Auto-Sync Logos logic for v64
+        if (!localStorage.getItem('logos_synced_v64')) {
             await autoSyncLogos();
-            localStorage.setItem('logos_synced_v63', 'true');
+            localStorage.setItem('logos_synced_v64', 'true');
         }
         await navigate('nav-dashboard');
 
