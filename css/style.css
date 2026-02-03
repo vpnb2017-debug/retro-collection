@@ -7,12 +7,14 @@
 }
 
 html,
-body,
-#app {
+body {
     height: 100%;
+    width: 100%;
     margin: 0;
     padding: 0;
     overflow: hidden;
+    position: fixed;
+    /* Prevents bounce and scroll */
 }
 
 body {
@@ -71,7 +73,9 @@ input:focus {
 #app {
     display: flex;
     flex-direction: column;
-    height: 100vh;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
 }
 
 .app-header {
@@ -138,7 +142,6 @@ input:focus {
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    /* Important: individual views handle scroll */
     max-width: 1200px;
     margin: 0 auto;
     width: 100%;
@@ -149,7 +152,6 @@ input:focus {
     overflow-y: auto;
     padding: var(--space-lg);
     min-height: 0;
-    /* Crucial for flex overflow */
 }
 
 /* Utility / Loading */
@@ -208,7 +210,7 @@ input:focus {
     width: 90%;
     max-width: 450px;
     transform: scale(0.9);
-    transition: transform 0.3s cubic_bezier(0.34, 1.56, 0.64, 1);
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
 }
 
@@ -233,31 +235,6 @@ input:focus {
     display: flex;
     gap: 1rem;
     justify-content: flex-end;
-}
-
-/* Mobile Tweaks */
-@media (max-width: 600px) {
-    .app-header {
-        padding: var(--space-md);
-        flex-direction: column;
-        gap: var(--space-md);
-    }
-
-    .main-nav {
-        width: 100%;
-        justify-content: space-between;
-        background: rgba(30, 41, 59, 0.5);
-        padding: 5px;
-        border-radius: var(--radius-full);
-    }
-
-    #main-content {
-        padding: var(--space-md);
-    }
-
-    .modal-content {
-        padding: 1.5rem;
-    }
 }
 
 /* Bottom Nav */
@@ -286,19 +263,24 @@ input:focus {
     box-shadow: 0 0 10px var(--accent-glow);
 }
 
+/* Mobile Tweaks */
 @media (max-width: 600px) {
+    .app-header {
+        padding: var(--space-md);
+        flex-direction: column;
+        gap: var(--space-md);
+    }
+
     .main-nav {
         display: none !important;
-        /* Hide top nav on mobile */
+    }
+
+    #main-content {
+        padding: 0;
     }
 
     .bottom-nav {
         display: flex;
-    }
-
-    #main-content {
-        padding-bottom: 80px;
-        /* Space for bottom nav */
     }
 
     .collection-grid {
@@ -312,5 +294,9 @@ input:focus {
 
     .game-card h4 {
         font-size: 0.85rem !important;
+    }
+
+    .modal-content {
+        padding: 1.5rem;
     }
 }

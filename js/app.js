@@ -306,7 +306,7 @@ async function renderGenericGrid(viewTitle, itemsFilter) {
             </div>
         </div>
 
-        <div id="grid-scroll-area" style="flex:1; overflow-y:auto; padding: 0 var(--space-lg) var(--space-lg) var(--space-lg);">
+        <div id="grid-scroll-area" style="flex:1; overflow-y:auto; padding: 0 var(--space-lg) var(--space-lg) var(--space-lg); min-height:0;">
             <div class="collection-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem;">
                 <p style="color:white">A carregar...</p>
             </div>
