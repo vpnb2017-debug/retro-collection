@@ -907,81 +907,20 @@ async function renderSyncView() {
                 <p style="font-size:0.85rem; color:var(--text-secondary); margin:0.5rem 0;">A instalação está pronta! Clique no botão abaixo para colocar no seu ecrã.</p>
                 <button id="btn-pwa-install" class="btn-primary" style="margin-top:1rem; width:100%;">Instalar Agora</button>
             </div>
+
+            <div class="glass" style="margin-top:1.5rem; padding:1.5rem; border-radius:var(--radius-lg); text-align:left;">
+                <h4 style="color:var(--text-secondary); margin-bottom:0.5rem;">🔍 Diagnóstico da App</h4>
+                <ul style="font-size:0.75rem; color:var(--text-secondary); list-style:none; padding:0;">
+                    <li>📡 Protocolo: <span id="diag-https">Verificando...</span></li>
+                    <li>⚙️ Service Worker: <span id="diag-sw">Verificando...</span></li>
+                    <li>📦 Manifest: ✅ Detetado</li>
+                </ul>
+                <p style="font-size:0.7rem; color:var(--text-secondary); margin-top:0.5rem;">Nota: A instalação <b>exige</b> HTTPS (Site Seguro).</p>
+            </div>
         </div>
     `;
 
-    // Force Update Logic
-    const btnForce = document.getElementById('btn-force-update');
-    if (btnForce) {
-        btnForce.onclick = async () => {
-            if (confirm('Isto irá limpar cache e reiniciar a App (v24). Continuar?')) {
-                if ('serviceWorker' in navigator) {
-                    const regs = await navigator.serviceWorker.getRegistrations();
-                    for (let reg of regs) await reg.unregister();
-                }
-                const names = await caches.keys();
-                for (let name of names) await caches.delete(name);
-                localStorage.setItem('force_refresh', 'true');
-                location.href = location.href.split('?')[0] + '?v=' + Date.now();
-            }
-        };
-    }
-
-    <div class="glass" style="margin-top:1.5rem; padding:1.5rem; border-radius:var(--radius-lg); text-align:left;">
-        <h4 style="color:var(--text-secondary); margin-bottom:0.5rem;">🔍 Diagnóstico da App</h4>
-        <ul style="font-size:0.75rem; color:var(--text-secondary); list-style:none; padding:0;">
-            <li>📡 Protocolo: <span id="diag-https">Verificando...</span></li>
-            <li>⚙️ Service Worker: <span id="diag-sw">Verificando...</span></li>
-            <li>📦 Manifest: ✅ Detetado</li>
-        </ul>
-        <p style="font-size:0.7rem; color:var(--text-secondary); margin-top:0.5rem;">Nota: A instalação <b>exige</b> HTTPS (Site Seguro).</p>
-    </div>
-        </div >
-        `;
-
-    // Fill diagnostics
-    const httpsOk = window.location.protocol === 'https:' || window.location.hostname === 'localhost';
-    document.getElementById('diag-https').innerHTML = httpsOk ? '✅ Seguro (HTTPS/Local)' : '❌ Inseguro (HTTP)';
-    document.getElementById('diag-https').style.color = httpsOk ? '#4ade80' : '#f87171';
-
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.getRegistration().then(reg => {
-            const swOk = !!reg;
-            document.getElementById('diag-sw').innerHTML = swOk ? '✅ Ativo' : '❌ Não Registado';
-            document.getElementById('diag-sw').style.color = swOk ? '#4ade80' : '#f87171';
-        });
-    }
-
-    if (state.deferredPrompt) {
-        document.getElementById('btn-pwa-install').onclick = async () => {
-            const promptEvent = state.deferredPrompt;
-            promptEvent.prompt();
-            const { outcome } = await promptEvent.userChoice;
-            console.log(`User response to install prompt: ${ outcome } `);
-            state.deferredPrompt = null;
-            document.getElementById('pwa-install-container').style.display = 'none';
-        };
-    }
-
-    // Force Update Logic
-    document.getElementById('btn-force-update').onclick = async () => {
-        if (await uiService.confirm("Isto irá forçar a App a limpar o cache e ir buscar a versão mais recente ao GitHub. Continuar?")) {
-            if ('serviceWorker' in navigator) {
-                const registrations = await navigator.serviceWorker.getRegistrations();
-                for (let registration of registrations) {
-                    await registration.unregister();
-                }
-            }
-            window.location.reload(true);
-        }
-    };
-
-    // Display filename if known
-    const knownFile = localStorage.getItem('sync_filename');
-    if (knownFile) {
-        document.getElementById('sync-filename').textContent = knownFile;
-    }
-
+    // Listeners
     document.getElementById('btn-file-save').onclick = async () => {
         const games = await dbService.getAll('games');
         const consoles = await dbService.getAll('consoles');
@@ -989,14 +928,12 @@ async function renderSyncView() {
 
         try {
             if (!window.showSaveFilePicker) {
-                // Mobile/Fallback
                 localFileSync.downloadFallback({ games, consoles, platforms, timestamp: Date.now() });
                 uiService.alert("Ficheiro de backup gerado! Guarde-o na sua pasta do Drive.", "Exportar");
             } else {
-                // Desktop
                 const fileName = await localFileSync.selectFileForSave();
                 if (fileName) {
-                    uiService.alert(`A guardar em ${ fileName }...`, "Sincronizando");
+                    uiService.alert(`A guardar em ${fileName}...`, "Sincronizando");
                     await localFileSync.save({ games, consoles, platforms, timestamp: Date.now() });
 
                     const nowString = new Date().toLocaleString('pt-PT');
@@ -1004,10 +941,13 @@ async function renderSyncView() {
                     localStorage.setItem('sync_filename', fileName);
 
                     const statusEl = document.getElementById('sync-status');
-                    statusEl.textContent = 'Último envio: ' + nowString;
-                    statusEl.style.display = 'block';
-                    document.getElementById('sync-filename').textContent = fileName;
-
+                    if (statusEl) {
+                        statusEl.textContent = 'Último envio: ' + nowString;
+                        statusEl.style.display = 'block';
+                    }
+                    if (document.getElementById('sync-filename')) {
+                        document.getElementById('sync-filename').textContent = fileName;
+                    }
                     uiService.alert("Alterações enviadas com sucesso! ✅", "Feito");
                 }
             }
@@ -1021,7 +961,6 @@ async function renderSyncView() {
             try {
                 let data;
                 if (!window.showOpenFilePicker) {
-                    // Mobile Fallback: Use input file
                     const input = document.createElement('input');
                     input.type = 'file';
                     input.accept = '.json';
@@ -1031,13 +970,14 @@ async function renderSyncView() {
                     };
                     input.click();
                 } else {
-                    // Desktop
                     const fileName = await localFileSync.selectFileForLoad();
                     if (fileName) {
                         data = await localFileSync.load();
                         await applyImport(data);
                         localStorage.setItem('sync_filename', fileName);
-                        document.getElementById('sync-filename').textContent = fileName;
+                        if (document.getElementById('sync-filename')) {
+                            document.getElementById('sync-filename').textContent = fileName;
+                        }
                     }
                 }
             } catch (e) {
@@ -1059,6 +999,59 @@ async function renderSyncView() {
 
         uiService.alert("Dados restaurados! 🔄", "Sucesso ✅");
         navigate('nav-dashboard');
+    }
+
+    const btnInstall = document.getElementById('btn-pwa-install');
+    if (btnInstall) {
+        btnInstall.onclick = async () => {
+            if (!state.deferredPrompt) return;
+            state.deferredPrompt.prompt();
+            const { outcome } = await state.deferredPrompt.userChoice;
+            if (outcome === 'accepted') {
+                state.deferredPrompt = null;
+                renderSyncView();
+            }
+        };
+    }
+
+    const btnForce = document.getElementById('btn-force-update');
+    if (btnForce) {
+        btnForce.onclick = async () => {
+            if (confirm('Isto irá limpar cache e reiniciar a App (v24). Continuar?')) {
+                if ('serviceWorker' in navigator) {
+                    const regs = await navigator.serviceWorker.getRegistrations();
+                    for (let reg of regs) await reg.unregister();
+                }
+                const names = await caches.keys();
+                for (let name of names) await caches.delete(name);
+                localStorage.clear();
+                location.href = location.href.split('?')[0] + '?v=' + Date.now();
+            }
+        };
+    }
+
+    // Diagnostics
+    const httpsOk = window.location.protocol === 'https:' || window.location.hostname === 'localhost';
+    const diagHttps = document.getElementById('diag-https');
+    if (diagHttps) {
+        diagHttps.innerHTML = httpsOk ? '✅ Seguro (HTTPS/Local)' : '❌ Inseguro (HTTP)';
+        diagHttps.style.color = httpsOk ? '#4ade80' : '#f87171';
+    }
+
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistration().then(reg => {
+            const swOk = !!reg;
+            const diagSw = document.getElementById('diag-sw');
+            if (diagSw) {
+                diagSw.innerHTML = swOk ? '✅ Ativo' : '❌ Não Registado';
+                diagSw.style.color = swOk ? '#4ade80' : '#f87171';
+            }
+        });
+    }
+
+    const currentFile = localStorage.getItem('sync_filename');
+    if (currentFile && document.getElementById('sync-filename')) {
+        document.getElementById('sync-filename').textContent = currentFile;
     }
 }
 
