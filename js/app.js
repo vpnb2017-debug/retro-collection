@@ -2,7 +2,7 @@ import { dbService } from './services/db.js';
 import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js';
 import { coverSearchService } from './services/coverSearch.js';
 import WebuyService from './services/webuyService.js';
-import { localFileSync } from './services/localFileSync.js?v=65';
+import { localFileSync } from './services/localFileSync.js?v=66';
 
 // Global Exposure
 window.navigate = navigate;
@@ -108,7 +108,17 @@ async function navigate(id, params = null) {
         case 'nav-wishlist': await renderWishlist(); break;
         case 'nav-platforms': await renderPlatformManager(); break;
         case 'nav-sync': await renderSyncView(); break;
-        case 'nav-add': await renderAddForm(params); break;
+        case 'nav-add':
+            let itemToEdit = params;
+            if (typeof params === 'string') {
+                // Fetch from DB if only ID passed
+                const g = await dbService.get('games', params);
+                const c = await dbService.get('consoles', params);
+                itemToEdit = g || c;
+                if (itemToEdit) itemToEdit._t = g ? 'games' : 'consoles';
+            }
+            await renderAddForm(itemToEdit);
+            break;
     }
 }
 
@@ -131,7 +141,7 @@ async function renderDashboard() {
         const ownedTotal = ownedGames.length + ownedConsoles.length;
         const wishlistTotal = games.filter(g => g.isWishlist).length + consoles.filter(c => c.isWishlist).length;
 
-        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v65</span></h2>`;
+        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v66</span></h2>`;
 
         const platData = await getPlatformOptions();
 
@@ -229,10 +239,10 @@ async function renderGenericGrid(viewTitle, itemsFilter) {
             state.lastFilteredList = filtered;
 
             scrollEl.innerHTML = `
-                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap:12px;">
+                <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap:12px;">
                     ${filtered.map(item => `
-                        <div onclick="navigate('nav-add', ${JSON.stringify(item).replace(/"/g, '&quot;')})" style="background:rgba(255,255,255,0.05); border-radius:12px; overflow:hidden; border:1px solid rgba(255,255,255,0.1); height:210px; cursor:pointer; display:flex; flex-direction:column; transition: transform 0.2s;">
-                            <div style="height:130px; background:#000 url(${item.image || ''}) center/contain no-repeat;"></div>
+                        <div onclick="navigate('nav-add', '${item.id}')" style="background:rgba(255,255,255,0.05); border-radius:12px; overflow:hidden; border:1px solid rgba(255,255,255,0.1); height:210px; cursor:pointer; display:flex; flex-direction:column; transition: transform 0.2s;">
+                            <div style="height:130px; background:#000 url(${item.image || ''}) center/contain no-repeat; pointer-events:none;"></div>
                             <div style="padding:10px; flex:1; display:flex; flex-direction:column; justify-content:space-between;">
                                 <h4 style="font-size:0.75rem; overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; line-height:1.2; font-weight:600;">${item.title}</h4>
                                 <span style="font-size:0.65rem; color:#ffc978; font-weight:800; text-transform:uppercase;">${item.platform || 'Geral'}</span>
@@ -276,9 +286,9 @@ async function renderAddForm(item) {
             const next = state.lastFilteredList[idx + 1];
             navArrows = `
                 <div style="display:flex; gap:10px; align-items:center; margin-left:auto;">
-                    <button onclick="navigate('nav-add', ${JSON.stringify(prev).replace(/"/g, '&quot;')})" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:white; width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; opacity:${prev ? 1 : 0.2}; pointer-events:${prev ? 'auto' : 'none'};">⬅️</button>
+                    <button onclick="navigate('nav-add', '${prev?.id}')" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:white; width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; opacity:${prev ? 1 : 0.2}; pointer-events:${prev ? 'auto' : 'none'};">⬅️</button>
                     <span style="font-size:0.7rem; opacity:0.5;">${idx + 1} / ${state.lastFilteredList.length}</span>
-                    <button onclick="navigate('nav-add', ${JSON.stringify(next).replace(/"/g, '&quot;')})" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:white; width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; opacity:${next ? 1 : 0.2}; pointer-events:${next ? 'auto' : 'none'};">➡️</button>
+                    <button onclick="navigate('nav-add', '${next?.id}')" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:white; width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; opacity:${next ? 1 : 0.2}; pointer-events:${next ? 'auto' : 'none'};">➡️</button>
                 </div>
             `;
         }
@@ -697,7 +707,7 @@ async function exportCollection() {
         const platforms = await dbService.getAll('platforms');
 
         const data = {
-            version: "v65",
+            version: "v66",
             timestamp: new Date().toISOString(),
             games,
             consoles,
@@ -768,15 +778,15 @@ async function importCollection() {
 
 /** INITIALIZATION **/
 async function init() {
-    logger("Iniciando RetroCollection v65...");
+    logger("Iniciando RetroCollection v66...");
     try {
         await dbService.open();
         logger("DB Conectado.");
 
-        // Auto-Sync Logos logic for v65
-        if (!localStorage.getItem('logos_synced_v65')) {
+        // Auto-Sync Logos logic for v66
+        if (!localStorage.getItem('logos_synced_v66')) {
             await autoSyncLogos();
-            localStorage.setItem('logos_synced_v65', 'true');
+            localStorage.setItem('logos_synced_v66', 'true');
         }
         await navigate('nav-dashboard');
 
