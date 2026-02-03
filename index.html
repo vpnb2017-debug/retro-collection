@@ -14,7 +14,22 @@
 
     <!-- Styles -->
     <link rel="stylesheet" href="css/variables.css">
-    <link rel="stylesheet" href="css/style_v27.css?v=27">
+    <script>
+        // NUCLEAR CACHE BYPASS v28
+        if (localStorage.getItem('app_version') !== '28') {
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations().then(regs => {
+                    for (let reg of regs) reg.unregister();
+                });
+            }
+            caches.keys().then(names => {
+                for (let name of names) caches.delete(name);
+            });
+            localStorage.setItem('app_version', '28');
+            console.log('Cache Nuclear Wipe Done for v28');
+        }
+    </script>
+    <link rel="stylesheet" href="css/style_v28.css?v=28">
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -72,12 +87,12 @@
     <!-- External Libs -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 
-    <!-- Main Entry Point v27 -->
-    <script type="module" src="js/app.js?v=27"></script>
+    <!-- Main Entry Point v28 -->
+    <script type="module" src="js/app.js?v=28"></script>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js?v=27').catch(err => console.log('SW failed', err));
+                navigator.serviceWorker.register('sw.js?v=28').catch(err => console.log('SW failed', err));
             });
         }
     </script>
