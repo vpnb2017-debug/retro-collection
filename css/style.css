@@ -7,8 +7,11 @@
 }
 
 html,
-body {
+body,
+#app {
     height: 100%;
+    margin: 0;
+    padding: 0;
     overflow: hidden;
 }
 
@@ -79,8 +82,7 @@ input:focus {
     border-bottom: 1px solid var(--border-color);
     background: rgba(15, 23, 42, 0.8);
     backdrop-filter: blur(10px);
-    position: sticky;
-    top: 0;
+    flex-shrink: 0;
     z-index: 50;
 }
 
@@ -146,6 +148,8 @@ input:focus {
     flex: 1;
     overflow-y: auto;
     padding: var(--space-lg);
+    min-height: 0;
+    /* Crucial for flex overflow */
 }
 
 /* Utility / Loading */
@@ -259,14 +263,11 @@ input:focus {
 /* Bottom Nav */
 .bottom-nav {
     display: none;
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
     height: 60px;
     background: rgba(15, 23, 42, 0.95);
     backdrop-filter: blur(15px);
     border-top: 1px solid var(--border-color);
+    flex-shrink: 0;
     z-index: 100;
     padding: 0 1rem;
     justify-content: space-around;
