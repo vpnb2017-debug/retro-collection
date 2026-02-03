@@ -2,7 +2,7 @@ import { dbService } from './services/db.js';
 import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js';
 import { coverSearchService } from './services/coverSearch.js';
 import WebuyService from './services/webuyService.js';
-import { localFileSync } from './services/localFileSync.js?v=56';
+import { localFileSync } from './services/localFileSync.js?v=57';
 
 // Global Exposure
 window.navigate = navigate;
@@ -129,7 +129,7 @@ async function renderDashboard() {
         const ownedTotal = ownedGames.length + ownedConsoles.length;
         const wishlistTotal = games.filter(g => g.isWishlist).length + consoles.filter(c => c.isWishlist).length;
 
-        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v56</span></h2>`;
+        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v57</span></h2>`;
 
         const platData = await getPlatformOptions();
 
@@ -559,15 +559,15 @@ async function pickLogoForPlatform(id) {
     modal.style.display = 'flex';
     grid.innerHTML = '<p style="grid-column:1/-1; text-align:center; opacity:0.5;">A carregar sugestões...</p>';
 
-    const base = 'https://raw.githubusercontent.com/KyleBing/retro-game-console-icons/master/icons/';
+    const base = 'https://raw.githubusercontent.com/KyleBing/retro-game-console-icons/main/art/';
     const icons = [
-        'ps.png', 'ps2.png', 'ps3.png', 'ps4.png', 'ps5.png', 'psp.png', 'vita.png',
-        'fc.png', 'sfc.png', 'n64.png', 'ngc.png', 'wii.png', 'wiiu.png', 'switch.png',
-        'gb.png', 'gbc.png', 'gba.png', 'ds.png', '3ds.png',
-        'md.png', 'ms.png', 'saturn.png', 'dc.png', 'gg.png',
-        'xbox.png', 'xbox360.png', 'xboxone.png', 'xboxseries.png',
-        'atari2600.png', 'atari5200.png', 'atari7800.png', 'atari800.png', 'atarist.png',
-        'amiga.png', 'c64.png', 'msx.png', 'pc.png', 'dos.png'
+        'PS.png', 'PS2.png', 'PS3.png', 'PS4.png', 'PS5.png', 'PSP.png', 'VITA.png',
+        'FC.png', 'SFC.png', 'N64.png', 'NGC.png', 'WII.png', 'WIIU.png', 'SWITCH.png',
+        'GB.png', 'GBC.png', 'GBA.png', 'DS.png', '3DS.png',
+        'MD.png', 'MS.png', 'SATURN.png', 'DC.png', 'GG.png',
+        'XBOX.png', 'XBOX360.png', 'XBOXONE.png', 'XBOXSERIES.png',
+        'ATARI2600.png', 'ATARI5200.png', 'ATARI7800.png', 'ATARI800.png', 'ATARIST.png',
+        'AMIGA.png', 'C64.png', 'MSX.png', 'PC.png', 'DOS.png'
     ];
 
     grid.innerHTML = icons.map(icon => `
@@ -625,7 +625,7 @@ async function exportCollection() {
         const platforms = await dbService.getAll('platforms');
 
         const data = {
-            version: "v56",
+            version: "v57",
             timestamp: new Date().toISOString(),
             games,
             consoles,
@@ -696,15 +696,15 @@ async function importCollection() {
 
 /** INITIALIZATION **/
 async function init() {
-    logger("Iniciando RetroCollection v56...");
+    logger("Iniciando RetroCollection v57...");
     try {
         await dbService.open();
         logger("DB Conectado.");
 
-        // Auto-Sync Logos logic for v56
-        if (!localStorage.getItem('logos_synced_v56')) {
+        // Auto-Sync Logos logic for v57
+        if (!localStorage.getItem('logos_synced_v57')) {
             await autoSyncLogos();
-            localStorage.setItem('logos_synced_v56', 'true');
+            localStorage.setItem('logos_synced_v57', 'true');
         }
         await navigate('nav-dashboard');
 
@@ -726,32 +726,32 @@ async function init() {
 
 async function autoSyncLogos() {
     const platforms = await getPlatformOptions();
-    const base = 'https://raw.githubusercontent.com/KyleBing/retro-game-console-icons/master/icons/';
+    const base = 'https://raw.githubusercontent.com/KyleBing/retro-game-console-icons/main/art/';
     const map = {
-        'playstation': 'ps.png', 'ps1': 'ps.png', 'psx': 'ps.png', 'playstation 1': 'ps.png', 'psone': 'ps.png',
-        'playstation 2': 'ps2.png', 'ps2': 'ps2.png',
-        'playstation 3': 'ps3.png', 'ps3': 'ps3.png',
-        'playstation 4': 'ps4.png', 'ps4': 'ps4.png',
-        'playstation 5': 'ps5.png', 'ps5': 'ps5.png',
-        'psp': 'psp.png', 'ps vita': 'vita.png', 'psvita': 'vita.png',
-        'nes': 'fc.png', 'nintendo': 'fc.png', 'famicom': 'fc.png', 'nintendo entertainment system': 'fc.png',
-        'snes': 'sfc.png', 'super nintendo': 'sfc.png', 'super famicom': 'sfc.png',
-        'n64': 'n64.png', 'nintendo 64': 'n64.png',
-        'gamecube': 'ngc.png', 'ngc': 'ngc.png', 'nintendo gamecube': 'ngc.png',
-        'wii': 'wii.png', 'wii u': 'wiiu.png', 'wiiu': 'wiiu.png',
-        'switch': 'switch.png', 'nintendo switch': 'switch.png',
-        'game boy': 'gb.png', 'gb': 'gb.png',
-        'game boy color': 'gbc.png', 'gbc': 'gbc.png',
-        'game boy advance': 'gba.png', 'gba': 'gba.png', 'gba sp': 'gba.png',
-        'ds': 'ds.png', 'nintendo ds': 'ds.png', 'ds lite': 'ds.png',
-        '3ds': '3ds.png', 'nintendo 3ds': '3ds.png', 'new 3ds': '3ds.png',
-        'mega drive': 'md.png', 'megadrive': 'md.png', 'genesis': 'md.png', 'sega mega drive': 'md.png',
-        'master system': 'ms.png', 'mastersystem': 'ms.png', 'sega master system': 'ms.png',
-        'saturn': 'saturn.png', 'sega saturn': 'saturn.png',
-        'dreamcast': 'dc.png', 'sega dreamcast': 'dc.png',
-        'game gear': 'gg.png', 'sega game gear': 'gg.png',
-        'atari 2600': 'atari2600.png', 'atari': 'atari2600.png',
-        'xbox': 'xbox.png', 'xbox 360': 'xbox360.png', 'xbox one': 'xboxone.png', 'xbox series': 'xboxseries.png'
+        'playstation': 'PS.png', 'ps1': 'PS.png', 'psx': 'PS.png', 'playstation 1': 'PS.png', 'psone': 'PS.png',
+        'playstation 2': 'PS2.png', 'ps2': 'PS2.png',
+        'playstation 3': 'PS3.png', 'ps3': 'PS3.png',
+        'playstation 4': 'PS4.png', 'ps4': 'PS4.png',
+        'playstation 5': 'PS5.png', 'ps5': 'PS5.png',
+        'psp': 'PSP.png', 'ps vita': 'VITA.png', 'psvita': 'VITA.png',
+        'nes': 'FC.png', 'nintendo': 'FC.png', 'famicom': 'FC.png', 'nintendo entertainment system': 'FC.png',
+        'snes': 'SFC.png', 'super nintendo': 'SFC.png', 'super famicom': 'SFC.png',
+        'n64': 'N64.png', 'nintendo 64': 'N64.png',
+        'gamecube': 'NGC.png', 'ngc': 'NGC.png', 'nintendo gamecube': 'NGC.png',
+        'wii': 'WII.png', 'wii u': 'WIIU.png', 'wiiu': 'WIIU.png',
+        'switch': 'SWITCH.png', 'nintendo switch': 'SWITCH.png',
+        'game boy': 'GB.png', 'gb': 'GB.png',
+        'game boy color': 'GBC.png', 'gbc': 'GBC.png',
+        'game boy advance': 'GBA.png', 'gba': 'GBA.png', 'gba sp': 'GBA.png',
+        'ds': 'DS.png', 'nintendo ds': 'DS.png', 'ds lite': 'DS.png',
+        '3ds': '3DS.png', 'nintendo 3ds': '3DS.png', 'new 3ds': '3DS.png',
+        'mega drive': 'MD.png', 'megadrive': 'MD.png', 'genesis': 'MD.png', 'sega mega drive': 'MD.png',
+        'master system': 'MS.png', 'mastersystem': 'MS.png', 'sega master system': 'MS.png',
+        'saturn': 'SATURN.png', 'sega saturn': 'SATURN.png',
+        'dreamcast': 'DC.png', 'sega dreamcast': 'DC.png',
+        'game gear': 'GG.png', 'sega game gear': 'GG.png',
+        'atari 2600': 'ATARI2600.png', 'atari': 'ATARI2600.png',
+        'xbox': 'XBOX.png', 'xbox 360': 'XBOX360.png', 'xbox one': 'XBOXONE.png', 'xbox series': 'XBOXSERIES.png'
     };
 
     for (const p of platforms) {
