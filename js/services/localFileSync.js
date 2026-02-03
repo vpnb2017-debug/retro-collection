@@ -51,7 +51,8 @@ export const localFileSync = {
         }
 
         try {
-            const writable = await fileHandle.createWritable();
+            // Explicitly truncate to ensure no old data remains if the new file is smaller
+            const writable = await fileHandle.createWritable({ keepExistingData: false });
             await writable.write(JSON.stringify(data, null, 2));
             await writable.close();
             return "saved";
@@ -69,7 +70,7 @@ export const localFileSync = {
         }
         const file = await fileHandle.getFile();
         const text = await file.text();
-        return JSON.parse(text);
+        return this.robustJSONParse(text);
     },
 
     downloadFallback(data) {
@@ -84,6 +85,25 @@ export const localFileSync = {
 
     async importFromFile(file) {
         const text = await file.text();
-        return JSON.parse(text);
+        return this.robustJSONParse(text);
+    },
+
+    robustJSONParse(text) {
+        text = text.trim();
+        try {
+            return JSON.parse(text);
+        } catch (e) {
+            console.warn("Simple JSON parse failed, attempting recovery...", e);
+            // If there's trailing junk, find the last closing brace
+            const lastBrace = text.lastIndexOf('}');
+            if (lastBrace !== -1) {
+                try {
+                    return JSON.parse(text.substring(0, lastBrace + 1));
+                } catch (e2) {
+                    throw new Error("Ficheiro de base de dados corrompido. Certifique-se de que o ficheiro é um JSON válido.");
+                }
+            }
+            throw e;
+        }
     }
 };
