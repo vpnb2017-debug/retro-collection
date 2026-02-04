@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport"
         content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>RetroCollection v106 🔍🔧🎮</title>
+    <title>RetroCollection v107 📅🔧🎮</title>
 
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1e1e24">
@@ -323,20 +323,20 @@
             return false;
         };
 
-        log("Arranque v106 iniciado...");
+        log("Arranque v107 iniciado...");
 
         // v102 AGGRESSIVE SETUP & UPDATE
         const urlParams = new URLSearchParams(window.location.search);
         const forceUpdate = urlParams.get('update');
 
-        if (localStorage.getItem('app_v') !== '106' || forceUpdate === '106') {
-            log("Actualização Crítica v106...");
-            localStorage.setItem('app_v', '106');
+        if (localStorage.getItem('app_v') !== '107' || forceUpdate === '107') {
+            log("Actualização Crítica v107...");
+            localStorage.setItem('app_v', '107');
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.getRegistrations().then(rs => {
                     Promise.all(rs.map(r => r.unregister())).then(() => {
                         log("Cache renovado. A reiniciar...");
-                        location.href = location.href.split('?')[0] + '?v=106';
+                        location.href = location.href.split('?')[0] + '?v=107';
                     });
                 });
             } else {
@@ -344,7 +344,7 @@
             }
         }
 
-        // Hanging check v106 + Emergency Button
+        // Hanging check v107 + Emergency Button
         setTimeout(() => {
             const title = document.querySelector('.v29-title-zone h2');
             if (title && title.innerText.includes('A carregar')) {
@@ -358,6 +358,7 @@
         document.getElementById('emergency-btn').onclick = async () => {
             if (confirm("Isto irá limpar o cache e desinstalar a App para tentar resolver o problema. Continuar?")) {
                 localStorage.removeItem('app_v');
+                localStorage.removeItem('logos_synced_v107');
                 localStorage.removeItem('logos_synced_v106');
                 localStorage.removeItem('logos_synced_v105');
                 localStorage.removeItem('logos_synced_v104');
@@ -371,18 +372,18 @@
                 }
                 const keys = await caches.keys();
                 for (let k of keys) await caches.delete(k);
-                location.href = location.href.split('?')[0] + '?update=106';
+                location.href = location.href.split('?')[0] + '?update=107';
             }
         };
     </script>
 
-    <script type="module" src="js/app.js?v=106"></script>
+    <script type="module" src="js/app.js?v=107"></script>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 // v104.1: Removed query string - causes fetch errors on some local servers
                 navigator.serviceWorker.register('sw.js')
-                    .then(() => log("v106 Pronta."))
+                    .then(() => log("v107 Pronta."))
                     .catch(e => log("Falha: " + e.message));
             });
         }

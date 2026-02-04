@@ -1,10 +1,10 @@
-import { dbService } from './services/db.js?v=106';
-import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js?v=106';
-import { coverSearchService } from './services/coverSearch.js?v=106';
-import WebuyService from './services/webuyService.js?v=106';
-import { localFileSync } from './services/localFileSync.js?v=106';
-import { metadataService } from './services/metadataService.js?v=106';
-import { cloudSyncService } from './services/cloudSyncService.js?v=106';
+import { dbService } from './services/db.js?v=107';
+import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js?v=107';
+import { coverSearchService } from './services/coverSearch.js?v=107';
+import WebuyService from './services/webuyService.js?v=107';
+import { localFileSync } from './services/localFileSync.js?v=107';
+import { metadataService } from './services/metadataService.js?v=107';
+import { cloudSyncService } from './services/cloudSyncService.js?v=107';
 
 // Global Exposure
 window.navigate = navigate;
@@ -92,6 +92,7 @@ const state = {
     filterType: 'all',
     filterPlatform: 'all',
     filterSearch: '',
+    filterDecade: null, // v107: Dedicated decade filter
     viewMode: 'grid',
     lastFilteredList: []
 };
@@ -144,14 +145,16 @@ async function navigateByGenre(genre) {
     state.filterPlatform = 'all';
     state.filterType = 'all';
     state.filterSearch = genre.toLowerCase();
+    state.filterDecade = null; // v107: Clear decade filter
     await navigate('nav-collection');
 }
 
-// v105: Navigation by Decade
+// v107: Navigation by Decade (improved)
 async function navigateByDecade(decade) {
     state.filterPlatform = 'all';
     state.filterType = 'all';
-    state.filterSearch = decade.toString();
+    state.filterSearch = '';
+    state.filterDecade = decade; // v107: Use dedicated decade filter
     await navigate('nav-collection');
 }
 
@@ -166,7 +169,7 @@ async function renderDashboard() {
         const ownedTotal = ownedGames.length + ownedConsoles.length;
         const wishlistTotal = games.filter(g => g.isWishlist).length + consoles.filter(c => c.isWishlist).length;
 
-        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v106</span></h2>`;
+        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v107</span></h2>`;
 
         const platData = await getPlatformOptions();
 
@@ -335,6 +338,14 @@ async function renderGenericGrid(viewTitle, itemsFilter) {
                 const itemPlat = i.platform || '(Sem Consola)';
                 if (state.filterPlatform !== 'all' && itemPlat !== state.filterPlatform) return false;
 
+                // v107: Decade filter (range-based)
+                if (state.filterDecade !== null) {
+                    if (!i.year) return false;
+                    const decadeStart = state.filterDecade;
+                    const decadeEnd = state.filterDecade + 9;
+                    if (i.year < decadeStart || i.year > decadeEnd) return false;
+                }
+
                 // v106: Search in title, genre, and year
                 if (state.filterSearch) {
                     const searchLower = state.filterSearch;
@@ -378,6 +389,7 @@ function clearFilters() {
     state.filterType = 'all';
     state.filterPlatform = 'all';
     state.filterSearch = '';
+    state.filterDecade = null; // v107: Clear decade filter
     const view = state.view === 'nav-collection' ? renderCollection : renderWishlist;
     view();
 }
@@ -902,7 +914,7 @@ async function renderSyncView() {
                     </div>
                  </div>
                  
-                <p style="margin-top:15px; font-size:0.75rem; color:#22c55e; font-weight:700; text-align:center;">🤖 Sentinela de Sync Ativo (v106)</p>
+                <p style="margin-top:15px; font-size:0.75rem; color:#22c55e; font-weight:700; text-align:center;">🤖 Sentinela de Sync Ativo (v107)</p>
             </div>
 
             <!-- Legacy Local Sync Section -->
@@ -1017,7 +1029,7 @@ async function pushToCloud(silent = false) {
         const platforms = await dbService.getAll('platforms');
 
         const data = {
-            version: "v106",
+            version: "v107",
             timestamp: new Date().toISOString(),
             games,
             consoles,
@@ -1144,15 +1156,15 @@ async function importCollection() {
 
 /** INITIALIZATION **/
 async function init() {
-    logger("Iniciando RetroCollection v106...");
+    logger("Iniciando RetroCollection v107...");
     try {
         await dbService.open();
         logger("DB Conectado.");
 
-        // Auto-Sync Logos logic for v106
-        if (!localStorage.getItem('logos_synced_v106')) {
+        // Auto-Sync Logos logic for v107
+        if (!localStorage.getItem('logos_synced_v107')) {
             await autoSyncLogos();
-            localStorage.setItem('logos_synced_v106', 'true');
+            localStorage.setItem('logos_synced_v107', 'true');
         }
 
         // v98 Resilient Startup
