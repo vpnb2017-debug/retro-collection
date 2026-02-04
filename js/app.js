@@ -150,7 +150,7 @@ async function renderDashboard() {
         const ownedTotal = ownedGames.length + ownedConsoles.length;
         const wishlistTotal = games.filter(g => g.isWishlist).length + consoles.filter(c => c.isWishlist).length;
 
-        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v92</span></h2>`;
+        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v93</span></h2>`;
 
         const platData = await getPlatformOptions();
 
@@ -1022,15 +1022,15 @@ async function importCollection() {
 
 /** INITIALIZATION **/
 async function init() {
-    logger("Iniciando RetroCollection v92...");
+    logger("Iniciando RetroCollection v93...");
     try {
         await dbService.open();
         logger("DB Conectado.");
 
-        // Auto-Sync Logos logic for v92
-        if (!localStorage.getItem('logos_synced_v92')) {
+        // Auto-Sync Logos logic for v93
+        if (!localStorage.getItem('logos_synced_v93')) {
             await autoSyncLogos();
-            localStorage.setItem('logos_synced_v92', 'true');
+            localStorage.setItem('logos_synced_v93', 'true');
         }
 
         // v92 Auto-Pull on start

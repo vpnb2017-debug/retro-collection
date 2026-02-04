@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport"
         content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>RetroCollection v92 🎮</title>
+    <title>RetroCollection v93 🎮</title>
 
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1e1e24">
@@ -318,41 +318,46 @@
 
         log("Arranque v92 iniciado...");
 
-        // v92 AGGRESSIVE SETUP & UPDATE
+        // v93 AGGRESSIVE SETUP & UPDATE
         const urlParams = new URLSearchParams(window.location.search);
         const forceUpdate = urlParams.get('update');
 
-        if (localStorage.getItem('app_v') !== '92' || forceUpdate === '92') {
-            log("Actualização Crítica v92...");
-            localStorage.setItem('app_v', '92');
+        // AUTO-INJECT GIST LINK IF MISSING (This is safe, not a secret)
+        if (!localStorage.getItem('cloud_sync_url')) {
+            localStorage.setItem('cloud_sync_url', 'https://gist.github.com/vpnb2017-debug/90680387537b0070ca06a86f91f16383');
+        }
+
+        if (localStorage.getItem('app_v') !== '93' || forceUpdate === '93') {
+            log("Actualização Crítica v93...");
+            localStorage.setItem('app_v', '93');
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.getRegistrations().then(rs => {
                     Promise.all(rs.map(r => r.unregister())).then(() => {
                         log("Cache renovado. A reiniciar...");
-                        location.href = location.href.split('?')[0] + '?v=92';
+                        location.href = location.href.split('?')[0] + '?v=93';
                     });
                 });
             } else {
-                location.href = location.href.split('?')[0] + '?v=92';
+                location.href = location.href.split('?')[0] + '?v=93';
             }
         }
 
-        // Hanging check v92
+        // Hanging check v93
         setTimeout(() => {
             const title = document.querySelector('.v29-title-zone h2');
             if (title && title.innerText.includes('A carregar')) {
                 log("Hanging detetado! Tentando bypass...");
-                location.href = location.href.split('?')[0] + '?force_v92=' + Date.now();
+                location.href = location.href.split('?')[0] + '?force_v93=' + Date.now();
             }
         }, 8000);
     </script>
 
-    <script type="module" src="js/app.js?v=92"></script>
+    <script type="module" src="js/app.js?v=93"></script>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js?v=92')
-                    .then(() => log("v92 Pronta."))
+                navigator.serviceWorker.register('sw.js?v=93')
+                    .then(() => log("v93 Pronta."))
                     .catch(e => log("Falha: " + e.message));
             });
         }
