@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport"
         content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>RetroCollection v95 🎮</title>
+    <title>RetroCollection v96 🎮</title>
 
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1e1e24">
@@ -316,43 +316,43 @@
             return false;
         };
 
-        log("Arranque v95 iniciado...");
+        log("Arranque v96 iniciado...");
 
-        // v95 AGGRESSIVE SETUP & UPDATE
+        // v96 AGGRESSIVE SETUP & UPDATE
         const urlParams = new URLSearchParams(window.location.search);
         const forceUpdate = urlParams.get('update');
 
-        if (localStorage.getItem('app_v') !== '95' || forceUpdate === '95') {
-            log("Actualização Crítica v95...");
-            localStorage.setItem('app_v', '95');
+        if (localStorage.getItem('app_v') !== '96' || forceUpdate === '96') {
+            log("Actualização Crítica v96...");
+            localStorage.setItem('app_v', '96');
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.getRegistrations().then(rs => {
                     Promise.all(rs.map(r => r.unregister())).then(() => {
                         log("Cache renovado. A reiniciar...");
-                        location.href = location.href.split('?')[0] + '?v=95';
+                        location.href = location.href.split('?')[0] + '?v=96';
                     });
                 });
             } else {
-                location.href = location.href.split('?')[0] + '?v=95';
+                location.href = location.href.split('?')[0] + '?v=96';
             }
         }
 
-        // Hanging check v95
+        // Hanging check v96
         setTimeout(() => {
             const title = document.querySelector('.v29-title-zone h2');
             if (title && title.innerText.includes('A carregar')) {
                 log("Hanging detetado! Tentando bypass...");
-                location.href = location.href.split('?')[0] + '?force_v95=' + Date.now();
+                location.href = location.href.split('?')[0] + '?force_v96=' + Date.now();
             }
         }, 8000);
     </script>
 
-    <script type="module" src="js/app.js?v=95"></script>
+    <script type="module" src="js/app.js?v=96"></script>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js?v=95')
-                    .then(() => log("v95 Pronta."))
+                navigator.serviceWorker.register('sw.js?v=96')
+                    .then(() => log("v96 Pronta."))
                     .catch(e => log("Falha: " + e.message));
             });
         }

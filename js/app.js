@@ -2,9 +2,9 @@ import { dbService } from './services/db.js?v=90';
 import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js?v=90';
 import { coverSearchService } from './services/coverSearch.js?v=90';
 import WebuyService from './services/webuyService.js?v=90';
-import { localFileSync } from './services/localFileSync.js?v=95';
-import { metadataService } from './services/metadataService.js?v=95';
-import { cloudSyncService } from './services/cloudSyncService.js?v=95';
+import { localFileSync } from './services/localFileSync.js?v=96';
+import { metadataService } from './services/metadataService.js?v=96';
+import { cloudSyncService } from './services/cloudSyncService.js?v=96';
 
 // Global Exposure
 window.navigate = navigate;
@@ -150,28 +150,54 @@ async function renderDashboard() {
         const ownedTotal = ownedGames.length + ownedConsoles.length;
         const wishlistTotal = games.filter(g => g.isWishlist).length + consoles.filter(c => c.isWishlist).length;
 
-        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v95</span></h2>`;
+        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v96</span></h2>`;
 
-        const platData = await getPlatformOptions();
+        // Sync Sentinel Logic v96
+        const cloudUrl = localStorage.getItem('cloud_sync_url');
+        const githubToken = localStorage.getItem('github_token');
+        const lastError = localStorage.getItem('last_push_error');
         const lastSync = localStorage.getItem('last_sync_timestamp') || 'Nunca';
+
+        let statusColor = '#22c55e'; // Green (OK)
+        let statusTitle = 'Sincronização Ativa';
+        let statusIcon = '🟢';
+        let errorMessage = '';
+
+        if (!cloudUrl || !githubToken) {
+            statusColor = '#ffb300'; // Yellow (Config Missing)
+            statusTitle = 'Configuração Incompleta';
+            statusIcon = '🟡';
+            errorMessage = 'Verifica o Token e o Link nas definições.';
+        } else if (lastError) {
+            statusColor = '#ef4444'; // Red (Error)
+            statusTitle = 'Erro de Sincronização';
+            statusIcon = '🔴';
+            errorMessage = lastError;
+        }
 
         scrollEl.innerHTML = `
             <div style="display:flex; flex-direction:column; gap:20px; padding-bottom:40px;">
                 
-                <!-- Sync Badge Dashboard v95 -->
-                <div style="background:rgba(255,159,10,0.05); padding:16px; border-radius:18px; border:1px solid rgba(255,159,10,0.2); display:flex; flex-direction:column; gap:10px;">
+                <!-- Sync Sentinel v96 -->
+                <div style="background:rgba(0,0,0,0.2); padding:16px; border-radius:18px; border:2px solid ${statusColor}; display:flex; flex-direction:column; gap:8px;">
                     <div style="display:flex; justify-content:space-between; align-items:center;">
                         <div style="display:flex; align-items:center; gap:8px;">
-                            <span style="font-size:1.2rem;">☁️</span>
-                            <span style="font-weight:700; font-size:0.85rem;">Sincronização Cloud</span>
+                            <span style="font-size:1.2rem;">${statusIcon}</span>
+                            <span style="font-weight:700; font-size:0.85rem; color:${statusColor};">${statusTitle}</span>
                         </div>
-                        <span style="font-size:0.7rem; opacity:0.6;">Última: ${lastSync}</span>
+                        <span style="font-size:0.65rem; opacity:0.6;">Última: ${lastSync}</span>
                     </div>
+                    
+                    ${errorMessage ? `<div style="font-size:0.75rem; color:#fff; background:rgba(239,68,68,0.1); padding:8px 12px; border-radius:10px;">${errorMessage}</div>` : ''}
+
                     <div style="display:flex; justify-content:space-between; align-items:center; padding-top:6px; border-top:1px solid rgba(255,255,255,0.05);">
                         <div style="font-size:0.75rem; opacity:0.8;">
-                           <b>${games.length}</b> Jogos | <b>${consoles.length}</b> Consolas
+                           <b>${games.length}</b> Jogos | <b>${consoles.length}</b> Itens
                         </div>
-                        <button onclick="pullFromCloud()" style="background:#ff9f0a; border:none; color:white; padding:6px 14px; border-radius:10px; font-weight:700; font-size:0.75rem; cursor:pointer; box-shadow:0 4px 10px rgba(255,159,10,0.2);">Puxar 📥</button>
+                        <div style="display:flex; gap:8px;">
+                            <button onclick="pullFromCloud()" style="background:#444; border:none; color:white; padding:8px 12px; border-radius:10px; font-weight:700; font-size:0.7rem; cursor:pointer;">Puxar 📥</button>
+                            <button onclick="pushToCloud()" style="background:${statusColor}; border:none; color:white; padding:8px 12px; border-radius:10px; font-weight:700; font-size:0.7rem; cursor:pointer;">Repetir 📤</button>
+                        </div>
                     </div>
                 </div>
             <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap:12px; margin-top:5px;">
@@ -851,7 +877,7 @@ async function renderSyncView() {
                     </div>
                  </div>
                  
-                <p style="margin-top:15px; font-size:0.75rem; color:#22c55e; font-weight:700; text-align:center;">🤖 Modo Sempre-Sincronizado Ativo (v95)</p>
+                <p style="margin-top:15px; font-size:0.75rem; color:#22c55e; font-weight:700; text-align:center;">🤖 Sentinela de Sync Ativo (v96)</p>
             </div>
 
             <!-- Legacy Local Sync Section -->
@@ -888,6 +914,7 @@ async function saveCloudLink() {
 
     localStorage.setItem('cloud_sync_url', url);
     if (token) localStorage.setItem('github_token', token);
+    localStorage.removeItem('last_push_error'); // Limpa erro ao gravar novas chaves
 
     uiService.alert("Chaves guardadas com sucesso! 💎", "Configurado!");
 }
@@ -954,7 +981,7 @@ async function pushToCloud(silent = false) {
         const platforms = await dbService.getAll('platforms');
 
         const data = {
-            version: "v95",
+            version: "v96",
             timestamp: new Date().toISOString(),
             games,
             consoles,
@@ -966,20 +993,36 @@ async function pushToCloud(silent = false) {
             if (!silent) logger("A enviar...");
             await cloudSyncService.uploadToGist(token, gistId, data);
 
+            // Sucesso: Limpar erro anterior
+            localStorage.removeItem('last_push_error');
+
             if (silent) {
                 const toast = document.createElement('div');
-                toast.style = "position:fixed; bottom:80px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.8); color:white; padding:10px 20px; border-radius:20px; font-size:0.75rem; z-index:99999; border:1px solid #22c55e; animation: fadeout 3s forwards;";
+                toast.style = "position:fixed; bottom:80px; left:50%; transform:translateX(-50%); background:rgba(34,197,94,0.9); color:white; padding:10px 20px; border-radius:20px; font-size:0.75rem; z-index:99999; border:1px solid #fff; animation: fadeout 3s forwards;";
                 toast.innerText = "☁️ Nuvem Atualizada!";
                 document.body.appendChild(toast);
                 setTimeout(() => toast.remove(), 3000);
             } else {
                 uiService.alert("Sincronizado com sucesso! 🚀", "Enviado!");
             }
+            // Atualiza Dashboard se estiver visível
+            if (state.view === 'nav-dashboard') renderDashboard();
         }
     } catch (err) {
+        // Grava o erro para o Sentinela mostrar no Dashboard
+        localStorage.setItem('last_push_error', err.message);
+        if (state.view === 'nav-dashboard') renderDashboard();
+
         if (!silent) {
             logger("PUSH ERR: " + err.message);
             uiService.alert("Erro ao enviar: " + err.message);
+        } else {
+            // Toast de erro silencioso
+            const toast = document.createElement('div');
+            toast.style = "position:fixed; bottom:80px; left:50%; transform:translateX(-50%); background:rgba(239,68,68,0.9); color:white; padding:10px 20px; border-radius:20px; font-size:0.75rem; z-index:99999; border:1px solid #fff; animation: fadeout 5s forwards;";
+            toast.innerText = "❌ Falha na Nuvem!";
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 5000);
         }
     }
 }
@@ -1065,15 +1108,15 @@ async function importCollection() {
 
 /** INITIALIZATION **/
 async function init() {
-    logger("Iniciando RetroCollection v95...");
+    logger("Iniciando RetroCollection v96...");
     try {
         await dbService.open();
         logger("DB Conectado.");
 
-        // Auto-Sync Logos logic for v95
-        if (!localStorage.getItem('logos_synced_v95')) {
+        // Auto-Sync Logos logic for v96
+        if (!localStorage.getItem('logos_synced_v96')) {
             await autoSyncLogos();
-            localStorage.setItem('logos_synced_v95', 'true');
+            localStorage.setItem('logos_synced_v96', 'true');
         }
 
         // v94 Auto-Pull on start
