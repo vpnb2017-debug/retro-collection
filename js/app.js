@@ -1,10 +1,10 @@
-import { dbService } from './services/db.js?v=107';
-import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js?v=107';
-import { coverSearchService } from './services/coverSearch.js?v=107';
-import WebuyService from './services/webuyService.js?v=107';
-import { localFileSync } from './services/localFileSync.js?v=107';
-import { metadataService } from './services/metadataService.js?v=107';
-import { cloudSyncService } from './services/cloudSyncService.js?v=107';
+import { dbService } from './services/db.js?v=108';
+import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js?v=108';
+import { coverSearchService } from './services/coverSearch.js?v=108';
+import WebuyService from './services/webuyService.js?v=108';
+import { localFileSync } from './services/localFileSync.js?v=108';
+import { metadataService } from './services/metadataService.js?v=108';
+import { cloudSyncService } from './services/cloudSyncService.js?v=108';
 
 // Global Exposure
 window.navigate = navigate;
@@ -169,7 +169,7 @@ async function renderDashboard() {
         const ownedTotal = ownedGames.length + ownedConsoles.length;
         const wishlistTotal = games.filter(g => g.isWishlist).length + consoles.filter(c => c.isWishlist).length;
 
-        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v107</span></h2>`;
+        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v108</span></h2>`;
 
         const platData = await getPlatformOptions();
 
@@ -914,7 +914,7 @@ async function renderSyncView() {
                     </div>
                  </div>
                  
-                <p style="margin-top:15px; font-size:0.75rem; color:#22c55e; font-weight:700; text-align:center;">🤖 Sentinela de Sync Ativo (v107)</p>
+                <p style="margin-top:15px; font-size:0.75rem; color:#22c55e; font-weight:700; text-align:center;">🤖 Sentinela de Sync Ativo (v108)</p>
             </div>
 
             <!-- Legacy Local Sync Section -->
@@ -1029,7 +1029,7 @@ async function pushToCloud(silent = false) {
         const platforms = await dbService.getAll('platforms');
 
         const data = {
-            version: "v107",
+            version: "v108",
             timestamp: new Date().toISOString(),
             games,
             consoles,
@@ -1156,15 +1156,15 @@ async function importCollection() {
 
 /** INITIALIZATION **/
 async function init() {
-    logger("Iniciando RetroCollection v107...");
+    logger("Iniciando RetroCollection v108...");
     try {
         await dbService.open();
         logger("DB Conectado.");
 
-        // Auto-Sync Logos logic for v107
-        if (!localStorage.getItem('logos_synced_v107')) {
+        // Auto-Sync Logos logic for v108
+        if (!localStorage.getItem('logos_synced_v108')) {
             await autoSyncLogos();
-            localStorage.setItem('logos_synced_v107', 'true');
+            localStorage.setItem('logos_synced_v108', 'true');
         }
 
         // v98 Resilient Startup
