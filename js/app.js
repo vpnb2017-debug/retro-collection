@@ -2,9 +2,9 @@ import { dbService } from './services/db.js?v=90';
 import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js?v=90';
 import { coverSearchService } from './services/coverSearch.js?v=90';
 import WebuyService from './services/webuyService.js?v=90';
-import { localFileSync } from './services/localFileSync.js?v=92';
-import { metadataService } from './services/metadataService.js?v=92';
-import { cloudSyncService } from './services/cloudSyncService.js?v=92';
+import { localFileSync } from './services/localFileSync.js?v=94';
+import { metadataService } from './services/metadataService.js?v=94';
+import { cloudSyncService } from './services/cloudSyncService.js?v=94';
 
 // Global Exposure
 window.navigate = navigate;
@@ -150,11 +150,23 @@ async function renderDashboard() {
         const ownedTotal = ownedGames.length + ownedConsoles.length;
         const wishlistTotal = games.filter(g => g.isWishlist).length + consoles.filter(c => c.isWishlist).length;
 
-        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v93</span></h2>`;
+        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v94</span></h2>`;
 
         const platData = await getPlatformOptions();
+        const lastSync = localStorage.getItem('last_sync_timestamp') || 'Nunca';
 
         scrollEl.innerHTML = `
+            <div style="display:flex; flex-direction:column; gap:20px; padding-bottom:40px;">
+                
+                <!-- Sync Badge Dashboard -->
+                <div style="background:rgba(255,159,10,0.05); padding:12px 20px; border-radius:14px; border:1px solid rgba(255,159,10,0.2); display:flex; justify-content:space-between; align-items:center; font-size:0.8rem;">
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <span style="font-size:1.1rem;">☁️</span>
+                        <span style="opacity:0.7;">Sincronização:</span>
+                        <span style="color:#ff9f0a; font-weight:700;">${lastSync}</span>
+                    </div>
+                    <button onclick="pullFromCloud()" style="background:none; border:none; color:#ff9f0a; font-weight:700; cursor:pointer; text-decoration:underline;">Puxar 📥</button>
+                </div>
             <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap:12px; margin-top:5px;">
                 <div onclick="navigate('nav-collection')" style="background:rgba(255,159,10,0.12); padding:20px; border-radius:18px; border:1px solid rgba(255,159,10,0.25); cursor:pointer;">
                     <h3 style="font-size:0.85rem; opacity:0.8; margin-bottom:8px;">Coleção</h3>
@@ -227,6 +239,7 @@ async function renderDashboard() {
                 <button onclick="navigate('nav-sync')" style="flex:1; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); padding:14px; border-radius:14px; color:white; font-size:0.85rem; cursor:pointer; font-weight:600;">Definições Cloud ☁️</button>
                 <button onclick="navigate('nav-platforms')" style="flex:1; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); padding:14px; border-radius:14px; color:white; font-size:0.85rem; cursor:pointer; font-weight:600;">Consolas 🕹️</button>
             </div>
+        </div>
         `;
     } catch (err) { logger("DASH ERR: " + err.message); }
 }
@@ -778,6 +791,11 @@ async function renderSyncView() {
     const { titleEl, scrollEl } = getZones();
     const cloudUrl = localStorage.getItem('cloud_sync_url') || '';
     const githubToken = localStorage.getItem('github_token') || '';
+    const lastSync = localStorage.getItem('last_sync_timestamp') || 'Nunca';
+
+    // Status Logic
+    const hasToken = githubToken.length > 10;
+    const hasUrl = cloudUrl.includes('gist.github.com');
 
     titleEl.innerHTML = `<h2>Nuvem & Definições</h2>`;
     scrollEl.innerHTML = `
@@ -785,12 +803,22 @@ async function renderSyncView() {
             
             <!-- Cloud Sync Section -->
             <div style="background:linear-gradient(135deg, rgba(255,159,10,0.1) 0%, rgba(255,121,80,0.1) 100%); padding:28px; border-radius:24px; border:1px solid rgba(255,159,10,0.3); box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
-                 <div style="display:flex; align-items:center; gap:12px; margin-bottom:15px;">
-                    <span style="font-size:1.8rem;">☁️</span>
-                    <h3 style="margin:0; font-size:1.2rem; color:#ff9f0a;">Sincronização Cloud</h3>
+                 <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px;">
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <span style="font-size:1.8rem;">☁️</span>
+                        <h3 style="margin:0; font-size:1.2rem; color:#ff9f0a;">Sincronização Cloud</h3>
+                    </div>
+                    ${hasToken ? '<span style="background:#22c55e; color:white; padding:4px 10px; border-radius:20px; font-size:0.65rem; font-weight:800;">🔐 PROTEGIDO</span>' : '<span style="background:#ef4444; color:white; padding:4px 10px; border-radius:20px; font-size:0.65rem; font-weight:800;">⚠️ SEM TOKEN</span>'}
                  </div>
                  
-                 <p style="margin-bottom:20px; font-size:0.9rem; opacity:0.8; line-height:1.5;">Liga a tua coleção ao <b>GitHub Gist</b> para sincronizar entre PC e Telemóvel.</p>
+                 <div style="background:rgba(0,0,0,0.2); padding:12px; border-radius:12px; margin-bottom:20px; font-size:0.8rem; display:flex; flex-direction:column; gap:4px;">
+                    <div style="display:flex; justify-content:space-between;">
+                        <span style="opacity:0.6;">Última Puxada:</span>
+                        <span style="color:#ff9f0a; font-weight:700;">${lastSync}</span>
+                    </div>
+                 </div>
+
+                 <p style="margin-bottom:20px; font-size:0.9rem; opacity:0.8; line-height:1.5;">A sincronização é **automática** em background. Usa estes botões apenas para verificação manual.</p>
                  
                  <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:20px;">
                     <label style="font-size:0.75rem; color:#ff9f0a; font-weight:700; margin-left:5px;">Link do Gist (Secret)</label>
@@ -800,11 +828,11 @@ async function renderSyncView() {
                  <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:24px;">
                     <label style="font-size:0.75rem; color:#ff9f0a; font-weight:700; margin-left:5px;">GitHub Token (Escrita)</label>
                     <input type="password" id="github-token-input" placeholder="ghp_..." value="${githubToken}" style="background:#1a1a20; border:1px solid #444; color:white; padding:15px; border-radius:12px; font-size:0.9rem;">
-                    <p style="font-size:0.65rem; opacity:0.4; margin-top:4px;">Necessário apenas para enviar dados do telemóvel para a nuvem.</p>
+                    <p style="font-size:0.65rem; opacity:0.4; margin-top:4px;">Invisível por segurança. Necessário para enviar dados para a nuvem.</p>
                  </div>
 
                  <div style="display:flex; flex-direction:column; gap:12px;">
-                    <button onclick="saveCloudLink()" style="width:100%; height:50px; background:#444; border:none; color:white; border-radius:14px; font-weight:700; cursor:pointer;">Gravar Definições 💾</button>
+                    <button onclick="saveCloudLink()" style="width:100%; height:50px; background:#444; border:none; color:white; border-radius:14px; font-weight:700; cursor:pointer;">Gravar Chaves 💾</button>
                     
                     <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-top:10px;">
                         <button onclick="pullFromCloud()" style="border:none; padding:18px; border-radius:16px; background:#ff9f0a; color:white; font-weight:800; cursor:pointer; font-size:0.9rem; box-shadow: 0 4px 15px rgba(255,159,10,0.3); display:flex; flex-direction:column; align-items:center; gap:8px;">
@@ -816,7 +844,7 @@ async function renderSyncView() {
                     </div>
                  </div>
                  
-                 <p style="margin-top:15px; font-size:0.75rem; color:#22c55e; font-weight:700; text-align:center;">🤖 Sincronização Automática Ativa (v92)</p>
+                 <p style="margin-top:15px; font-size:0.75rem; color:#22c55e; font-weight:700; text-align:center;">🤖 Modo Sempre-Sincronizado Ativo (v94)</p>
             </div>
 
             <!-- Legacy Local Sync Section -->
@@ -854,13 +882,13 @@ async function saveCloudLink() {
     localStorage.setItem('cloud_sync_url', url);
     if (token) localStorage.setItem('github_token', token);
 
-    uiService.alert("Definições guardadas com sucesso! 🛡️", "Guardado!");
+    uiService.alert("Chaves guardadas com sucesso! 💎", "Configurado!");
 }
 
 async function pullFromCloud(silent = false) {
     const url = localStorage.getItem('cloud_sync_url');
     if (!url) {
-        if (!silent) uiService.alert("Configura primeiro o link do Gist ou Drive nas definições.");
+        if (!silent) uiService.alert("Configura primeiro o link do Gist nas definições.");
         return;
     }
 
@@ -868,26 +896,27 @@ async function pullFromCloud(silent = false) {
     try {
         const data = await cloudSyncService.fetchDatabase(url);
         if (!data || (!data.games && !data.consoles)) {
-            throw new Error("Dados da nuvem inválidos ou vazios.");
+            throw new Error("Dados da nuvem inválidos.");
         }
 
-        // v92 Auto-Pull Logic
+        const now = new Date().toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' });
+        localStorage.setItem('last_sync_timestamp', now);
+
         if (silent) {
-            // Only import if remote timestamp is newer (if we had timestamps, let's just do it for now for simplicity)
-            // Or better: pull only if we don't have local data yet or force it on init
             await performFullImport(data);
+            if (state.view === 'nav-dashboard') renderDashboard();
             return;
         }
 
-        if (await uiService.confirm(`Encontrados ${data.games?.length || 0} jogos e ${data.consoles?.length || 0} consolas. Substituir a coleção local?`, "Sincronização Cloud")) {
+        if (await uiService.confirm(`Sincronizar ${data.games?.length || 0} jogos? Isto substituirá a coleção local.`, "Nuvem ☁️")) {
             await performFullImport(data);
-            uiService.alert("Coleção atualizada com sucesso a partir da Nuvem! ☁️✨", "Sucesso!");
+            uiService.alert("Sincronizado com sucesso! ✨", "Sucesso!");
             await navigate('nav-dashboard');
         }
     } catch (err) {
         if (!silent) {
-            logger("CLOUD SYNC ERR: " + err.message);
-            uiService.alert("Erro ao sincronizar: " + err.message);
+            logger("PULL ERR: " + err.message);
+            uiService.alert("Erro ao receber: " + err.message);
         }
     }
 }
@@ -897,22 +926,18 @@ async function pushToCloud(silent = false) {
     const token = localStorage.getItem('github_token');
 
     if (!url || !url.includes('gist.github.com')) {
-        if (!silent) return uiService.alert("O upload automático requer um link do GitHub Gist.");
+        if (!silent) return uiService.alert("O upload requer um link do GitHub Gist.");
         return;
     }
     if (!token) {
-        if (!silent) return uiService.alert("Precisas de um GitHub Token com permissão 'gist' para subir dados.");
+        if (!silent) return uiService.alert("Precisas de um GitHub Token para subir dados.");
         return;
     }
 
-    // Extract Gist ID
     const gistIdMatch = url.match(/\/([^/?]+)$/) || url.match(/\/([^/?]+)\/raw/);
     const gistId = gistIdMatch ? gistIdMatch[1] : null;
 
-    if (!gistId) {
-        if (!silent) return uiService.alert("ID do Gist inválido.");
-        return;
-    }
+    if (!gistId) return;
 
     if (!silent) logger("A preparar envio...");
     try {
@@ -921,22 +946,31 @@ async function pushToCloud(silent = false) {
         const platforms = await dbService.getAll('platforms');
 
         const data = {
-            version: "v92",
+            version: "v94",
             timestamp: new Date().toISOString(),
             games,
             consoles,
             platforms
         };
 
-        if (silent || await uiService.confirm(`Atualizar a Nuvem com ${games.length} itens?`, "Sincronizar 📤")) {
+        if (silent || await uiService.confirm(`Exportar ${games.length} itens para a Nuvem?`, "Sincronizar Agora 📤")) {
             if (!silent) logger("A enviar...");
             await cloudSyncService.uploadToGist(token, gistId, data);
-            if (!silent) uiService.alert("Dados sincronizados! 🚀", "Sucesso!");
+
+            if (silent) {
+                const toast = document.createElement('div');
+                toast.style = "position:fixed; bottom:80px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.8); color:white; padding:10px 20px; border-radius:20px; font-size:0.75rem; z-index:99999; border:1px solid #22c55e; animation: fadeout 3s forwards;";
+                toast.innerText = "☁️ Nuvem Atualizada!";
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), 3000);
+            } else {
+                uiService.alert("Sincronizado com sucesso! 🚀", "Enviado!");
+            }
         }
     } catch (err) {
         if (!silent) {
             logger("PUSH ERR: " + err.message);
-            uiService.alert("Erro ao subir: " + err.message);
+            uiService.alert("Erro ao enviar: " + err.message);
         }
     }
 }
@@ -1022,18 +1056,18 @@ async function importCollection() {
 
 /** INITIALIZATION **/
 async function init() {
-    logger("Iniciando RetroCollection v93...");
+    logger("Iniciando RetroCollection v94...");
     try {
         await dbService.open();
         logger("DB Conectado.");
 
-        // Auto-Sync Logos logic for v93
-        if (!localStorage.getItem('logos_synced_v93')) {
+        // Auto-Sync Logos logic for v94
+        if (!localStorage.getItem('logos_synced_v94')) {
             await autoSyncLogos();
-            localStorage.setItem('logos_synced_v93', 'true');
+            localStorage.setItem('logos_synced_v94', 'true');
         }
 
-        // v92 Auto-Pull on start
+        // v94 Auto-Pull on start
         await pullFromCloud(true);
 
         // Cloud Check
