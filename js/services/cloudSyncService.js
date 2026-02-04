@@ -65,13 +65,15 @@ export const cloudSyncService = {
             if (!content) throw new Error("Ficheiro vazio recebido da nuvem.");
 
             try {
-                // v83: Trim and parse
+                // v83+: Trim and parse
                 const data = typeof content === 'string' ? JSON.parse(content.trim()) : content;
                 return data;
             } catch (parseErr) {
                 console.error("[CloudSync] Parse error:", parseErr);
+                const size = typeof content === 'string' ? content.length : "N/A";
                 const preview = typeof content === 'string' ? content.substring(0, 50).replace(/[\n\r]/g, ' ') : "Array/Object";
-                throw new Error(`Erro no JSON recebido. Começa com: "${preview}...". Verifica se colaste o conteúdo corretamente no GitHub.`);
+                // v84: Expose technical error for precise debugging
+                throw new Error(`Erro de Sintaxe JSON: ${parseErr.message}. (Tam: ${size} chars). Começa com: "${preview}...".`);
             }
         } catch (err) {
             console.error("[CloudSync] Error:", err);
