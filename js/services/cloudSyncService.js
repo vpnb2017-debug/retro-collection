@@ -77,9 +77,25 @@ export const cloudSyncService = {
             if (!content) throw new Error("Ficheiro vazio recebido da nuvem.");
 
             // v85: Detect if we received an HTML error page instead of JSON
-            const trimmed = typeof content === 'string' ? content.trim() : "";
+            let trimmed = typeof content === 'string' ? content.trim() : "";
             if (trimmed.startsWith('<!DOCTYPE') || trimmed.toLowerCase().startsWith('<html')) {
                 throw new Error("O GitHub/Drive parece estar com problemas técnicos (Erro de Servidor). Tenta novamente mais tarde ou usa a Importação Manual.");
+            }
+
+            // v87: SANITIZATION - Strip illegal ASCII control characters (0-31) that break JSON.parse
+            // except for common ones like line feed (\n) or carriage return (\r) if they were intended.
+            // Actually, in standard JSON strings, even \n must be escaped. 
+            // This regex removes the most common "bad" invisible ones including null bytes.
+            if (typeof trimmed === 'string') {
+                const originalLen = trimmed.length;
+                trimmed = trimmed.replace(/[\x00-\x1F\x7F]/g, (match) => {
+                    // Allow only safe white spaces if present outside of strings (though unlikely to be raw)
+                    if (match === '\n' || match === '\r' || match === '\t') return match;
+                    return ''; // Strip everything else
+                });
+                if (trimmed.length !== originalLen) {
+                    console.log(`[CloudSync] Sanitized ${originalLen - trimmed.length} illegal characters.`);
+                }
             }
 
             try {
