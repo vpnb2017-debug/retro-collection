@@ -2,8 +2,8 @@ import { dbService } from './services/db.js';
 import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js';
 import { coverSearchService } from './services/coverSearch.js';
 import WebuyService from './services/webuyService.js';
-import { localFileSync } from './services/localFileSync.js?v=72';
-import { metadataService } from './services/metadataService.js?v=72';
+import { localFileSync } from './services/localFileSync.js?v=73';
+import { metadataService } from './services/metadataService.js?v=73';
 
 // Global Exposure
 window.navigate = navigate;
@@ -144,7 +144,7 @@ async function renderDashboard() {
         const ownedTotal = ownedGames.length + ownedConsoles.length;
         const wishlistTotal = games.filter(g => g.isWishlist).length + consoles.filter(c => c.isWishlist).length;
 
-        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v72</span></h2>`;
+        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v73</span></h2>`;
 
         const platData = await getPlatformOptions();
 
@@ -802,7 +802,7 @@ async function exportCollection() {
         const platforms = await dbService.getAll('platforms');
 
         const data = {
-            version: "v72",
+            version: "v73",
             timestamp: new Date().toISOString(),
             games,
             consoles,
@@ -873,15 +873,15 @@ async function importCollection() {
 
 /** INITIALIZATION **/
 async function init() {
-    logger("Iniciando RetroCollection v72...");
+    logger("Iniciando RetroCollection v73...");
     try {
         await dbService.open();
         logger("DB Conectado.");
 
-        // Auto-Sync Logos logic for v72
-        if (!localStorage.getItem('logos_synced_v72')) {
+        // Auto-Sync Logos logic for v73
+        if (!localStorage.getItem('logos_synced_v73')) {
             await autoSyncLogos();
-            localStorage.setItem('logos_synced_v72', 'true');
+            localStorage.setItem('logos_synced_v73', 'true');
         }
         await navigate('nav-dashboard');
 

@@ -22,45 +22,53 @@ export const metadataService = {
             const results = searchData.query.search || [];
             if (results.length === 0) return null;
 
-            // v71: Smart Selection Logic
+            // v73: Semantic Scoring Logic
+            const searchWords = title.toLowerCase().split(/\s+/).filter(w => w.length > 1);
             const searchNumbers = title.match(/\b\d+\b/g) || [];
-            const keywords = ['video game', 'game', 'series', 'console', 'developed'];
+            const gamingKeywords = ['video game', 'game', 'series', 'console', 'developed', 'software'];
 
             let bestPage = null;
-            let highestScore = -100;
+            let highestScore = -200;
 
-            // Check top 5 results to find the needle in the haystack
-            for (let i = 0; i < Math.min(5, results.length); i++) {
+            // Deep search in top 10 results
+            for (let i = 0; i < Math.min(10, results.length); i++) {
                 const res = results[i];
                 const resTitle = res.title.toLowerCase();
                 const snippet = res.snippet.toLowerCase();
                 let score = 0;
 
-                // 1. Precise Title Matching
-                if (resTitle === title.toLowerCase()) score += 50;
-                else if (resTitle.includes(title.toLowerCase())) score += 20;
+                // 1. Exact or Partial Title Match
+                if (resTitle === title.toLowerCase()) score += 100;
+                else if (resTitle.includes(title.toLowerCase())) score += 40;
 
-                // 2. Gaming Context
-                if (keywords.some(k => snippet.includes(k) || resTitle.includes(k))) score += 15;
+                // 2. Significant Word Matching (Key for Moto GP 3 vs Ride)
+                const matchedWords = searchWords.filter(w => resTitle.includes(w) || snippet.includes(w));
+                const matchRatio = matchedWords.length / searchWords.length;
+                if (matchRatio === 1) score += 50;
+                else if (matchRatio < 0.5) score -= 100; // Hard penalty if missing half the words
 
-                // 3. Numerical Integrity (Critical for Fifa, Sonic, etc)
-                const resNumbers = resTitle.match(/\b\d+\b/g) || [];
+                // 3. Gaming Context
+                if (gamingKeywords.some(k => snippet.includes(k) || resTitle.includes(k))) score += 20;
+                if (resTitle.includes('(video game)')) score += 50;
+
+                // 4. Numerical Integrity (Critical for series)
+                const resNumbers = (resTitle + " " + snippet).match(/\b\d+\b/g) || [];
                 if (searchNumbers.length > 0) {
                     const allMatch = searchNumbers.every(n => resNumbers.includes(n));
-                    const anyMismatch = resNumbers.some(n => !searchNumbers.includes(n) && n.length > 2); // Avoid small numbers
+                    const anyMismatch = resNumbers.some(n => !searchNumbers.includes(n) && n.length > 1 && !searchNumbers.some(sn => n.includes(sn)));
 
-                    if (allMatch) score += 40;
-                    if (anyMismatch) score -= 60; // Hard penalty for different year/version
+                    if (allMatch) score += 60;
+                    if (anyMismatch && !allMatch) score -= 120; // Extra penalty for wrong version
                 }
 
-                console.log(`[Metadata] Scoring result "${res.title}": ${score}`);
+                console.log(`[Metadata] v73 Scoring "${res.title}": ${score} (Words: ${matchedWords.length}/${searchWords.length})`);
                 if (score > highestScore) {
                     highestScore = score;
                     bestPage = res;
                 }
             }
 
-            if (!bestPage) bestPage = results[0];
+            if (!bestPage || highestScore < -50) bestPage = results[0];
 
             const pageId = bestPage.pageid;
             const contentUrl = `https://en.wikipedia.org/w/api.php?action=query&prop=extracts|revisions&exintro&explaintext&rvprop=content&rvsection=0&pageids=${pageId}&format=json&origin=*`;
