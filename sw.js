@@ -1,6 +1,5 @@
-const CACHE_NAME = 'retro-collection-v99';
+const CACHE_NAME = 'retro-collection-v100';
 const ASSETS = [
-    './',
     './index.html',
     './css/variables.css',
     './js/app.js',
@@ -9,6 +8,8 @@ const ASSETS = [
     './js/services/coverSearch.js',
     './js/services/webuyService.js',
     './js/services/localFileSync.js',
+    './js/services/metadataService.js',
+    './js/services/cloudSyncService.js',
     './manifest.json',
     './assets/icon-192.png',
     './assets/icon-512.png'
@@ -17,7 +18,7 @@ const ASSETS = [
 self.addEventListener('install', (event) => {
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
-            console.log('SW: Pre-caching v99');
+            console.log('SW: Pre-caching v100');
             return cache.addAll(ASSETS);
         })
     );

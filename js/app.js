@@ -2,9 +2,9 @@ import { dbService } from './services/db.js?v=90';
 import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js?v=90';
 import { coverSearchService } from './services/coverSearch.js?v=90';
 import WebuyService from './services/webuyService.js?v=90';
-import { localFileSync } from './services/localFileSync.js?v=99';
-import { metadataService } from './services/metadataService.js?v=99';
-import { cloudSyncService } from './services/cloudSyncService.js?v=99';
+import { localFileSync } from './services/localFileSync.js?v=100';
+import { metadataService } from './services/metadataService.js?v=100';
+import { cloudSyncService } from './services/cloudSyncService.js?v=100';
 
 // Global Exposure
 window.navigate = navigate;
@@ -150,7 +150,7 @@ async function renderDashboard() {
         const ownedTotal = ownedGames.length + ownedConsoles.length;
         const wishlistTotal = games.filter(g => g.isWishlist).length + consoles.filter(c => c.isWishlist).length;
 
-        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v99</span></h2>`;
+        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v100</span></h2>`;
 
         const platData = await getPlatformOptions();
 
@@ -879,7 +879,7 @@ async function renderSyncView() {
                     </div>
                  </div>
                  
-                <p style="margin-top:15px; font-size:0.75rem; color:#22c55e; font-weight:700; text-align:center;">🤖 Sentinela de Sync Ativo (v99)</p>
+                <p style="margin-top:15px; font-size:0.75rem; color:#22c55e; font-weight:700; text-align:center;">🤖 Sentinela de Sync Ativo (v100)</p>
             </div>
 
             <!-- Legacy Local Sync Section -->
@@ -971,9 +971,6 @@ async function pushToCloud(silent = false) {
         return;
     }
 
-    const gistIdMatch = url.match(/\/([^/?]+)$/) || url.match(/\/([^/?]+)\/raw/);
-    const gistId = gistIdMatch ? gistIdMatch[1] : null;
-
     const gistIdMatch = url.match(/\/([a-f0-9]{20,40})\b/);
     const gistId = gistIdMatch ? gistIdMatch[1] : null;
 
@@ -992,7 +989,7 @@ async function pushToCloud(silent = false) {
         const platforms = await dbService.getAll('platforms');
 
         const data = {
-            version: "v99",
+            version: "v100",
             timestamp: new Date().toISOString(),
             games,
             consoles,
@@ -1119,15 +1116,15 @@ async function importCollection() {
 
 /** INITIALIZATION **/
 async function init() {
-    logger("Iniciando RetroCollection v99...");
+    logger("Iniciando RetroCollection v100...");
     try {
         await dbService.open();
         logger("DB Conectado.");
 
-        // Auto-Sync Logos logic for v99
-        if (!localStorage.getItem('logos_synced_v99')) {
+        // Auto-Sync Logos logic for v100
+        if (!localStorage.getItem('logos_synced_v100')) {
             await autoSyncLogos();
-            localStorage.setItem('logos_synced_v99', 'true');
+            localStorage.setItem('logos_synced_v100', 'true');
         }
 
         // v98 Resilient Startup
