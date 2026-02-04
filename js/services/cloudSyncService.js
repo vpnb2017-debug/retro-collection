@@ -7,9 +7,6 @@ export const cloudSyncService = {
     /**
      * Converts a Google Drive share link into a direct download link
      */
-    /**
-     * Converts a Google Drive share link into a direct download link
-     */
     getDirectLink(viewUrl) {
         if (!viewUrl) return null;
 
@@ -30,32 +27,31 @@ export const cloudSyncService = {
      */
     async fetchDatabase(url) {
         const directUrl = this.getDirectLink(url);
-        // v79+: Use a CORS Proxy to bypass Google Drive's restrictions
-        const proxiedUrl = `https://corsproxy.io/?${encodeURIComponent(directUrl)}`;
+        // v81: Switching to api.allorigins.win for better Google Drive redirect handling
+        const proxiedUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(directUrl)}`;
 
         try {
             console.log(`[CloudSync] Original: ${url}`);
-            console.log(`[CloudSync] Fetching via Proxy: ${proxiedUrl}`);
+            console.log(`[CloudSync] Fetching via AllOrigins: ${proxiedUrl}`);
 
             const response = await fetch(proxiedUrl);
 
             if (!response.ok) {
-                // v80: Provide more details for diagnostics
                 const status = response.status;
-                let errorMsg = `Erro ${status}: Falha ao descarregar cloud link.`;
-
-                if (status === 403) errorMsg = "Erro 403: Acesso Negado. Certifica-te de que o ficheiro está partilhado como 'Qualquer pessoa com o link'.";
-                if (status === 404) errorMsg = "Erro 404: Ficheiro não encontrado. Verifica se o link ainda é válido.";
-
-                throw new Error(errorMsg);
+                throw new Error(`Erro ${status}: Falha ao contactar o servidor de sincronização.`);
             }
 
-            const data = await response.json();
+            const wrapper = await response.json();
+            // AllOrigins returns the content in a .contents property
+            if (!wrapper.contents) throw new Error("A nuvem não devolveu conteúdo válido.");
+
+            // AllOrigins might return the content as a string if it doesn't auto-detect JSON
+            const data = typeof wrapper.contents === 'string' ? JSON.parse(wrapper.contents) : wrapper.contents;
+
             return data;
         } catch (err) {
             console.error("[CloudSync] Error:", err);
-            // Re-throw with more context if it's a parse error
-            if (err.name === 'SyntaxError') {
+            if (err.name === 'SyntaxError' || err.message.includes("Unexpected token")) {
                 throw new Error("O ficheiro recebido não é um JSON válido. Verifica se o link é de um ficheiro .json.");
             }
             throw err;
