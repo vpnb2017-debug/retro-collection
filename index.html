@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport"
         content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>RetroCollection v71 🎮</title>
+    <title>RetroCollection v72 🎮</title>
 
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1e1e24">
@@ -181,6 +181,34 @@
             overflow-y: auto;
             display: none;
         }
+
+        /* Floating Action Button for Mobile */
+        .fab-mobile {
+            display: none;
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #ff9f0a 0%, #ff7950 100%);
+            color: white;
+            border-radius: 30px;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: 800;
+            box-shadow: 0 4px 15px rgba(255, 159, 10, 0.4);
+            z-index: 3000;
+            border: 2px solid #1e1e24;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        @media (max-width: 600px) {
+            .fab-mobile {
+                display: flex;
+            }
+        }
     </style>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -228,12 +256,12 @@
                 style="background:none; border:none; font-size:1.5rem;">🏠</button>
             <button onclick="navigate('nav-collection')"
                 style="background:none; border:none; font-size:1.5rem;">🎮</button>
-            <button onclick="openAddModal()"
-                style="background:var(--accent-color); border:none; font-size:1.5rem; width:50px; height:50px; border-radius:50%; color:white; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 10px rgba(0,0,0,0.3); margin-bottom:15px; border:2px solid #1e1e24;">+</button>
             <button onclick="navigate('nav-platforms')"
                 style="background:none; border:none; font-size:1.5rem;">🕹️</button>
             <button onclick="navigate('nav-sync')" style="background:none; border:none; font-size:1.5rem;">☁️</button>
         </nav>
+
+        <button class="fab-mobile" onclick="openAddModal()">+</button>
     </div>
 
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
@@ -262,25 +290,25 @@
             return false;
         };
 
-        log("Arranque v71 iniciado...");
+        log("Arranque v72 iniciado...");
 
-        // v71 AGGRESSIVE UPDATE
+        // v72 AGGRESSIVE UPDATE
         const urlParams = new URLSearchParams(window.location.search);
         const forceUpdate = urlParams.get('update');
 
-        if (localStorage.getItem('app_v') !== '71' || forceUpdate === '71') {
-            log("Actualização Crítica v71...");
-            localStorage.clear();
-            localStorage.setItem('app_v', '71');
+        if (localStorage.getItem('app_v') !== '72' || forceUpdate === '72') {
+            log("Actualização Crítica v72...");
+            // Clear only app specific stuff or force reload
+            localStorage.setItem('app_v', '72');
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.getRegistrations().then(rs => {
                     Promise.all(rs.map(r => r.unregister())).then(() => {
                         log("Cache renovado. A reiniciar...");
-                        location.href = location.href.split('?')[0] + '?v=71';
+                        location.href = location.href.split('?')[0] + '?v=72';
                     });
                 });
             } else {
-                location.href = location.href.split('?')[0] + '?v=71';
+                location.href = location.href.split('?')[0] + '?v=72';
             }
         }
 
@@ -289,17 +317,17 @@
             const title = document.querySelector('.v29-title-zone h2');
             if (title && title.innerText.includes('A carregar')) {
                 log("Hanging detetado! Tentando bypass...");
-                location.href = location.href.split('?')[0] + '?force_v71=' + Date.now();
+                location.href = location.href.split('?')[0] + '?force_v72=' + Date.now();
             }
         }, 8000);
     </script>
 
-    <script type="module" src="js/app.js?v=71"></script>
+    <script type="module" src="js/app.js?v=72"></script>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js?v=71')
-                    .then(() => log("v71 Pronta."))
+                navigator.serviceWorker.register('sw.js?v=72')
+                    .then(() => log("v72 Pronta."))
                     .catch(e => log("Falha: " + e.message));
             });
         }
