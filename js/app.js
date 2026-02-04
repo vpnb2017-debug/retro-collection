@@ -2,9 +2,9 @@ import { dbService } from './services/db.js';
 import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js';
 import { coverSearchService } from './services/coverSearch.js';
 import WebuyService from './services/webuyService.js';
-import { localFileSync } from './services/localFileSync.js?v=84';
-import { metadataService } from './services/metadataService.js?v=84';
-import { cloudSyncService } from './services/cloudSyncService.js?v=84';
+import { localFileSync } from './services/localFileSync.js?v=85';
+import { metadataService } from './services/metadataService.js?v=85';
+import { cloudSyncService } from './services/cloudSyncService.js?v=85';
 
 // Global Exposure
 window.navigate = navigate;
@@ -149,7 +149,7 @@ async function renderDashboard() {
         const ownedTotal = ownedGames.length + ownedConsoles.length;
         const wishlistTotal = games.filter(g => g.isWishlist).length + consoles.filter(c => c.isWishlist).length;
 
-        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v84</span></h2>`;
+        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v85</span></h2>`;
 
         const platData = await getPlatformOptions();
 
@@ -882,7 +882,7 @@ async function exportCollection() {
         const platforms = await dbService.getAll('platforms');
 
         const data = {
-            version: "v84",
+            version: "v85",
             timestamp: new Date().toISOString(),
             games,
             consoles,
@@ -936,15 +936,15 @@ async function importCollection() {
 
 /** INITIALIZATION **/
 async function init() {
-    logger("Iniciando RetroCollection v84...");
+    logger("Iniciando RetroCollection v85...");
     try {
         await dbService.open();
         logger("DB Conectado.");
 
-        // Auto-Sync Logos logic for v84
-        if (!localStorage.getItem('logos_synced_v84')) {
+        // Auto-Sync Logos logic for v85
+        if (!localStorage.getItem('logos_synced_v85')) {
             await autoSyncLogos();
-            localStorage.setItem('logos_synced_v84', 'true');
+            localStorage.setItem('logos_synced_v85', 'true');
         }
 
         // Cloud Check

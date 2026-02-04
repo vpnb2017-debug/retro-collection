@@ -64,14 +64,20 @@ export const cloudSyncService = {
 
             if (!content) throw new Error("Ficheiro vazio recebido da nuvem.");
 
+            // v85: Detect if we received an HTML error page instead of JSON
+            const trimmed = typeof content === 'string' ? content.trim() : "";
+            if (trimmed.startsWith('<!DOCTYPE') || trimmed.toLowerCase().startsWith('<html')) {
+                throw new Error("O GitHub/Drive parece estar com problemas técnicos (Erro de Servidor). Tenta novamente mais tarde ou usa a Importação Manual.");
+            }
+
             try {
                 // v83+: Trim and parse
-                const data = typeof content === 'string' ? JSON.parse(content.trim()) : content;
+                const data = typeof content === 'string' ? JSON.parse(trimmed) : content;
                 return data;
             } catch (parseErr) {
                 console.error("[CloudSync] Parse error:", parseErr);
                 const size = typeof content === 'string' ? content.length : "N/A";
-                const preview = typeof content === 'string' ? content.substring(0, 50).replace(/[\n\r]/g, ' ') : "Array/Object";
+                const preview = trimmed.substring(0, 50).replace(/[\n\r]/g, ' ');
                 // v84: Expose technical error for precise debugging
                 throw new Error(`Erro de Sintaxe JSON: ${parseErr.message}. (Tam: ${size} chars). Começa com: "${preview}...".`);
             }
