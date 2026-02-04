@@ -50,7 +50,6 @@ export const cloudSyncService = {
         const isDrive = directUrl.includes('google.com');
 
         // v88: Cache busting - ensures we pull the absolute latest version from GitHub/Gist
-        // Highly needed since user reported seeing old versions (v67)
         if (isGitHub) {
             const sep = directUrl.includes('?') ? '&' : '?';
             directUrl += `${sep}t=${Date.now()}`;
@@ -89,34 +88,60 @@ export const cloudSyncService = {
                 throw new Error("O GitHub/Drive parece estar com problemas técnicos (Erro de Servidor). Tenta novamente mais tarde ou usa a Importação Manual.");
             }
 
-            // v88: ATOMIC SANITIZATION - Forcefully strip ALL illegal ASCII control characters (0-31 and 127)
-            // that cause "Bad control character" errors at buffer boundaries (like the 256KB reported).
+            // v88: ATOMIC SANITIZATION
             if (typeof trimmed === 'string') {
                 const originalLen = trimmed.length;
-                // Atomic cleanup: remove almost all control codes. We only keep \n \r \t if they are intended outside strings,
-                // but in valid JSON data strings, these must be escaped as \n anyway. 
-                // This regex is safer for high-volume data.
                 trimmed = trimmed.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
-
                 if (trimmed.length !== originalLen) {
                     console.warn(`[CloudSync] V88 Atomic Clean: Removed ${originalLen - trimmed.length} illegal characters.`);
                 }
             }
 
             try {
-                // v83+: Trim and parse
-                const data = JSON.parse(trimmed);
-                return data;
+                return JSON.parse(trimmed);
             } catch (parseErr) {
                 console.error("[CloudSync] Parse error:", parseErr);
                 const size = trimmed.length;
                 const preview = trimmed.substring(0, 50).replace(/[\n\r]/g, ' ');
-                // v84+: Expose technical error for precise debugging
                 throw new Error(`Erro de Sintaxe JSON: ${parseErr.message}. (Tam: ${size} chars). Começa com: "${preview}...".`);
             }
         } catch (err) {
             console.error("[CloudSync] Error:", err);
             throw err;
         }
+    },
+
+    /**
+     * Uploads the database to a GitHub Gist (v91)
+     */
+    async uploadToGist(token, gistId, data) {
+        if (!token) throw new Error("GitHub Token é obrigatório para subir para a nuvem.");
+        if (!gistId) throw new Error("ID do Gist não encontrado. Configura o link primeiro.");
+
+        // v88 fix: Strip illegal characters before stringifying (unlikely from structured data but safe)
+        const content = JSON.stringify(data, null, 2);
+
+        const response = await fetch(`https://api.github.com/gists/${gistId}`, {
+            method: 'PATCH',
+            headers: {
+                'Authorization': `token ${token}`,
+                'Accept': 'application/vnd.github.v3+json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                files: {
+                    'retro_collection.json': {
+                        content: content
+                    }
+                }
+            })
+        });
+
+        if (!response.ok) {
+            const errData = await response.json();
+            throw new Error(`Erro GitHub (${response.status}): ${errData.message || response.statusText}`);
+        }
+
+        return await response.json();
     }
 };
