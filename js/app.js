@@ -2,9 +2,9 @@ import { dbService } from './services/db.js?v=90';
 import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js?v=90';
 import { coverSearchService } from './services/coverSearch.js?v=90';
 import WebuyService from './services/webuyService.js?v=90';
-import { localFileSync } from './services/localFileSync.js?v=98';
-import { metadataService } from './services/metadataService.js?v=98';
-import { cloudSyncService } from './services/cloudSyncService.js?v=98';
+import { localFileSync } from './services/localFileSync.js?v=99';
+import { metadataService } from './services/metadataService.js?v=99';
+import { cloudSyncService } from './services/cloudSyncService.js?v=99';
 
 // Global Exposure
 window.navigate = navigate;
@@ -150,7 +150,7 @@ async function renderDashboard() {
         const ownedTotal = ownedGames.length + ownedConsoles.length;
         const wishlistTotal = games.filter(g => g.isWishlist).length + consoles.filter(c => c.isWishlist).length;
 
-        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v98</span></h2>`;
+        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v99</span></h2>`;
 
         const platData = await getPlatformOptions();
 
@@ -879,7 +879,7 @@ async function renderSyncView() {
                     </div>
                  </div>
                  
-                <p style="margin-top:15px; font-size:0.75rem; color:#22c55e; font-weight:700; text-align:center;">🤖 Sentinela de Sync Ativo (v98)</p>
+                <p style="margin-top:15px; font-size:0.75rem; color:#22c55e; font-weight:700; text-align:center;">🤖 Sentinela de Sync Ativo (v99)</p>
             </div>
 
             <!-- Legacy Local Sync Section -->
@@ -974,7 +974,16 @@ async function pushToCloud(silent = false) {
     const gistIdMatch = url.match(/\/([^/?]+)$/) || url.match(/\/([^/?]+)\/raw/);
     const gistId = gistIdMatch ? gistIdMatch[1] : null;
 
-    if (!gistId) return;
+    const gistIdMatch = url.match(/\/([a-f0-9]{20,40})\b/);
+    const gistId = gistIdMatch ? gistIdMatch[1] : null;
+
+    if (!gistId) {
+        const errorMsg = "Link do Gist inválido. Não encontrei o ID.";
+        localStorage.setItem('last_push_error', errorMsg);
+        if (state.view === 'nav-dashboard') renderDashboard();
+        if (!silent) uiService.alert(errorMsg);
+        return;
+    }
 
     if (!silent) logger("A preparar envio...");
     try {
@@ -983,7 +992,7 @@ async function pushToCloud(silent = false) {
         const platforms = await dbService.getAll('platforms');
 
         const data = {
-            version: "v98",
+            version: "v99",
             timestamp: new Date().toISOString(),
             games,
             consoles,
@@ -995,7 +1004,6 @@ async function pushToCloud(silent = false) {
             if (!silent) logger("A enviar...");
             await cloudSyncService.uploadToGist(token, gistId, data);
 
-            // Sucesso: Limpar erro anterior
             localStorage.removeItem('last_push_error');
 
             if (silent) {
@@ -1007,19 +1015,20 @@ async function pushToCloud(silent = false) {
             } else {
                 uiService.alert("Sincronizado com sucesso! 🚀", "Enviado!");
             }
-            // Atualiza Dashboard se estiver visível
             if (state.view === 'nav-dashboard') renderDashboard();
         }
     } catch (err) {
-        // Grava o erro para o Sentinela mostrar no Dashboard
-        localStorage.setItem('last_push_error', err.message);
+        let errorMsg = err.message;
+        if (errorMsg.includes("404")) {
+            errorMsg = "Gist não encontrado (404). Verifica se o Link está correto no telemóvel.";
+        }
+        localStorage.setItem('last_push_error', errorMsg);
         if (state.view === 'nav-dashboard') renderDashboard();
 
         if (!silent) {
-            logger("PUSH ERR: " + err.message);
-            uiService.alert("Erro ao enviar: " + err.message);
+            logger("PUSH ERR: " + errorMsg);
+            uiService.alert("Erro ao enviar: " + errorMsg);
         } else {
-            // Toast de erro silencioso
             const toast = document.createElement('div');
             toast.style = "position:fixed; bottom:80px; left:50%; transform:translateX(-50%); background:rgba(239,68,68,0.9); color:white; padding:10px 20px; border-radius:20px; font-size:0.75rem; z-index:99999; border:1px solid #fff; animation: fadeout 5s forwards;";
             toast.innerText = "❌ Falha na Nuvem!";
@@ -1110,15 +1119,15 @@ async function importCollection() {
 
 /** INITIALIZATION **/
 async function init() {
-    logger("Iniciando RetroCollection v98...");
+    logger("Iniciando RetroCollection v99...");
     try {
         await dbService.open();
         logger("DB Conectado.");
 
-        // Auto-Sync Logos logic for v98
-        if (!localStorage.getItem('logos_synced_v98')) {
+        // Auto-Sync Logos logic for v99
+        if (!localStorage.getItem('logos_synced_v99')) {
             await autoSyncLogos();
-            localStorage.setItem('logos_synced_v98', 'true');
+            localStorage.setItem('logos_synced_v99', 'true');
         }
 
         // v98 Resilient Startup
