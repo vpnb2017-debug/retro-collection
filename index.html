@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport"
         content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>RetroCollection v97 🎮</title>
+    <title>RetroCollection v98 🎮</title>
 
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1e1e24">
@@ -316,43 +316,43 @@
             return false;
         };
 
-        log("Arranque v97 iniciado...");
+        log("Arranque v98 iniciado...");
 
-        // v97 AGGRESSIVE SETUP & UPDATE
+        // v98 AGGRESSIVE SETUP & UPDATE
         const urlParams = new URLSearchParams(window.location.search);
         const forceUpdate = urlParams.get('update');
 
-        if (localStorage.getItem('app_v') !== '97' || forceUpdate === '97') {
-            log("Actualização Crítica v97...");
-            localStorage.setItem('app_v', '97');
+        if (localStorage.getItem('app_v') !== '98' || forceUpdate === '98') {
+            log("Actualização Crítica v98...");
+            localStorage.setItem('app_v', '98');
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.getRegistrations().then(rs => {
                     Promise.all(rs.map(r => r.unregister())).then(() => {
                         log("Cache renovado. A reiniciar...");
-                        location.href = location.href.split('?')[0] + '?v=97';
+                        location.href = location.href.split('?')[0] + '?v=98';
                     });
                 });
             } else {
-                location.href = location.href.split('?')[0] + '?v=97';
+                location.href = location.href.split('?')[0] + '?v=98';
             }
         }
 
-        // Hanging check v97
+        // Hanging check REMOVED in v98 to avoid loops.
+        // We only log if it's still loading after 15s.
         setTimeout(() => {
             const title = document.querySelector('.v29-title-zone h2');
             if (title && title.innerText.includes('A carregar')) {
-                log("Hanging detetado! Tentando bypass...");
-                location.href = location.href.split('?')[0] + '?force_v97=' + Date.now();
+                log("Aviso: O arranque está a demorar mais do que o esperado...");
             }
-        }, 8000);
+        }, 15000);
     </script>
 
-    <script type="module" src="js/app.js?v=97"></script>
+    <script type="module" src="js/app.js?v=98"></script>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js?v=97')
-                    .then(() => log("v97 Pronta."))
+                navigator.serviceWorker.register('sw.js?v=98')
+                    .then(() => log("v98 Pronta."))
                     .catch(e => log("Falha: " + e.message));
             });
         }

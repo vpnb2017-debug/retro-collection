@@ -2,9 +2,9 @@ import { dbService } from './services/db.js?v=90';
 import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js?v=90';
 import { coverSearchService } from './services/coverSearch.js?v=90';
 import WebuyService from './services/webuyService.js?v=90';
-import { localFileSync } from './services/localFileSync.js?v=97';
-import { metadataService } from './services/metadataService.js?v=97';
-import { cloudSyncService } from './services/cloudSyncService.js?v=97';
+import { localFileSync } from './services/localFileSync.js?v=98';
+import { metadataService } from './services/metadataService.js?v=98';
+import { cloudSyncService } from './services/cloudSyncService.js?v=98';
 
 // Global Exposure
 window.navigate = navigate;
@@ -150,7 +150,7 @@ async function renderDashboard() {
         const ownedTotal = ownedGames.length + ownedConsoles.length;
         const wishlistTotal = games.filter(g => g.isWishlist).length + consoles.filter(c => c.isWishlist).length;
 
-        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v97</span></h2>`;
+        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v98</span></h2>`;
 
         const platData = await getPlatformOptions();
 
@@ -879,7 +879,7 @@ async function renderSyncView() {
                     </div>
                  </div>
                  
-                <p style="margin-top:15px; font-size:0.75rem; color:#22c55e; font-weight:700; text-align:center;">🤖 Sentinela de Sync Ativo (v97)</p>
+                <p style="margin-top:15px; font-size:0.75rem; color:#22c55e; font-weight:700; text-align:center;">🤖 Sentinela de Sync Ativo (v98)</p>
             </div>
 
             <!-- Legacy Local Sync Section -->
@@ -983,7 +983,7 @@ async function pushToCloud(silent = false) {
         const platforms = await dbService.getAll('platforms');
 
         const data = {
-            version: "v97",
+            version: "v98",
             timestamp: new Date().toISOString(),
             games,
             consoles,
@@ -1110,30 +1110,36 @@ async function importCollection() {
 
 /** INITIALIZATION **/
 async function init() {
-    logger("Iniciando RetroCollection v97...");
+    logger("Iniciando RetroCollection v98...");
     try {
         await dbService.open();
         logger("DB Conectado.");
 
-        // Auto-Sync Logos logic for v97
-        if (!localStorage.getItem('logos_synced_v97')) {
+        // Auto-Sync Logos logic for v98
+        if (!localStorage.getItem('logos_synced_v98')) {
             await autoSyncLogos();
-            localStorage.setItem('logos_synced_v97', 'true');
+            localStorage.setItem('logos_synced_v98', 'true');
         }
 
-        // v94 Auto-Pull on start
-        await pullFromCloud(true);
+        // v98 Resilient Startup
+        try {
+            await pullFromCloud(true);
+        } catch (e) {
+            logger("Aviso: Falha no pull inicial, continuando...");
+        }
 
         // Cloud Check
-        const cloudUrl = localStorage.getItem('cloud_sync_url');
-        if (cloudUrl && !sessionStorage.getItem('startup_synced')) {
-            sessionStorage.setItem('startup_synced', 'true');
-            const gamesCount = (await dbService.getAll('games')).length;
-            if (gamesCount === 0) {
-                logger("Base de dados vazia. A tentar puxar da nuvem...");
-                await pullFromCloud();
+        try {
+            const cloudUrl = localStorage.getItem('cloud_sync_url');
+            if (cloudUrl && !sessionStorage.getItem('startup_synced')) {
+                sessionStorage.setItem('startup_synced', 'true');
+                const gamesCount = (await dbService.getAll('games')).length;
+                if (gamesCount === 0) {
+                    logger("Base de dados vazia. A tentar puxar da nuvem...");
+                    await pullFromCloud();
+                }
             }
-        }
+        } catch (e) { logger("Erro no cloud check inicial."); }
 
         await navigate('nav-dashboard');
 
@@ -1146,7 +1152,7 @@ async function init() {
                 logEl.style.transform = 'translateY(20px)';
                 setTimeout(() => logEl.style.display = 'none', 800);
             }
-        }, 2500);
+        }, 1500);
 
     } catch (err) {
         logger("FALHA CRÍTICA: " + err.message);
