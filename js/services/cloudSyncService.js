@@ -28,7 +28,15 @@ export const cloudSyncService = {
             return rawGist;
         }
 
-        return viewUrl; // Return as is if not a recognized Drive link
+        // format 4: GitHub Repository (github.com/.../blob/main/file.json)
+        // or direct raw link (raw.githubusercontent.com/...)
+        if (viewUrl.includes('github.com') && viewUrl.includes('/blob/')) {
+            const rawRepo = viewUrl.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/');
+            console.log(`[CloudSync] Repo link converted to raw: ${rawRepo}`);
+            return rawRepo;
+        }
+
+        return viewUrl; // Return as is if already a direct/raw link or unrecognized
     },
 
     /**
@@ -37,13 +45,17 @@ export const cloudSyncService = {
     async fetchDatabase(url) {
         const directUrl = this.getDirectLink(url);
 
-        // v82+: Gists don't need proxy (CORS allowed). Drive still needs AllOrigins bridge.
+        // v86: Disable proxy for ALL GitHub domains (Gist, Raw, Repo) to avoid size limits.
+        const isGitHub = directUrl.includes('githubusercontent.com') || directUrl.includes('github.com');
         const isDrive = directUrl.includes('google.com');
-        const fetchUrl = isDrive ? `https://api.allorigins.win/get?url=${encodeURIComponent(directUrl)}` : directUrl;
+
+        const fetchUrl = (isDrive && !isGitHub)
+            ? `https://api.allorigins.win/get?url=${encodeURIComponent(directUrl)}`
+            : directUrl;
 
         try {
             console.log(`[CloudSync] Original: ${url}`);
-            console.log(`[CloudSync] Fetching: ${fetchUrl}`);
+            console.log(`[CloudSync] Fetching (${isGitHub ? 'GITHUB' : 'NORMAL'}): ${fetchUrl}`);
 
             const response = await fetch(fetchUrl);
 
