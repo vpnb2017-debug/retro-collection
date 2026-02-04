@@ -37,7 +37,7 @@ export const cloudSyncService = {
     async fetchDatabase(url) {
         const directUrl = this.getDirectLink(url);
 
-        // v82: Gists don't need proxy (CORS allowed). Drive still needs AllOrigins bridge.
+        // v82+: Gists don't need proxy (CORS allowed). Drive still needs AllOrigins bridge.
         const isDrive = directUrl.includes('google.com');
         const fetchUrl = isDrive ? `https://api.allorigins.win/get?url=${encodeURIComponent(directUrl)}` : directUrl;
 
@@ -52,20 +52,29 @@ export const cloudSyncService = {
                 throw new Error(`Erro ${status}: Falha ao contactar a nuvem.`);
             }
 
+            let content = "";
             if (isDrive) {
                 const wrapper = await response.json();
                 if (!wrapper.contents) throw new Error("A nuvem não devolveu conteúdo válido.");
-                return typeof wrapper.contents === 'string' ? JSON.parse(wrapper.contents) : wrapper.contents;
+                content = wrapper.contents;
             } else {
-                // Direct fetch (Gist, Gist Raw, etc)
-                const data = await response.json();
+                // v83: Fetch as text first to allow better diagnostics
+                content = await response.text();
+            }
+
+            if (!content) throw new Error("Ficheiro vazio recebido da nuvem.");
+
+            try {
+                // v83: Trim and parse
+                const data = typeof content === 'string' ? JSON.parse(content.trim()) : content;
                 return data;
+            } catch (parseErr) {
+                console.error("[CloudSync] Parse error:", parseErr);
+                const preview = typeof content === 'string' ? content.substring(0, 50).replace(/[\n\r]/g, ' ') : "Array/Object";
+                throw new Error(`Erro no JSON recebido. Começa com: "${preview}...". Verifica se colaste o conteúdo corretamente no GitHub.`);
             }
         } catch (err) {
             console.error("[CloudSync] Error:", err);
-            if (err.name === 'SyntaxError' || err.message.includes("Unexpected token")) {
-                throw new Error("O ficheiro recebido não é um JSON válido. No Gist, certifica-te de que o ficheiro tem a extensão .json.");
-            }
             throw err;
         }
     }
