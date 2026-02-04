@@ -10,12 +10,12 @@ export const metadataService = {
      * @param {string} platform - Optional platform context
      */
     async fetchMetadata(title, platform = '') {
-        const cleanPlat = (platform && platform !== '(Sem Consola)') ? platform : '';
-        const query = `${title} ${cleanPlat} video game`.trim();
+        // v109: Search only by title (without platform) for better results
+        const query = `${title} video game`.trim();
         const searchUrl = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(query)}&format=json&origin=*`;
 
         try {
-            console.log(`[Metadata] Searching for: ${query}`);
+            console.log(`[Metadata v109] Searching for: ${query}`);
             const searchRes = await fetch(searchUrl);
             const searchData = await searchRes.json();
 
