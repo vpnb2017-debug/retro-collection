@@ -22,18 +22,45 @@ export const metadataService = {
             const results = searchData.query.search || [];
             if (results.length === 0) return null;
 
-            // Heuristic: Try to find the best page among top 3 results
-            // We look for "video game" or common gaming terms in the snippet
-            let bestPage = results[0];
+            // v71: Smart Selection Logic
+            const searchNumbers = title.match(/\b\d+\b/g) || [];
             const keywords = ['video game', 'game', 'series', 'console', 'developed'];
 
-            for (let i = 0; i < Math.min(3, results.length); i++) {
-                const snippet = results[i].snippet.toLowerCase();
-                if (keywords.some(k => snippet.includes(k))) {
-                    bestPage = results[i];
-                    break;
+            let bestPage = null;
+            let highestScore = -100;
+
+            // Check top 5 results to find the needle in the haystack
+            for (let i = 0; i < Math.min(5, results.length); i++) {
+                const res = results[i];
+                const resTitle = res.title.toLowerCase();
+                const snippet = res.snippet.toLowerCase();
+                let score = 0;
+
+                // 1. Precise Title Matching
+                if (resTitle === title.toLowerCase()) score += 50;
+                else if (resTitle.includes(title.toLowerCase())) score += 20;
+
+                // 2. Gaming Context
+                if (keywords.some(k => snippet.includes(k) || resTitle.includes(k))) score += 15;
+
+                // 3. Numerical Integrity (Critical for Fifa, Sonic, etc)
+                const resNumbers = resTitle.match(/\b\d+\b/g) || [];
+                if (searchNumbers.length > 0) {
+                    const allMatch = searchNumbers.every(n => resNumbers.includes(n));
+                    const anyMismatch = resNumbers.some(n => !searchNumbers.includes(n) && n.length > 2); // Avoid small numbers
+
+                    if (allMatch) score += 40;
+                    if (anyMismatch) score -= 60; // Hard penalty for different year/version
+                }
+
+                console.log(`[Metadata] Scoring result "${res.title}": ${score}`);
+                if (score > highestScore) {
+                    highestScore = score;
+                    bestPage = res;
                 }
             }
+
+            if (!bestPage) bestPage = results[0];
 
             const pageId = bestPage.pageid;
             const contentUrl = `https://en.wikipedia.org/w/api.php?action=query&prop=extracts|revisions&exintro&explaintext&rvprop=content&rvsection=0&pageids=${pageId}&format=json&origin=*`;
