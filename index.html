@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport"
         content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>RetroCollection v100 🎮</title>
+    <title>RetroCollection v101 🆘🎮</title>
 
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1e1e24">
@@ -254,6 +254,13 @@
     </div>
 
     <div id="loading-log"></div>
+    <div id="emergency-zone"
+        style="position:fixed; bottom:160px; left:20px; right:20px; z-index:9500; text-align:center; display:none;">
+        <button id="emergency-btn"
+            style="background:rgba(239,68,68,0.2); border:1px solid #ef4444; color:#ef4444; padding:12px 20px; border-radius:12px; font-weight:700; font-size:0.8rem; cursor:pointer; backdrop-filter:blur(5px);">
+            ⚠️ Nada acontece? Clique aqui (RESET TOTAL)
+        </button>
+    </div>
 
     <div id="app">
         <header class="main-header">
@@ -316,43 +323,60 @@
             return false;
         };
 
-        log("Arranque v100 iniciado...");
+        log("Arranque v101 iniciado...");
 
-        // v100 AGGRESSIVE SETUP & UPDATE
+        // v101 AGGRESSIVE SETUP & UPDATE
         const urlParams = new URLSearchParams(window.location.search);
         const forceUpdate = urlParams.get('update');
 
-        if (localStorage.getItem('app_v') !== '100' || forceUpdate === '100') {
-            log("Actualização Crítica v100...");
-            localStorage.setItem('app_v', '100');
+        if (localStorage.getItem('app_v') !== '101' || forceUpdate === '101') {
+            log("Actualização Crítica v101...");
+            localStorage.setItem('app_v', '101');
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.getRegistrations().then(rs => {
                     Promise.all(rs.map(r => r.unregister())).then(() => {
                         log("Cache renovado. A reiniciar...");
-                        location.href = location.href.split('?')[0] + '?v=100';
+                        location.href = location.href.split('?')[0] + '?v=101';
                     });
                 });
             } else {
-                location.href = location.href.split('?')[0] + '?v=100';
+                location.href = location.href.split('?')[0] + '?v=101';
             }
         }
 
-        // Hanging check v99
+        // Hanging check v101 + Emergency Button
         setTimeout(() => {
             const title = document.querySelector('.v29-title-zone h2');
             if (title && title.innerText.includes('A carregar')) {
-                log("Aviso: O arranque está a demorar mais do que o esperado...");
+                log("Aviso: O arranque está a demorar muito...");
+                const ez = document.getElementById('emergency-zone');
+                if (ez) ez.style.display = 'block';
             }
-        }, 15000);
+        }, 8000);
+
+        // Emergency Reset Logic
+        document.getElementById('emergency-btn').onclick = async () => {
+            if (confirm("Isto irá limpar o cache e desinstalar a App para tentar resolver o problema. Continuar?")) {
+                localStorage.removeItem('app_v');
+                localStorage.removeItem('logos_synced_v100');
+                localStorage.removeItem('logos_synced_v99');
+                if ('serviceWorker' in navigator) {
+                    const rs = await navigator.serviceWorker.getRegistrations();
+                    for (let r of rs) await r.unregister();
+                }
+                const keys = await caches.keys();
+                for (let k of keys) await caches.delete(k);
+                location.href = location.href.split('?')[0] + '?update=101';
+            }
+        };
     </script>
 
-    <script type="module" src="js/app.js?v=100"></script>
+    <script type="module" src="js/app.js?v=101"></script>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                // v100: Removed query string to avoid registration errors on some local servers
-                navigator.serviceWorker.register('sw.js')
-                    .then(() => log("v100 Pronta."))
+                navigator.serviceWorker.register('sw.js?v=101')
+                    .then(() => log("v101 Pronta."))
                     .catch(e => log("Falha: " + e.message));
             });
         }
