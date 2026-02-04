@@ -1,10 +1,10 @@
-import { dbService } from './services/db.js?v=104';
-import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js?v=104';
-import { coverSearchService } from './services/coverSearch.js?v=104';
-import WebuyService from './services/webuyService.js?v=104';
-import { localFileSync } from './services/localFileSync.js?v=104';
-import { metadataService } from './services/metadataService.js?v=104';
-import { cloudSyncService } from './services/cloudSyncService.js?v=104';
+import { dbService } from './services/db.js?v=105';
+import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js?v=105';
+import { coverSearchService } from './services/coverSearch.js?v=105';
+import WebuyService from './services/webuyService.js?v=105';
+import { localFileSync } from './services/localFileSync.js?v=105';
+import { metadataService } from './services/metadataService.js?v=105';
+import { cloudSyncService } from './services/cloudSyncService.js?v=105';
 
 // Global Exposure
 window.navigate = navigate;
@@ -139,6 +139,22 @@ async function navigateByPlatform(platform) {
     await navigate('nav-collection');
 }
 
+// v105: Navigation by Genre
+async function navigateByGenre(genre) {
+    state.filterPlatform = 'all';
+    state.filterType = 'all';
+    state.filterSearch = genre.toLowerCase();
+    await navigate('nav-collection');
+}
+
+// v105: Navigation by Decade
+async function navigateByDecade(decade) {
+    state.filterPlatform = 'all';
+    state.filterType = 'all';
+    state.filterSearch = decade.toString();
+    await navigate('nav-collection');
+}
+
 /** DASHBOARD **/
 async function renderDashboard() {
     const { titleEl, scrollEl } = getZones();
@@ -150,7 +166,7 @@ async function renderDashboard() {
         const ownedTotal = ownedGames.length + ownedConsoles.length;
         const wishlistTotal = games.filter(g => g.isWishlist).length + consoles.filter(c => c.isWishlist).length;
 
-        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v104</span></h2>`;
+        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v105</span></h2>`;
 
         const platData = await getPlatformOptions();
 
@@ -221,7 +237,7 @@ async function renderDashboard() {
                 .sort((a, b) => b[1].length - a[1].length)
                 .slice(0, 5)
                 .map(([g, items]) => `
-                                <div style="display:flex; justify-content:space-between; font-size:0.75rem;">
+                                <div onclick="navigateByGenre('${g}')" style="display:flex; justify-content:space-between; font-size:0.75rem; cursor:pointer; padding:6px 8px; border-radius:8px; transition:background 0.2s;" onmouseover="this.style.background='rgba(255,159,10,0.1)'" onmouseout="this.style.background='transparent'">
                                     <span style="opacity:0.7;">${g}</span>
                                     <span style="font-weight:800; color:#ff9f0a;">${items.length}</span>
                                 </div>
@@ -234,7 +250,7 @@ async function renderDashboard() {
                         ${Object.entries(groupBy(games.filter(g => g.year), g => Math.floor(g.year / 10) * 10))
                 .sort((a, b) => b[0] - a[0])
                 .map(([d, items]) => `
-                                <div style="display:flex; justify-content:space-between; font-size:0.75rem;">
+                                <div onclick="navigateByDecade(${d})" style="display:flex; justify-content:space-between; font-size:0.75rem; cursor:pointer; padding:6px 8px; border-radius:8px; transition:background 0.2s;" onmouseover="this.style.background='rgba(255,159,10,0.1)'" onmouseout="this.style.background='transparent'">
                                     <span style="opacity:0.7;">Anos ${d}</span>
                                     <span style="font-weight:800; color:#ff9f0a;">${items.length}</span>
                                 </div>
@@ -879,7 +895,7 @@ async function renderSyncView() {
                     </div>
                  </div>
                  
-                <p style="margin-top:15px; font-size:0.75rem; color:#22c55e; font-weight:700; text-align:center;">🤖 Sentinela de Sync Ativo (v104)</p>
+                <p style="margin-top:15px; font-size:0.75rem; color:#22c55e; font-weight:700; text-align:center;">🤖 Sentinela de Sync Ativo (v105)</p>
             </div>
 
             <!-- Legacy Local Sync Section -->
@@ -994,7 +1010,7 @@ async function pushToCloud(silent = false) {
         const platforms = await dbService.getAll('platforms');
 
         const data = {
-            version: "v104",
+            version: "v105",
             timestamp: new Date().toISOString(),
             games,
             consoles,
@@ -1121,15 +1137,15 @@ async function importCollection() {
 
 /** INITIALIZATION **/
 async function init() {
-    logger("Iniciando RetroCollection v104...");
+    logger("Iniciando RetroCollection v105...");
     try {
         await dbService.open();
         logger("DB Conectado.");
 
-        // Auto-Sync Logos logic for v104
-        if (!localStorage.getItem('logos_synced_v104')) {
+        // Auto-Sync Logos logic for v105
+        if (!localStorage.getItem('logos_synced_v105')) {
             await autoSyncLogos();
-            localStorage.setItem('logos_synced_v104', 'true');
+            localStorage.setItem('logos_synced_v105', 'true');
         }
 
         // v98 Resilient Startup
@@ -1240,6 +1256,8 @@ window.deleteItem = deleteItem;
 window.searchCover = searchCover;
 window.selectCover = selectCover;
 window.navigateByPlatform = navigateByPlatform;
+window.navigateByGenre = navigateByGenre; // v105
+window.navigateByDecade = navigateByDecade; // v105
 window.exportCollection = exportCollection;
 window.importCollection = importCollection;
 
