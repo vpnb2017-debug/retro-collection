@@ -1,0 +1,15 @@
+# Database (THIS MUST BE PRIVATE)
+retro_collection.json
+*.json.bak
+*.xlsx
+
+# Scripts and Dev tools
+server.ps1
+extract_nuxt.ps1
+bing_test.html
+debug_search.html
+nuxt_debug.js
+
+# System
+.DS_Store
+Thumbs.db

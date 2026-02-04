@@ -98,6 +98,17 @@ export const dbService = {
         });
     },
 
+    async put(storeName, item) {
+        await this.open();
+        return new Promise((resolve, reject) => {
+            const transaction = this.db.transaction([storeName], 'readwrite');
+            const store = transaction.objectStore(storeName);
+            const request = store.put(item); // Save as is
+            request.onsuccess = () => resolve(item);
+            request.onerror = () => reject(request.error);
+        });
+    },
+
     async delete(storeName, id) {
         await this.open();
         return new Promise((resolve, reject) => {

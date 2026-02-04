@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport"
         content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>RetroCollection v87 🎮</title>
+    <title>RetroCollection v90 🎮</title>
 
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1e1e24">
@@ -316,44 +316,44 @@
             return false;
         };
 
-        log("Arranque v87 iniciado...");
+        log("Arranque v90 iniciado...");
 
-        // v87 AGGRESSIVE UPDATE
+        // v90 AGGRESSIVE UPDATE
         const urlParams = new URLSearchParams(window.location.search);
         const forceUpdate = urlParams.get('update');
 
-        if (localStorage.getItem('app_v') !== '87' || forceUpdate === '87') {
-            log("Actualização Crítica v87...");
+        if (localStorage.getItem('app_v') !== '90' || forceUpdate === '90') {
+            log("Actualização Crítica v90...");
             // Clear only app specific stuff or force reload
-            localStorage.setItem('app_v', '87');
+            localStorage.setItem('app_v', '90');
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.getRegistrations().then(rs => {
                     Promise.all(rs.map(r => r.unregister())).then(() => {
                         log("Cache renovado. A reiniciar...");
-                        location.href = location.href.split('?')[0] + '?v=87';
+                        location.href = location.href.split('?')[0] + '?v=90';
                     });
                 });
             } else {
-                location.href = location.href.split('?')[0] + '?v=87';
+                location.href = location.href.split('?')[0] + '?v=90';
             }
         }
 
-        // Hanging check v87
+        // Hanging check v90
         setTimeout(() => {
             const title = document.querySelector('.v29-title-zone h2');
             if (title && title.innerText.includes('A carregar')) {
                 log("Hanging detetado! Tentando bypass...");
-                location.href = location.href.split('?')[0] + '?force_v87=' + Date.now();
+                location.href = location.href.split('?')[0] + '?force_v90=' + Date.now();
             }
         }, 8000);
     </script>
 
-    <script type="module" src="js/app.js?v=87"></script>
+    <script type="module" src="js/app.js?v=90"></script>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js?v=87')
-                    .then(() => log("v87 Pronta."))
+                navigator.serviceWorker.register('sw.js?v=90')
+                    .then(() => log("v90 Pronta."))
                     .catch(e => log("Falha: " + e.message));
             });
         }

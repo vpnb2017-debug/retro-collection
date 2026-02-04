@@ -43,11 +43,18 @@ export const cloudSyncService = {
      * Fetches the JSON database from the provided URL
      */
     async fetchDatabase(url) {
-        const directUrl = this.getDirectLink(url);
+        let directUrl = this.getDirectLink(url);
 
         // v86: Disable proxy for ALL GitHub domains (Gist, Raw, Repo) to avoid size limits.
         const isGitHub = directUrl.includes('githubusercontent.com') || directUrl.includes('github.com');
         const isDrive = directUrl.includes('google.com');
+
+        // v88: Cache busting - ensures we pull the absolute latest version from GitHub/Gist
+        // Highly needed since user reported seeing old versions (v67)
+        if (isGitHub) {
+            const sep = directUrl.includes('?') ? '&' : '?';
+            directUrl += `${sep}t=${Date.now()}`;
+        }
 
         const fetchUrl = (isDrive && !isGitHub)
             ? `https://api.allorigins.win/get?url=${encodeURIComponent(directUrl)}`
@@ -82,31 +89,29 @@ export const cloudSyncService = {
                 throw new Error("O GitHub/Drive parece estar com problemas técnicos (Erro de Servidor). Tenta novamente mais tarde ou usa a Importação Manual.");
             }
 
-            // v87: SANITIZATION - Strip illegal ASCII control characters (0-31) that break JSON.parse
-            // except for common ones like line feed (\n) or carriage return (\r) if they were intended.
-            // Actually, in standard JSON strings, even \n must be escaped. 
-            // This regex removes the most common "bad" invisible ones including null bytes.
+            // v88: ATOMIC SANITIZATION - Forcefully strip ALL illegal ASCII control characters (0-31 and 127)
+            // that cause "Bad control character" errors at buffer boundaries (like the 256KB reported).
             if (typeof trimmed === 'string') {
                 const originalLen = trimmed.length;
-                trimmed = trimmed.replace(/[\x00-\x1F\x7F]/g, (match) => {
-                    // Allow only safe white spaces if present outside of strings (though unlikely to be raw)
-                    if (match === '\n' || match === '\r' || match === '\t') return match;
-                    return ''; // Strip everything else
-                });
+                // Atomic cleanup: remove almost all control codes. We only keep \n \r \t if they are intended outside strings,
+                // but in valid JSON data strings, these must be escaped as \n anyway. 
+                // This regex is safer for high-volume data.
+                trimmed = trimmed.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+
                 if (trimmed.length !== originalLen) {
-                    console.log(`[CloudSync] Sanitized ${originalLen - trimmed.length} illegal characters.`);
+                    console.warn(`[CloudSync] V88 Atomic Clean: Removed ${originalLen - trimmed.length} illegal characters.`);
                 }
             }
 
             try {
                 // v83+: Trim and parse
-                const data = typeof content === 'string' ? JSON.parse(trimmed) : content;
+                const data = JSON.parse(trimmed);
                 return data;
             } catch (parseErr) {
                 console.error("[CloudSync] Parse error:", parseErr);
-                const size = typeof content === 'string' ? content.length : "N/A";
+                const size = trimmed.length;
                 const preview = trimmed.substring(0, 50).replace(/[\n\r]/g, ' ');
-                // v84: Expose technical error for precise debugging
+                // v84+: Expose technical error for precise debugging
                 throw new Error(`Erro de Sintaxe JSON: ${parseErr.message}. (Tam: ${size} chars). Começa com: "${preview}...".`);
             }
         } catch (err) {
