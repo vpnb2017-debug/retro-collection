@@ -2,8 +2,8 @@ import { dbService } from './services/db.js';
 import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js';
 import { coverSearchService } from './services/coverSearch.js';
 import WebuyService from './services/webuyService.js';
-import { localFileSync } from './services/localFileSync.js?v=73';
-import { metadataService } from './services/metadataService.js?v=73';
+import { localFileSync } from './services/localFileSync.js?v=74';
+import { metadataService } from './services/metadataService.js?v=74';
 
 // Global Exposure
 window.navigate = navigate;
@@ -144,7 +144,7 @@ async function renderDashboard() {
         const ownedTotal = ownedGames.length + ownedConsoles.length;
         const wishlistTotal = games.filter(g => g.isWishlist).length + consoles.filter(c => c.isWishlist).length;
 
-        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v73</span></h2>`;
+        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v74</span></h2>`;
 
         const platData = await getPlatformOptions();
 
@@ -346,48 +346,50 @@ async function renderAddForm(item) {
             
             <div id="cover-preview" style="height:200px; background:#000 url(${item?.image || ''}) center/contain no-repeat; border-radius:15px; border:1px solid rgba(255,255,255,0.1); display:${item?.image ? 'block' : 'none'};"></div>
 
-            <div style="display:flex; gap:12px;">
+            <div class="v74-form-row">
                 <div style="flex:1; display:flex; flex-direction:column; gap:5px;">
                     <label style="font-size:0.75rem; color:#ff9f0a; font-weight:700; margin-left:5px;">Tipo de Item</label>
-                    <select id="add-type" style="padding:14px; background:#2b2b36; border:1px solid #444; color:white; border-radius:12px; font-size:0.9rem;">
+                    <select id="add-type" style="padding:15px; background:#2b2b36; border:1px solid #444; color:white; border-radius:12px; font-size:1rem; height:54px;">
                         <option value="games" ${type === 'games' ? 'selected' : ''}>💾 Jogo</option>
                         <option value="consoles" ${type === 'consoles' ? 'selected' : ''}>🕹️ Consola</option>
                     </select>
                 </div>
-                <div style="display:flex; align-items:flex-end; gap:10px; background:#2b2b36; border:1px solid #444; padding:12px 15px; border-radius:12px;">
-                    <input type="checkbox" id="add-wishlist" style="width:18px; height:18px;" ${item && item.isWishlist ? 'checked' : ''}>
-                    <label for="add-wishlist" style="font-size:0.85rem; font-weight:600;">Wishlist</label>
+                <div style="display:flex; align-items:center; gap:12px; background:#2b2b36; border:1px solid #444; padding:0 20px; border-radius:12px; height:54px; margin-top:auto;">
+                    <input type="checkbox" id="add-wishlist" style="width:22px; height:22px;" ${item && item.isWishlist ? 'checked' : ''}>
+                    <label for="add-wishlist" style="font-size:1rem; font-weight:600;">Wishlist</label>
                 </div>
             </div>
 
             <div style="display:flex; flex-direction:column; gap:5px;">
                 <label style="font-size:0.75rem; color:#ff9f0a; font-weight:700; margin-left:5px;">Título / Nome</label>
-                <div style="display:flex; gap:10px;">
-                    <input id="add-title" type="text" placeholder="Ex: God of War" value="${item ? item.title : ''}" style="flex:1; padding:14px; background:#2b2b36; border:1px solid #444; color:white; border-radius:12px; font-size:0.9rem;">
-                    <div style="display:flex; gap:5px;">
-                        <button onclick="fetchMetadata()" title="Auto-Preencher Metadados" style="background:rgba(255,159,10,0.1); border:1px solid #ff9f0a; color:#ff9f0a; padding:0 12px; border-radius:12px; font-size:1.1rem; cursor:pointer;">🤖</button>
-                        <button onclick="clearMetadata()" title="Limpar Metadados" style="background:rgba(255,255,255,0.05); border:1px solid #444; color:#fff; padding:0 10px; border-radius:12px; font-size:0.9rem; cursor:pointer;">🧹</button>
+                <div style="display:flex; flex-direction:column; gap:10px;">
+                    <div style="display:flex; gap:10px;">
+                        <input id="add-title" type="text" placeholder="Ex: God of War" value="${item ? item.title : ''}" style="flex:1; padding:15px; background:#2b2b36; border:1px solid #444; color:white; border-radius:12px; font-size:1rem; height:54px;">
+                        <button onclick="searchCover()" style="background:#ff9f0a; border:none; color:white; padding:0 15px; border-radius:12px; font-weight:700; cursor:pointer;"><span style="font-size:1.2rem;">🔍</span></button>
                     </div>
-                    <button onclick="searchCover()" style="background:#ff9f0a; border:none; color:white; padding:0 15px; border-radius:12px; font-weight:700; cursor:pointer;">🔍</button>
+                    <div style="display:flex; gap:10px;">
+                        <button onclick="fetchMetadata()" style="flex:1; background:rgba(255,159,10,0.1); border:1px solid #ff9f0a; color:#ff9f0a; padding:12px; border-radius:12px; font-weight:700; cursor:pointer;">🤖 Auto-Preencher</button>
+                        <button onclick="clearMetadata()" style="background:rgba(255,255,255,0.05); border:1px solid #444; color:#fff; padding:0 15px; border-radius:12px; font-size:1.1rem; cursor:pointer;">🧹</button>
+                    </div>
                 </div>
             </div>
             
             <div style="display:flex; flex-direction:column; gap:5px;">
                 <label style="font-size:0.75rem; color:#ff9f0a; font-weight:700; margin-left:5px;">Plataforma / Consola</label>
-                <select id="add-platform" style="padding:14px; background:#2b2b36; border:1px solid #444; color:white; border-radius:12px; font-size:0.9rem;">
+                <select id="add-platform" style="padding:15px; background:#2b2b36; border:1px solid #444; color:white; border-radius:12px; font-size:1rem; height:54px;">
                     <option value="">Selecionar Sistema</option>
                     ${pOptions}
                 </select>
             </div>
 
-            <div style="display:flex; gap:12px;">
+            <div class="v74-form-row">
                 <div style="flex:1; display:flex; flex-direction:column; gap:5px;">
                     <label style="font-size:0.75rem; color:#ff9f0a; font-weight:700; margin-left:5px;">Lançamento (Ano)</label>
-                    <input id="add-year" type="number" placeholder="Ex: 1991" value="${item ? (item.year || '') : ''}" style="padding:14px; background:#2b2b36; border:1px solid #444; color:white; border-radius:12px; font-size:0.9rem;">
+                    <input id="add-year" type="number" placeholder="Ex: 1991" value="${item ? (item.year || '') : ''}" style="padding:15px; background:#2b2b36; border:1px solid #444; color:white; border-radius:12px; font-size:1rem; height:54px;">
                 </div>
                 <div style="flex:1; display:flex; flex-direction:column; gap:5px;">
                     <label style="font-size:0.75rem; color:#ff9f0a; font-weight:700; margin-left:5px;">Género</label>
-                    <input id="add-genre" type="text" placeholder="Ex: RPG" value="${item ? (item.genre || '') : ''}" style="padding:14px; background:#2b2b36; border:1px solid #444; color:white; border-radius:12px; font-size:0.9rem;">
+                    <input id="add-genre" type="text" placeholder="Ex: RPG" value="${item ? (item.genre || '') : ''}" style="padding:15px; background:#2b2b36; border:1px solid #444; color:white; border-radius:12px; font-size:1rem; height:54px;">
                 </div>
             </div>
 
@@ -404,17 +406,17 @@ async function renderAddForm(item) {
                 </div>
             </div>
 
-            <div style="display:flex; gap:12px;">
+            <div class="v74-form-row">
                 <div style="flex:1; display:flex; flex-direction:column; gap:5px;">
                     <label style="font-size:0.75rem; color:#ff9f0a; font-weight:700; margin-left:5px;">Preço Pago (€)</label>
                     <div style="position:relative;">
-                        <span style="position:absolute; left:12px; top:14px; opacity:0.5;">€</span>
-                        <input id="add-price" type="number" step="0.01" placeholder="0.00" value="${item ? (item.price || '') : ''}" style="width:100%; padding:14px 14px 14px 30px; background:#2b2b36; border:1px solid #444; color:white; border-radius:12px; font-size:0.9rem;">
+                        <span style="position:absolute; left:12px; top:15px; opacity:0.5; font-size:1rem;">€</span>
+                        <input id="add-price" type="number" step="0.01" placeholder="0.00" value="${item ? (item.price || '') : ''}" style="width:100%; padding:15px 15px 15px 35px; background:#2b2b36; border:1px solid #444; color:white; border-radius:12px; font-size:1rem; height:54px;">
                     </div>
                 </div>
                 <div style="flex:1; display:flex; flex-direction:column; gap:5px;">
                     <label style="font-size:0.75rem; color:#ff9f0a; font-weight:700; margin-left:5px;">Data (DD/MM/AAAA)</label>
-                    <input id="add-date" type="text" placeholder="DD/MM/AAAA" maxlength="10" value="${item ? (item.acquiredDate || '') : ''}" style="padding:14px; background:#2b2b36; border:1px solid #444; color:white; border-radius:12px; font-size:0.9rem;">
+                    <input id="add-date" type="text" placeholder="DD/MM/AAAA" maxlength="10" value="${item ? (item.acquiredDate || '') : ''}" style="padding:15px; background:#2b2b36; border:1px solid #444; color:white; border-radius:12px; font-size:1rem; height:54px;">
                 </div>
             </div>
 
@@ -802,7 +804,7 @@ async function exportCollection() {
         const platforms = await dbService.getAll('platforms');
 
         const data = {
-            version: "v73",
+            version: "v74",
             timestamp: new Date().toISOString(),
             games,
             consoles,
@@ -873,15 +875,15 @@ async function importCollection() {
 
 /** INITIALIZATION **/
 async function init() {
-    logger("Iniciando RetroCollection v73...");
+    logger("Iniciando RetroCollection v74...");
     try {
         await dbService.open();
         logger("DB Conectado.");
 
-        // Auto-Sync Logos logic for v73
-        if (!localStorage.getItem('logos_synced_v73')) {
+        // Auto-Sync Logos logic for v74
+        if (!localStorage.getItem('logos_synced_v74')) {
             await autoSyncLogos();
-            localStorage.setItem('logos_synced_v73', 'true');
+            localStorage.setItem('logos_synced_v74', 'true');
         }
         await navigate('nav-dashboard');
 
