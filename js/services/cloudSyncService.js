@@ -22,8 +22,8 @@ export const cloudSyncService = {
         if (viewUrl.includes('gist.github.com')) {
             // Remove /raw if already present to avoid duplication
             const base = viewUrl.split('/raw')[0];
-            // Format for raw gist download
-            const rawGist = base.replace('gist.github.com', 'gist.githubusercontent.com') + '/raw';
+            // Format for raw gist download - v104: Added filename
+            const rawGist = base.replace('gist.github.com', 'gist.githubusercontent.com') + '/raw/retro_collection.json';
             console.log(`[CloudSync] Gist detected. Raw: ${rawGist}`);
             return rawGist;
         }
