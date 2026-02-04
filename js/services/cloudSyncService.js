@@ -25,9 +25,12 @@ export const cloudSyncService = {
      */
     async fetchDatabase(url) {
         const directUrl = this.getDirectLink(url);
+        // v79: Use a CORS Proxy to bypass Google Drive's restrictions
+        const proxiedUrl = `https://corsproxy.io/?${encodeURIComponent(directUrl)}`;
+
         try {
-            console.log(`[CloudSync] Fetching from: ${directUrl}`);
-            const response = await fetch(directUrl);
+            console.log(`[CloudSync] Fetching from (via Proxy): ${proxiedUrl}`);
+            const response = await fetch(proxiedUrl);
             if (!response.ok) throw new Error("Falha ao descarregar ficheiro da nuvem.");
 
             const data = await response.json();
