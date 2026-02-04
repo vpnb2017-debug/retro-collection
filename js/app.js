@@ -2,8 +2,9 @@ import { dbService } from './services/db.js';
 import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js';
 import { coverSearchService } from './services/coverSearch.js';
 import WebuyService from './services/webuyService.js';
-import { localFileSync } from './services/localFileSync.js?v=76';
-import { metadataService } from './services/metadataService.js?v=76';
+import { localFileSync } from './services/localFileSync.js?v=77';
+import { metadataService } from './services/metadataService.js?v=77';
+import { cloudSyncService } from './services/cloudSyncService.js?v=77';
 
 // Global Exposure
 window.navigate = navigate;
@@ -21,7 +22,9 @@ window.selectLogo = selectLogo;
 window.clearFilters = clearFilters;
 window.fetchMetadata = fetchMetadata;
 window.clearMetadata = clearMetadata;
-// window.state moved down to avoid TDZ error
+window.pullFromCloud = pullFromCloud;
+window.saveCloudLink = saveCloudLink;
+window.state = state; // Crucial for inline onclick handlers
 
 // Utility for logging 
 const logger = (msg) => { if (window.log) window.log(msg); else console.log(msg); };
@@ -146,7 +149,7 @@ async function renderDashboard() {
         const ownedTotal = ownedGames.length + ownedConsoles.length;
         const wishlistTotal = games.filter(g => g.isWishlist).length + consoles.filter(c => c.isWishlist).length;
 
-        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v76</span></h2>`;
+        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v77</span></h2>`;
 
         const platData = await getPlatformOptions();
 
@@ -767,35 +770,108 @@ function selectLogo(id, url) {
 /** SYNC / SETTINGS **/
 async function renderSyncView() {
     const { titleEl, scrollEl } = getZones();
+    const cloudUrl = localStorage.getItem('cloud_sync_url') || '';
+
     titleEl.innerHTML = `<h2>Nuvem & Definições</h2>`;
     scrollEl.innerHTML = `
         <div style="display:flex; flex-direction:column; gap:18px; max-width:600px; margin:0 auto;">
-            <div style="background:rgba(255,159,10,0.05); padding:24px; border-radius:20px; border:1px solid rgba(255,159,10,0.2);">
-                 <h3 style="margin-bottom:10px; font-size:1rem; color:#ff9f0a;">Sync Cloud ☁️</h3>
-                 <p style="margin-bottom:20px; font-size:0.85rem; opacity:0.7; line-height:1.4;">Usa estes botões para mover a tua coleção entre o PC e o Telemóvel.</p>
+            
+            <!-- Cloud Sync Section -->
+            <div style="background:linear-gradient(135deg, rgba(255,159,10,0.1) 0%, rgba(255,121,80,0.1) 100%); padding:28px; border-radius:24px; border:1px solid rgba(255,159,10,0.3); box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+                 <div style="display:flex; align-items:center; gap:12px; margin-bottom:15px;">
+                    <span style="font-size:1.8rem;">☁️</span>
+                    <h3 style="margin:0; font-size:1.2rem; color:#ff9f0a;">Cloud Auto-Sync</h3>
+                 </div>
                  
+                 <p style="margin-bottom:20px; font-size:0.9rem; opacity:0.8; line-height:1.5;">Liga a tua coleção ao Google Drive para sincronizar automaticamente entre todos os teus dispositivos.</p>
+                 
+                 <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:20px;">
+                    <label style="font-size:0.75rem; color:#ff9f0a; font-weight:700; margin-left:5px;">Link de Partilha (Google Drive)</label>
+                    <div style="display:flex; gap:10px;">
+                        <input type="text" id="cloud-url-input" placeholder="Cola o link aqui..." value="${cloudUrl}" style="flex:1; background:#1a1a20; border:1px solid #444; color:white; padding:15px; border-radius:12px; font-size:0.9rem;">
+                        <button onclick="saveCloudLink()" style="background:#ff9f0a; border:none; color:white; padding:0 20px; border-radius:12px; font-weight:700; cursor:pointer;">💾</button>
+                    </div>
+                 </div>
+
+                 <button onclick="pullFromCloud()" style="width:100%; border:none; padding:18px; border-radius:16px; background:#ff9f0a; color:white; font-weight:800; cursor:pointer; font-size:1rem; box-shadow: 0 4px 15px rgba(255,159,10,0.3); display:flex; align-items:center; justify-content:center; gap:10px;">
+                    <span>📥</span> Puxar Actualizações da Nuvem
+                 </button>
+                 
+                 <p style="margin-top:15px; font-size:0.75rem; opacity:0.5; text-align:center;">Nota: A escrita automática requer upload manual para o Drive após exportar.</p>
+            </div>
+
+            <!-- Legacy Local Sync Section -->
+            <div style="background:rgba(255,255,255,0.03); padding:24px; border-radius:20px; border:1px solid rgba(255,255,255,0.05);">
+                 <h3 style="margin-bottom:10px; font-size:1rem; opacity:0.7;">Ficheiro Local (Manual) 📂</h3>
                  <div style="display:flex; flex-direction:column; gap:10px;">
-                    <button onclick="exportCollection()" style="width:100%; border:none; padding:16px; border-radius:14px; background:#ff9f0a; color:white; font-weight:800; cursor:pointer; font-size:1rem;">📤 Exportar para Nuvem/Ficheiro</button>
-                    <button onclick="importCollection()" style="width:100%; border:none; padding:16px; border-radius:14px; background:rgba(255,159,10,0.1); border:2px solid #ff9f0a; color:#ff9f0a; font-weight:800; cursor:pointer; font-size:1rem;">📥 Importar da Nuvem/Ficheiro</button>
+                    <button onclick="exportCollection()" style="width:100%; border:none; padding:16px; border-radius:14px; background:rgba(255,255,255,0.05); color:white; font-weight:700; cursor:pointer; font-size:0.9rem; border:1px solid rgba(255,255,255,0.1);">📤 Exportar JSON</button>
+                    <button onclick="importCollection()" style="width:100%; border:none; padding:16px; border-radius:14px; background:rgba(255,255,255,0.05); color:white; font-weight:700; cursor:pointer; font-size:0.9rem; border:1px solid rgba(255,255,255,0.1);">📥 Importar JSON</button>
                  </div>
             </div>
             
-            <div style="background:rgba(255,100,100,0.05); padding:24px; border-radius:20px; border:1px solid rgba(255,0,0,0.2); margin-top:20px;">
+            <div style="background:rgba(255,100,100,0.05); padding:24px; border-radius:20px; border:1px solid rgba(255,0,0,0.2); margin-top:10px;">
                  <h3 style="margin-bottom:10px; font-size:1rem; color:#ff4d4d;">Zona de Perigo 🚨</h3>
-                 <p style="margin-bottom:20px; font-size:0.8rem; opacity:0.65; line-height:1.4;">Se a App estiver a falhar ou se quiseres limpar tudo para começar do zero.</p>
-                 <button id="btn-force-update" style="width:100%; background:#ff4d4d; color:white; border:none; padding:14px; border-radius:14px; font-weight:800; cursor:pointer;">WIPE TOTAL DA APP (v53)</button>
+                 <button id="btn-force-update" style="width:100%; background:#ff4d4d; color:white; border:none; padding:14px; border-radius:14px; font-weight:800; cursor:pointer;">WIPE TOTAL DA APP</button>
             </div>
         </div>
     `;
 
     document.getElementById('btn-force-update').onclick = async () => {
-        if (confirm("ATENÇÃO: Isto apagará TODOS os dados e a cache! Tem backup?")) {
+        if (confirm("ATENÇÃO: Isto apagará TODOS os dados locais! Tem o JSON guardado?")) {
             localStorage.clear();
             const rs = await navigator.serviceWorker.getRegistrations();
             for (let r of rs) await r.unregister();
             location.href = location.href.split('?')[0] + '?v=' + Date.now();
         }
     };
+}
+
+async function saveCloudLink() {
+    const url = document.getElementById('cloud-url-input').value.trim();
+    if (!url) return uiService.alert("Por favor insira um link válido.");
+    localStorage.setItem('cloud_sync_url', url);
+    uiService.alert("Link da Nuvem guardado com sucesso! Agora podes usar o botão de Puxar.", "Link Guardado ☁️");
+}
+
+async function pullFromCloud() {
+    const url = localStorage.getItem('cloud_sync_url');
+    if (!url) return uiService.alert("Configura primeiro o link do Google Drive nas definições.");
+
+    logger("A ligar à nuvem...");
+    try {
+        const data = await cloudSyncService.fetchDatabase(url);
+        if (!data || (!data.games && !data.consoles)) {
+            throw new Error("Dados da nuvem inválidos ou vazios.");
+        }
+
+        if (await uiService.confirm(`Encontrados ${data.games?.length || 0} jogos e ${data.consoles?.length || 0} consolas. Substituir a coleção local?`, "Sincronização Cloud")) {
+            await performFullImport(data);
+            uiService.alert("Coleção atualizada com sucesso a partir da Nuvem! ☁️✨", "Sucesso!");
+            await navigate('nav-dashboard');
+        }
+    } catch (err) {
+        logger("CLOUD SYNC ERR: " + err.message);
+        uiService.alert("Erro ao sincronizar: " + err.message);
+    }
+}
+
+async function performFullImport(data) {
+    logger("A limpar colecção...");
+    await dbService.clear('games');
+    await dbService.clear('consoles');
+    await dbService.clear('platforms');
+
+    logger("A processar novos dados...");
+    if (data.platforms) {
+        for (let p of data.platforms) await dbService.put('platforms', p);
+    }
+    if (data.games) {
+        for (let g of data.games) await dbService.put('games', g);
+    }
+    if (data.consoles) {
+        for (let c of data.consoles) await dbService.put('consoles', c);
+    }
+    logger("Importação concluída com sucesso.");
 }
 
 async function exportCollection() {
@@ -806,7 +882,7 @@ async function exportCollection() {
         const platforms = await dbService.getAll('platforms');
 
         const data = {
-            version: "v76",
+            version: "v77",
             timestamp: new Date().toISOString(),
             games,
             consoles,
@@ -847,28 +923,11 @@ async function importCollection() {
             throw new Error("Ficheiro inválido ou vazio.");
         }
 
-        // Wipe current db stores
-        await dbService.clear('games');
-        await dbService.clear('consoles');
-        await dbService.clear('platforms');
-
-        // Insert new data
-        if (data.games) {
-            for (const g of data.games) await dbService.add('games', g);
+        if (await uiService.confirm("Desejas substituir a coleção local?", "Confirmar Importação")) {
+            await performFullImport(data);
+            uiService.alert("Importação concluída! 🎮");
+            await navigate('nav-dashboard');
         }
-        if (data.consoles) {
-            for (const c of data.consoles) await dbService.add('consoles', c);
-        }
-        if (data.platforms) {
-            // Platforms store uses 'id', but add helper might generate new ones if not careful.
-            // platforms.js has its own logic, but here we just put raw items.
-            for (const p of data.platforms) await dbService.add('platforms', p);
-        }
-
-        uiService.alert("Importação concluída com sucesso! A App vai recarregar.", "Sucesso 📥");
-        logger("Importação concluída. Recarregando...");
-        setTimeout(() => location.reload(), 2000);
-
     } catch (err) {
         logger("IMPORT ERR: " + err.message);
         uiService.alert("Erro ao importar: " + err.message);
@@ -877,16 +936,28 @@ async function importCollection() {
 
 /** INITIALIZATION **/
 async function init() {
-    logger("Iniciando RetroCollection v76...");
+    logger("Iniciando RetroCollection v77...");
     try {
         await dbService.open();
         logger("DB Conectado.");
 
-        // Auto-Sync Logos logic for v76
-        if (!localStorage.getItem('logos_synced_v76')) {
+        // Auto-Sync Logos logic for v77
+        if (!localStorage.getItem('logos_synced_v77')) {
             await autoSyncLogos();
-            localStorage.setItem('logos_synced_v76', 'true');
+            localStorage.setItem('logos_synced_v77', 'true');
         }
+
+        // Cloud Check
+        const cloudUrl = localStorage.getItem('cloud_sync_url');
+        if (cloudUrl && !sessionStorage.getItem('startup_synced')) {
+            sessionStorage.setItem('startup_synced', 'true');
+            const gamesCount = (await dbService.getAll('games')).length;
+            if (gamesCount === 0) {
+                logger("Base de dados vazia. A tentar puxar da nuvem...");
+                await pullFromCloud();
+            }
+        }
+
         await navigate('nav-dashboard');
 
         // Hide log after success

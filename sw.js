@@ -1,4 +1,4 @@
-const CACHE_NAME = 'retro-collection-v76';
+const CACHE_NAME = 'retro-collection-v77';
 const ASSETS = [
     './',
     './index.html',
@@ -17,7 +17,7 @@ const ASSETS = [
 self.addEventListener('install', (event) => {
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
-            console.log('SW: Pre-caching v76');
+            console.log('SW: Pre-caching v77');
             return cache.addAll(ASSETS);
         })
     );
