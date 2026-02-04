@@ -2,9 +2,9 @@ import { dbService } from './services/db.js?v=90';
 import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js?v=90';
 import { coverSearchService } from './services/coverSearch.js?v=90';
 import WebuyService from './services/webuyService.js?v=90';
-import { localFileSync } from './services/localFileSync.js?v=94';
-import { metadataService } from './services/metadataService.js?v=94';
-import { cloudSyncService } from './services/cloudSyncService.js?v=94';
+import { localFileSync } from './services/localFileSync.js?v=95';
+import { metadataService } from './services/metadataService.js?v=95';
+import { cloudSyncService } from './services/cloudSyncService.js?v=95';
 
 // Global Exposure
 window.navigate = navigate;
@@ -150,7 +150,7 @@ async function renderDashboard() {
         const ownedTotal = ownedGames.length + ownedConsoles.length;
         const wishlistTotal = games.filter(g => g.isWishlist).length + consoles.filter(c => c.isWishlist).length;
 
-        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v94</span></h2>`;
+        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v95</span></h2>`;
 
         const platData = await getPlatformOptions();
         const lastSync = localStorage.getItem('last_sync_timestamp') || 'Nunca';
@@ -158,14 +158,21 @@ async function renderDashboard() {
         scrollEl.innerHTML = `
             <div style="display:flex; flex-direction:column; gap:20px; padding-bottom:40px;">
                 
-                <!-- Sync Badge Dashboard -->
-                <div style="background:rgba(255,159,10,0.05); padding:12px 20px; border-radius:14px; border:1px solid rgba(255,159,10,0.2); display:flex; justify-content:space-between; align-items:center; font-size:0.8rem;">
-                    <div style="display:flex; align-items:center; gap:8px;">
-                        <span style="font-size:1.1rem;">☁️</span>
-                        <span style="opacity:0.7;">Sincronização:</span>
-                        <span style="color:#ff9f0a; font-weight:700;">${lastSync}</span>
+                <!-- Sync Badge Dashboard v95 -->
+                <div style="background:rgba(255,159,10,0.05); padding:16px; border-radius:18px; border:1px solid rgba(255,159,10,0.2); display:flex; flex-direction:column; gap:10px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div style="display:flex; align-items:center; gap:8px;">
+                            <span style="font-size:1.2rem;">☁️</span>
+                            <span style="font-weight:700; font-size:0.85rem;">Sincronização Cloud</span>
+                        </div>
+                        <span style="font-size:0.7rem; opacity:0.6;">Última: ${lastSync}</span>
                     </div>
-                    <button onclick="pullFromCloud()" style="background:none; border:none; color:#ff9f0a; font-weight:700; cursor:pointer; text-decoration:underline;">Puxar 📥</button>
+                    <div style="display:flex; justify-content:space-between; align-items:center; padding-top:6px; border-top:1px solid rgba(255,255,255,0.05);">
+                        <div style="font-size:0.75rem; opacity:0.8;">
+                           <b>${games.length}</b> Jogos | <b>${consoles.length}</b> Consolas
+                        </div>
+                        <button onclick="pullFromCloud()" style="background:#ff9f0a; border:none; color:white; padding:6px 14px; border-radius:10px; font-weight:700; font-size:0.75rem; cursor:pointer; box-shadow:0 4px 10px rgba(255,159,10,0.2);">Puxar 📥</button>
+                    </div>
                 </div>
             <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap:12px; margin-top:5px;">
                 <div onclick="navigate('nav-collection')" style="background:rgba(255,159,10,0.12); padding:20px; border-radius:18px; border:1px solid rgba(255,159,10,0.25); cursor:pointer;">
@@ -844,7 +851,7 @@ async function renderSyncView() {
                     </div>
                  </div>
                  
-                 <p style="margin-top:15px; font-size:0.75rem; color:#22c55e; font-weight:700; text-align:center;">🤖 Modo Sempre-Sincronizado Ativo (v94)</p>
+                <p style="margin-top:15px; font-size:0.75rem; color:#22c55e; font-weight:700; text-align:center;">🤖 Modo Sempre-Sincronizado Ativo (v95)</p>
             </div>
 
             <!-- Legacy Local Sync Section -->
@@ -908,9 +915,10 @@ async function pullFromCloud(silent = false) {
             return;
         }
 
-        if (await uiService.confirm(`Sincronizar ${data.games?.length || 0} jogos? Isto substituirá a coleção local.`, "Nuvem ☁️")) {
+        const totalItems = (data.games?.length || 0) + (data.consoles?.length || 0);
+        if (await uiService.confirm(`A Nuvem contém ${totalItems} itens (${data.games?.length || 0} jogos e ${data.consoles?.length || 0} consolas). Desejas substituir a coleção local?`, "Sincronização Cloud ☁️")) {
             await performFullImport(data);
-            uiService.alert("Sincronizado com sucesso! ✨", "Sucesso!");
+            uiService.alert("Coleção sincronizada com sucesso! ✨", "Sucesso!");
             await navigate('nav-dashboard');
         }
     } catch (err) {
@@ -946,14 +954,15 @@ async function pushToCloud(silent = false) {
         const platforms = await dbService.getAll('platforms');
 
         const data = {
-            version: "v94",
+            version: "v95",
             timestamp: new Date().toISOString(),
             games,
             consoles,
             platforms
         };
 
-        if (silent || await uiService.confirm(`Exportar ${games.length} itens para a Nuvem?`, "Sincronizar Agora 📤")) {
+        const totalItems = games.length + consoles.length;
+        if (silent || await uiService.confirm(`Desejas exportar ${totalItems} itens para a Nuvem?`, "Sincronizar 📤")) {
             if (!silent) logger("A enviar...");
             await cloudSyncService.uploadToGist(token, gistId, data);
 
@@ -1056,15 +1065,15 @@ async function importCollection() {
 
 /** INITIALIZATION **/
 async function init() {
-    logger("Iniciando RetroCollection v94...");
+    logger("Iniciando RetroCollection v95...");
     try {
         await dbService.open();
         logger("DB Conectado.");
 
-        // Auto-Sync Logos logic for v94
-        if (!localStorage.getItem('logos_synced_v94')) {
+        // Auto-Sync Logos logic for v95
+        if (!localStorage.getItem('logos_synced_v95')) {
             await autoSyncLogos();
-            localStorage.setItem('logos_synced_v94', 'true');
+            localStorage.setItem('logos_synced_v95', 'true');
         }
 
         // v94 Auto-Pull on start
