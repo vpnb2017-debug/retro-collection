@@ -10,7 +10,8 @@ export const metadataService = {
      * @param {string} platform - Optional platform context
      */
     async fetchMetadata(title, platform = '') {
-        const query = `${title} ${platform} video game`.trim();
+        const cleanPlat = (platform && platform !== '(Sem Consola)') ? platform : '';
+        const query = `${title} ${cleanPlat} video game`.trim();
         const searchUrl = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(query)}&format=json&origin=*`;
 
         try {
@@ -18,12 +19,23 @@ export const metadataService = {
             const searchRes = await fetch(searchUrl);
             const searchData = await searchRes.json();
 
-            if (!searchData.query.search || searchData.query.search.length === 0) {
-                return null;
+            const results = searchData.query.search || [];
+            if (results.length === 0) return null;
+
+            // Heuristic: Try to find the best page among top 3 results
+            // We look for "video game" or common gaming terms in the snippet
+            let bestPage = results[0];
+            const keywords = ['video game', 'game', 'series', 'console', 'developed'];
+
+            for (let i = 0; i < Math.min(3, results.length); i++) {
+                const snippet = results[i].snippet.toLowerCase();
+                if (keywords.some(k => snippet.includes(k))) {
+                    bestPage = results[i];
+                    break;
+                }
             }
 
-            // Get first result details
-            const pageId = searchData.query.search[0].pageid;
+            const pageId = bestPage.pageid;
             const contentUrl = `https://en.wikipedia.org/w/api.php?action=query&prop=extracts|revisions&exintro&explaintext&rvprop=content&rvsection=0&pageids=${pageId}&format=json&origin=*`;
 
             const contentRes = await fetch(contentUrl);

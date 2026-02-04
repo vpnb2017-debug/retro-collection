@@ -2,8 +2,8 @@ import { dbService } from './services/db.js';
 import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js';
 import { coverSearchService } from './services/coverSearch.js';
 import WebuyService from './services/webuyService.js';
-import { localFileSync } from './services/localFileSync.js?v=69';
-import { metadataService } from './services/metadataService.js?v=69';
+import { localFileSync } from './services/localFileSync.js?v=70';
+import { metadataService } from './services/metadataService.js?v=70';
 
 // Global Exposure
 window.navigate = navigate;
@@ -20,6 +20,7 @@ window.pickLogoForPlatform = pickLogoForPlatform;
 window.selectLogo = selectLogo;
 window.clearFilters = clearFilters;
 window.fetchMetadata = fetchMetadata;
+window.clearMetadata = clearMetadata;
 
 // Utility for logging 
 const logger = (msg) => { if (window.log) window.log(msg); else console.log(msg); };
@@ -143,7 +144,7 @@ async function renderDashboard() {
         const ownedTotal = ownedGames.length + ownedConsoles.length;
         const wishlistTotal = games.filter(g => g.isWishlist).length + consoles.filter(c => c.isWishlist).length;
 
-        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v69</span></h2>`;
+        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v70</span></h2>`;
 
         const platData = await getPlatformOptions();
 
@@ -330,8 +331,9 @@ async function renderAddForm(item) {
     }
 
     titleEl.innerHTML = `
-        <div style="display:flex; align-items:center; width:100%;">
-            <h2 style="margin:0;">${item ? '✏️ Editar Item' : '➕ Novo Item'}</h2>
+        <div style="display:flex; align-items:center; width:100%; gap:15px;">
+            <button onclick="navigate(state.view === 'nav-add' ? 'nav-collection' : state.view)" style="background:none; border:none; color:white; font-size:1.2rem; cursor:pointer; padding:5px;">🏠</button>
+            <h2 style="margin:0; font-size:1.2rem;">${item ? '✏️ Editar Item' : '➕ Novo Item'}</h2>
             ${navArrows}
         </div>
     `;
@@ -362,7 +364,10 @@ async function renderAddForm(item) {
                 <label style="font-size:0.75rem; color:#ff9f0a; font-weight:700; margin-left:5px;">Título / Nome</label>
                 <div style="display:flex; gap:10px;">
                     <input id="add-title" type="text" placeholder="Ex: God of War" value="${item ? item.title : ''}" style="flex:1; padding:14px; background:#2b2b36; border:1px solid #444; color:white; border-radius:12px; font-size:0.9rem;">
-                    <button onclick="fetchMetadata()" title="Auto-Preencher Metadados" style="background:rgba(255,159,10,0.1); border:1px solid #ff9f0a; color:#ff9f0a; padding:0 12px; border-radius:12px; font-size:1.1rem; cursor:pointer;">🤖</button>
+                    <div style="display:flex; gap:5px;">
+                        <button onclick="fetchMetadata()" title="Auto-Preencher Metadados" style="background:rgba(255,159,10,0.1); border:1px solid #ff9f0a; color:#ff9f0a; padding:0 12px; border-radius:12px; font-size:1.1rem; cursor:pointer;">🤖</button>
+                        <button onclick="clearMetadata()" title="Limpar Metadados" style="background:rgba(255,255,255,0.05); border:1px solid #444; color:#fff; padding:0 10px; border-radius:12px; font-size:0.9rem; cursor:pointer;">🧹</button>
+                    </div>
                     <button onclick="searchCover()" style="background:#ff9f0a; border:none; color:white; padding:0 15px; border-radius:12px; font-weight:700; cursor:pointer;">🔍</button>
                 </div>
             </div>
@@ -571,7 +576,7 @@ async function fetchMetadata() {
         if (data.genre) document.getElementById('add-genre').value = data.genre;
         if (data.developer) document.getElementById('add-developer').value = data.developer;
 
-        if (data.description && !document.getElementById('add-notes').value) {
+        if (data.description && (!document.getElementById('add-notes').value || document.getElementById('add-notes').value.length < 5)) {
             document.getElementById('add-notes').value = data.description;
         }
 
@@ -581,6 +586,15 @@ async function fetchMetadata() {
         logger("METADATA ERR: " + err.message);
         uiService.alert("Erro ao consultar metadados.");
     }
+}
+
+function clearMetadata() {
+    const fields = ['add-year', 'add-genre', 'add-developer', 'add-notes'];
+    fields.forEach(f => {
+        const el = document.getElementById(f);
+        if (el) el.value = '';
+    });
+    logger("Metadados limpos.");
 }
 
 async function openAddModal() { navigate('nav-add'); }
@@ -788,7 +802,7 @@ async function exportCollection() {
         const platforms = await dbService.getAll('platforms');
 
         const data = {
-            version: "v67",
+            version: "v70",
             timestamp: new Date().toISOString(),
             games,
             consoles,
@@ -859,15 +873,15 @@ async function importCollection() {
 
 /** INITIALIZATION **/
 async function init() {
-    logger("Iniciando RetroCollection v69...");
+    logger("Iniciando RetroCollection v70...");
     try {
         await dbService.open();
         logger("DB Conectado.");
 
-        // Auto-Sync Logos logic for v69
-        if (!localStorage.getItem('logos_synced_v69')) {
+        // Auto-Sync Logos logic for v70
+        if (!localStorage.getItem('logos_synced_v70')) {
             await autoSyncLogos();
-            localStorage.setItem('logos_synced_v69', 'true');
+            localStorage.setItem('logos_synced_v70', 'true');
         }
         await navigate('nav-dashboard');
 
@@ -942,7 +956,7 @@ function isValidDate(dateString) {
 
 function groupBy(arr, key) {
     return arr.reduce((acc, obj) => {
-        const k = obj[key] || '(Sem Consola)';
+        const k = (typeof key === 'function' ? key(obj) : obj[key]) || '(Geral)';
         if (!acc[k]) acc[k] = [];
         acc[k].push(obj);
         return acc;
