@@ -2,8 +2,8 @@ import { dbService } from './services/db.js';
 import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js';
 import { coverSearchService } from './services/coverSearch.js';
 import WebuyService from './services/webuyService.js';
-import { localFileSync } from './services/localFileSync.js?v=74';
-import { metadataService } from './services/metadataService.js?v=74';
+import { localFileSync } from './services/localFileSync.js?v=75';
+import { metadataService } from './services/metadataService.js?v=75';
 
 // Global Exposure
 window.navigate = navigate;
@@ -21,6 +21,7 @@ window.selectLogo = selectLogo;
 window.clearFilters = clearFilters;
 window.fetchMetadata = fetchMetadata;
 window.clearMetadata = clearMetadata;
+window.state = state; // Crucial for inline onclick handlers
 
 // Utility for logging 
 const logger = (msg) => { if (window.log) window.log(msg); else console.log(msg); };
@@ -144,7 +145,7 @@ async function renderDashboard() {
         const ownedTotal = ownedGames.length + ownedConsoles.length;
         const wishlistTotal = games.filter(g => g.isWishlist).length + consoles.filter(c => c.isWishlist).length;
 
-        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v74</span></h2>`;
+        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v75</span></h2>`;
 
         const platData = await getPlatformOptions();
 
@@ -332,7 +333,7 @@ async function renderAddForm(item) {
 
     titleEl.innerHTML = `
         <div style="display:flex; align-items:center; width:100%; gap:15px;">
-            <button onclick="navigate(state.view === 'nav-add' ? 'nav-collection' : state.view)" style="background:none; border:none; color:white; font-size:1.2rem; cursor:pointer; padding:5px;">🏠</button>
+            <button onclick="navigate('nav-dashboard')" style="background:none; border:none; color:white; font-size:1.2rem; cursor:pointer; padding:5px;">🏠</button>
             <h2 style="margin:0; font-size:1.2rem;">${item ? '✏️ Editar Item' : '➕ Novo Item'}</h2>
             ${navArrows}
         </div>
@@ -804,7 +805,7 @@ async function exportCollection() {
         const platforms = await dbService.getAll('platforms');
 
         const data = {
-            version: "v74",
+            version: "v75",
             timestamp: new Date().toISOString(),
             games,
             consoles,
@@ -875,15 +876,15 @@ async function importCollection() {
 
 /** INITIALIZATION **/
 async function init() {
-    logger("Iniciando RetroCollection v74...");
+    logger("Iniciando RetroCollection v75...");
     try {
         await dbService.open();
         logger("DB Conectado.");
 
-        // Auto-Sync Logos logic for v74
-        if (!localStorage.getItem('logos_synced_v74')) {
+        // Auto-Sync Logos logic for v75
+        if (!localStorage.getItem('logos_synced_v75')) {
             await autoSyncLogos();
-            localStorage.setItem('logos_synced_v74', 'true');
+            localStorage.setItem('logos_synced_v75', 'true');
         }
         await navigate('nav-dashboard');
 
