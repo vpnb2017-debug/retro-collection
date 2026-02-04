@@ -2,9 +2,9 @@ import { dbService } from './services/db.js';
 import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js';
 import { coverSearchService } from './services/coverSearch.js';
 import WebuyService from './services/webuyService.js';
-import { localFileSync } from './services/localFileSync.js?v=77';
-import { metadataService } from './services/metadataService.js?v=77';
-import { cloudSyncService } from './services/cloudSyncService.js?v=77';
+import { localFileSync } from './services/localFileSync.js?v=78';
+import { metadataService } from './services/metadataService.js?v=78';
+import { cloudSyncService } from './services/cloudSyncService.js?v=78';
 
 // Global Exposure
 window.navigate = navigate;
@@ -24,7 +24,7 @@ window.fetchMetadata = fetchMetadata;
 window.clearMetadata = clearMetadata;
 window.pullFromCloud = pullFromCloud;
 window.saveCloudLink = saveCloudLink;
-window.state = state; // Crucial for inline onclick handlers
+// window.state moved down to avoid TDZ error
 
 // Utility for logging 
 const logger = (msg) => { if (window.log) window.log(msg); else console.log(msg); };
@@ -149,7 +149,7 @@ async function renderDashboard() {
         const ownedTotal = ownedGames.length + ownedConsoles.length;
         const wishlistTotal = games.filter(g => g.isWishlist).length + consoles.filter(c => c.isWishlist).length;
 
-        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v77</span></h2>`;
+        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v78</span></h2>`;
 
         const platData = await getPlatformOptions();
 
@@ -882,7 +882,7 @@ async function exportCollection() {
         const platforms = await dbService.getAll('platforms');
 
         const data = {
-            version: "v77",
+            version: "v78",
             timestamp: new Date().toISOString(),
             games,
             consoles,
@@ -936,15 +936,15 @@ async function importCollection() {
 
 /** INITIALIZATION **/
 async function init() {
-    logger("Iniciando RetroCollection v77...");
+    logger("Iniciando RetroCollection v78...");
     try {
         await dbService.open();
         logger("DB Conectado.");
 
-        // Auto-Sync Logos logic for v77
-        if (!localStorage.getItem('logos_synced_v77')) {
+        // Auto-Sync Logos logic for v78
+        if (!localStorage.getItem('logos_synced_v78')) {
             await autoSyncLogos();
-            localStorage.setItem('logos_synced_v77', 'true');
+            localStorage.setItem('logos_synced_v78', 'true');
         }
 
         // Cloud Check
