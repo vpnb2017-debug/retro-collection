@@ -378,7 +378,8 @@
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js?v=104')
+                // v104.1: Removed query string - causes fetch errors on some local servers
+                navigator.serviceWorker.register('sw.js')
                     .then(() => log("v104 Pronta."))
                     .catch(e => log("Falha: " + e.message));
             });
