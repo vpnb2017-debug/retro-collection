@@ -1,10 +1,10 @@
-import { dbService } from './services/db.js?v=105';
-import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js?v=105';
-import { coverSearchService } from './services/coverSearch.js?v=105';
-import WebuyService from './services/webuyService.js?v=105';
-import { localFileSync } from './services/localFileSync.js?v=105';
-import { metadataService } from './services/metadataService.js?v=105';
-import { cloudSyncService } from './services/cloudSyncService.js?v=105';
+import { dbService } from './services/db.js?v=106';
+import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js?v=106';
+import { coverSearchService } from './services/coverSearch.js?v=106';
+import WebuyService from './services/webuyService.js?v=106';
+import { localFileSync } from './services/localFileSync.js?v=106';
+import { metadataService } from './services/metadataService.js?v=106';
+import { cloudSyncService } from './services/cloudSyncService.js?v=106';
 
 // Global Exposure
 window.navigate = navigate;
@@ -166,7 +166,7 @@ async function renderDashboard() {
         const ownedTotal = ownedGames.length + ownedConsoles.length;
         const wishlistTotal = games.filter(g => g.isWishlist).length + consoles.filter(c => c.isWishlist).length;
 
-        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v105</span></h2>`;
+        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v106</span></h2>`;
 
         const platData = await getPlatformOptions();
 
@@ -335,7 +335,14 @@ async function renderGenericGrid(viewTitle, itemsFilter) {
                 const itemPlat = i.platform || '(Sem Consola)';
                 if (state.filterPlatform !== 'all' && itemPlat !== state.filterPlatform) return false;
 
-                if (state.filterSearch && !i.title.toLowerCase().includes(state.filterSearch)) return false;
+                // v106: Search in title, genre, and year
+                if (state.filterSearch) {
+                    const searchLower = state.filterSearch;
+                    const titleMatch = i.title.toLowerCase().includes(searchLower);
+                    const genreMatch = i.genre && i.genre.toLowerCase().includes(searchLower);
+                    const yearMatch = i.year && i.year.toString().includes(searchLower);
+                    if (!titleMatch && !genreMatch && !yearMatch) return false;
+                }
                 return true;
             }).sort((a, b) => a.title.localeCompare(b.title));
 
@@ -895,7 +902,7 @@ async function renderSyncView() {
                     </div>
                  </div>
                  
-                <p style="margin-top:15px; font-size:0.75rem; color:#22c55e; font-weight:700; text-align:center;">🤖 Sentinela de Sync Ativo (v105)</p>
+                <p style="margin-top:15px; font-size:0.75rem; color:#22c55e; font-weight:700; text-align:center;">🤖 Sentinela de Sync Ativo (v106)</p>
             </div>
 
             <!-- Legacy Local Sync Section -->
@@ -1010,7 +1017,7 @@ async function pushToCloud(silent = false) {
         const platforms = await dbService.getAll('platforms');
 
         const data = {
-            version: "v105",
+            version: "v106",
             timestamp: new Date().toISOString(),
             games,
             consoles,
@@ -1137,15 +1144,15 @@ async function importCollection() {
 
 /** INITIALIZATION **/
 async function init() {
-    logger("Iniciando RetroCollection v105...");
+    logger("Iniciando RetroCollection v106...");
     try {
         await dbService.open();
         logger("DB Conectado.");
 
-        // Auto-Sync Logos logic for v105
-        if (!localStorage.getItem('logos_synced_v105')) {
+        // Auto-Sync Logos logic for v106
+        if (!localStorage.getItem('logos_synced_v106')) {
             await autoSyncLogos();
-            localStorage.setItem('logos_synced_v105', 'true');
+            localStorage.setItem('logos_synced_v106', 'true');
         }
 
         // v98 Resilient Startup
