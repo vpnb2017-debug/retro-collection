@@ -2,9 +2,9 @@ import { dbService } from './services/db.js';
 import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js';
 import { coverSearchService } from './services/coverSearch.js';
 import WebuyService from './services/webuyService.js';
-import { localFileSync } from './services/localFileSync.js?v=81';
-import { metadataService } from './services/metadataService.js?v=81';
-import { cloudSyncService } from './services/cloudSyncService.js?v=81';
+import { localFileSync } from './services/localFileSync.js?v=82';
+import { metadataService } from './services/metadataService.js?v=82';
+import { cloudSyncService } from './services/cloudSyncService.js?v=82';
 
 // Global Exposure
 window.navigate = navigate;
@@ -149,7 +149,7 @@ async function renderDashboard() {
         const ownedTotal = ownedGames.length + ownedConsoles.length;
         const wishlistTotal = games.filter(g => g.isWishlist).length + consoles.filter(c => c.isWishlist).length;
 
-        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v81</span></h2>`;
+        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v82</span></h2>`;
 
         const platData = await getPlatformOptions();
 
@@ -783,10 +783,10 @@ async function renderSyncView() {
                     <h3 style="margin:0; font-size:1.2rem; color:#ff9f0a;">Cloud Auto-Sync</h3>
                  </div>
                  
-                 <p style="margin-bottom:20px; font-size:0.9rem; opacity:0.8; line-height:1.5;">Liga a tua coleção ao Google Drive para sincronizar automaticamente entre todos os teus dispositivos.</p>
+                 <p style="margin-bottom:20px; font-size:0.9rem; opacity:0.8; line-height:1.5;">Liga a tua coleção ao <b>GitHub Gist</b> (Recomendado) ou Google Drive para sincronizar automaticamente.</p>
                  
                  <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:20px;">
-                    <label style="font-size:0.75rem; color:#ff9f0a; font-weight:700; margin-left:5px;">Link de Partilha (Google Drive)</label>
+                    <label style="font-size:0.75rem; color:#ff9f0a; font-weight:700; margin-left:5px;">Link do Gist ou Drive</label>
                     <div style="display:flex; gap:10px;">
                         <input type="text" id="cloud-url-input" placeholder="Cola o link aqui..." value="${cloudUrl}" style="flex:1; background:#1a1a20; border:1px solid #444; color:white; padding:15px; border-radius:12px; font-size:0.9rem;">
                         <button onclick="saveCloudLink()" style="background:#ff9f0a; border:none; color:white; padding:0 20px; border-radius:12px; font-weight:700; cursor:pointer;">💾</button>
@@ -835,7 +835,7 @@ async function saveCloudLink() {
 
 async function pullFromCloud() {
     const url = localStorage.getItem('cloud_sync_url');
-    if (!url) return uiService.alert("Configura primeiro o link do Google Drive nas definições.");
+    if (!url) return uiService.alert("Configura primeiro o link do Gist ou Drive nas definições.");
 
     logger("A ligar à nuvem...");
     try {
@@ -882,7 +882,7 @@ async function exportCollection() {
         const platforms = await dbService.getAll('platforms');
 
         const data = {
-            version: "v81",
+            version: "v82",
             timestamp: new Date().toISOString(),
             games,
             consoles,
@@ -936,15 +936,15 @@ async function importCollection() {
 
 /** INITIALIZATION **/
 async function init() {
-    logger("Iniciando RetroCollection v81...");
+    logger("Iniciando RetroCollection v82...");
     try {
         await dbService.open();
         logger("DB Conectado.");
 
-        // Auto-Sync Logos logic for v81
-        if (!localStorage.getItem('logos_synced_v81')) {
+        // Auto-Sync Logos logic for v82
+        if (!localStorage.getItem('logos_synced_v82')) {
             await autoSyncLogos();
-            localStorage.setItem('logos_synced_v81', 'true');
+            localStorage.setItem('logos_synced_v82', 'true');
         }
 
         // Cloud Check
