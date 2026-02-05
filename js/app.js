@@ -1,10 +1,10 @@
-import { dbService } from './services/db.js?v=110';
-import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js?v=110';
-import { coverSearchService } from './services/coverSearch.js?v=110';
-import WebuyService from './services/webuyService.js?v=110';
-import { localFileSync } from './services/localFileSync.js?v=110';
-import { metadataService } from './services/metadataService.js?v=110';
-import { cloudSyncService } from './services/cloudSyncService.js?v=110';
+import { dbService } from './services/db.js?v=111';
+import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js?v=111';
+import { coverSearchService } from './services/coverSearch.js?v=111';
+import WebuyService from './services/webuyService.js?v=111';
+import { localFileSync } from './services/localFileSync.js?v=111';
+import { metadataService } from './services/metadataService.js?v=111';
+import { cloudSyncService } from './services/cloudSyncService.js?v=111';
 
 // Global Exposure
 window.navigate = navigate;
@@ -169,7 +169,7 @@ async function renderDashboard() {
         const ownedTotal = ownedGames.length + ownedConsoles.length;
         const wishlistTotal = games.filter(g => g.isWishlist).length + consoles.filter(c => c.isWishlist).length;
 
-        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v110</span></h2>`;
+        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v111</span></h2>`;
 
         const platData = await getPlatformOptions();
 
@@ -361,7 +361,13 @@ async function renderGenericGrid(viewTitle, itemsFilter) {
 
             scrollEl.innerHTML = `
                 <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap:12px;">
-                    ${filtered.map(item => `
+                    ${filtered.map(item => {
+                // v111: Validation status indicator
+                const validationIcon = item.validated ?
+                    '<span style="color:#22c55e; font-size:0.7rem; margin-left:4px;" title="Validado">✅</span>' :
+                    '<span style="color:#ef4444; font-size:0.7rem; margin-left:4px;" title="Não Validado">❌</span>';
+
+                return `
                         <div onclick="navigate('nav-add', '${item.id}')" style="background:rgba(255,255,255,0.05); border-radius:12px; overflow:hidden; border:1px solid rgba(255,255,255,0.1); height:210px; cursor:pointer; display:flex; flex-direction:column; transition: transform 0.2s;">
                             <div style="height:130px; background:#000 url(${item.image || ''}) center/contain no-repeat; pointer-events:none;"></div>
                             <div style="padding:10px; flex:1; display:flex; flex-direction:column; justify-content:space-between;">
@@ -369,10 +375,13 @@ async function renderGenericGrid(viewTitle, itemsFilter) {
                                     <h4 style="font-size:0.75rem; overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; line-height:1.2; font-weight:600; margin-bottom:2px;">${item.title}</h4>
                                     ${item.year ? `<div style="font-size:0.6rem; opacity:0.5; margin-bottom:4px;">${item.year}</div>` : ''}
                                 </div>
-                                <span style="font-size:0.65rem; color:#ffc978; font-weight:800; text-transform:uppercase;">${item.platform || 'Geral'}</span>
+                                <div style="display:flex; align-items:center;">
+                                    <span style="font-size:0.65rem; color:#ffc978; font-weight:800; text-transform:uppercase;">${item.platform || 'Geral'}</span>
+                                    ${validationIcon}
+                                </div>
                             </div>
                         </div>
-                    `).join('')}
+                    `}).join('')}
                 </div>
                 ${filtered.length === 0 ? '<p style="text-align:center; margin-top:3rem; opacity:0.4; font-size:0.9rem;">Nenhum item encontrado.</p>' : ''}
             `;
@@ -914,7 +923,7 @@ async function renderSyncView() {
                     </div>
                  </div>
                  
-                <p style="margin-top:15px; font-size:0.75rem; color:#22c55e; font-weight:700; text-align:center;">🤖 Sentinela de Sync Ativo (v110)</p>
+                <p style="margin-top:15px; font-size:0.75rem; color:#22c55e; font-weight:700; text-align:center;">🤖 Sentinela de Sync Ativo (v111)</p>
             </div>
 
             <!-- Legacy Local Sync Section -->
@@ -1029,7 +1038,7 @@ async function pushToCloud(silent = false) {
         const platforms = await dbService.getAll('platforms');
 
         const data = {
-            version: "v110",
+            version: "v111",
             timestamp: new Date().toISOString(),
             games,
             consoles,
@@ -1156,15 +1165,15 @@ async function importCollection() {
 
 /** INITIALIZATION **/
 async function init() {
-    logger("Iniciando RetroCollection v110...");
+    logger("Iniciando RetroCollection v111...");
     try {
         await dbService.open();
         logger("DB Conectado.");
 
-        // Auto-Sync Logos logic for v110
-        if (!localStorage.getItem('logos_synced_v110')) {
+        // Auto-Sync Logos logic for v111
+        if (!localStorage.getItem('logos_synced_v111')) {
             await autoSyncLogos();
-            localStorage.setItem('logos_synced_v110', 'true');
+            localStorage.setItem('logos_synced_v111', 'true');
         }
 
         // v98 Resilient Startup
