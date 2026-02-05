@@ -1,10 +1,10 @@
-import { dbService } from './services/db.js?v=114';
-import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js?v=114';
-import { coverSearchService } from './services/coverSearch.js?v=114';
-import WebuyService from './services/webuyService.js?v=114';
-import { localFileSync } from './services/localFileSync.js?v=114';
-import { metadataService } from './services/metadataService.js?v=114';
-import { cloudSyncService } from './services/cloudSyncService.js?v=114';
+import { dbService } from './services/db.js?v=115';
+import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js?v=115';
+import { coverSearchService } from './services/coverSearch.js?v=115';
+import WebuyService from './services/webuyService.js?v=115';
+import { localFileSync } from './services/localFileSync.js?v=115';
+import { metadataService } from './services/metadataService.js?v=115';
+import { cloudSyncService } from './services/cloudSyncService.js?v=115';
 
 // Global Exposure
 window.navigate = navigate;
@@ -93,6 +93,7 @@ const state = {
     filterPlatform: 'all',
     filterSearch: '',
     filterDecade: null, // v107: Dedicated decade filter
+    filterValidation: 'all', // v115: Validation filter (all, validated, not-validated)
     viewMode: 'grid',
     lastFilteredList: []
 };
@@ -169,7 +170,7 @@ async function renderDashboard() {
         const ownedTotal = ownedGames.length + ownedConsoles.length;
         const wishlistTotal = games.filter(g => g.isWishlist).length + consoles.filter(c => c.isWishlist).length;
 
-        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v114</span></h2>`;
+        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v115</span></h2>`;
 
         const platData = await getPlatformOptions();
 
@@ -315,8 +316,13 @@ async function renderGenericGrid(viewTitle, itemsFilter) {
                 </select>
                 <select id="f-plat" style="flex:1; background:#1e1e24; border:1px solid #444; color:white; padding:10px; border-radius:10px; font-size:0.85rem; min-width:110px;">
                     <option value="all" ${state.filterPlatform === 'all' ? 'selected' : ''}>Plataformas</option>
-                    <option value="(Sem Consola)" ${state.filterPlatform === '(Sem Consola)' ? 'selected' : ''}>(Sem Consola)</option>
+                    <option value="(Sem Consola)" ${state.filterPlatform === '(Sem Consola)' ? 'selected' : ''}>( Sem Consola)</option>
                     ${platformOptions}
+                </select>
+                <select id="f-validation" style="flex:1; background:#1e1e24; border:1px solid #444; color:white; padding:10px; border-radius:10px; font-size:0.85rem; min-width:110px;">
+                    <option value="all" ${state.filterValidation === 'all' ? 'selected' : ''}>Todos</option>
+                    <option value="validated" ${state.filterValidation === 'validated' ? 'selected' : ''}>✅ Validados</option>
+                    <option value="not-validated" ${state.filterValidation === 'not-validated' ? 'selected' : ''}>❌ Não Validados</option>
                 </select>
                 <input id="f-search" type="text" placeholder="🔍 Procurar..." value="${state.filterSearch}" style="width:100%; background:#1e1e24; border:1px solid #444; color:white; padding:10px; border-radius:10px; font-size:0.85rem; margin-top:2px;">
                 <button onclick="window.clearFilters()" style="width:100%; background:rgba(255,159,10,0.1); border:1px dashed rgba(255,159,10,0.3); color:#ff9f0a; padding:8px; border-radius:10px; font-size:0.75rem; font-weight:700; cursor:pointer; margin-top:5px;">Limpar Filtros 🧹</button>
@@ -330,6 +336,7 @@ async function renderGenericGrid(viewTitle, itemsFilter) {
         const updateUI = () => {
             state.filterType = document.getElementById('f-type').value;
             state.filterPlatform = document.getElementById('f-plat').value;
+            state.filterValidation = document.getElementById('f-validation').value;
             state.filterSearch = document.getElementById('f-search').value.toLowerCase();
 
             const filtered = all.filter(i => {
@@ -344,6 +351,13 @@ async function renderGenericGrid(viewTitle, itemsFilter) {
                     const decadeStart = state.filterDecade;
                     const decadeEnd = state.filterDecade + 9;
                     if (i.year < decadeStart || i.year > decadeEnd) return false;
+                }
+
+                // v115: Validation filter
+                if (state.filterValidation !== 'all') {
+                    const isValidated = i.isValidated === true || i.isValidated === 'true' || i.isValidated === 1;
+                    if (state.filterValidation === 'validated' && !isValidated) return false;
+                    if (state.filterValidation === 'not-validated' && isValidated) return false;
                 }
 
                 // v106: Search in title, genre, and year
@@ -392,6 +406,7 @@ async function renderGenericGrid(viewTitle, itemsFilter) {
 
         document.getElementById('f-type').onchange = updateUI;
         document.getElementById('f-plat').onchange = updateUI;
+        document.getElementById('f-validation').onchange = updateUI;
         document.getElementById('f-search').oninput = updateUI;
         updateUI();
     } catch (err) { logger("GRID ERR: " + err.message); }
@@ -402,6 +417,7 @@ function clearFilters() {
     state.filterPlatform = 'all';
     state.filterSearch = '';
     state.filterDecade = null; // v107: Clear decade filter
+    state.filterValidation = 'all'; // v115: Clear validation filter
     const view = state.view === 'nav-collection' ? renderCollection : renderWishlist;
     view();
 }
@@ -926,7 +942,7 @@ async function renderSyncView() {
                     </div>
                  </div>
                  
-                <p style="margin-top:15px; font-size:0.75rem; color:#22c55e; font-weight:700; text-align:center;">🤖 Sentinela de Sync Ativo (v114)</p>
+                <p style="margin-top:15px; font-size:0.75rem; color:#22c55e; font-weight:700; text-align:center;">🤖 Sentinela de Sync Ativo (v115)</p>
             </div>
 
             <!-- Legacy Local Sync Section -->
@@ -1041,7 +1057,7 @@ async function pushToCloud(silent = false) {
         const platforms = await dbService.getAll('platforms');
 
         const data = {
-            version: "v114",
+            version: "v115",
             timestamp: new Date().toISOString(),
             games,
             consoles,
@@ -1168,15 +1184,15 @@ async function importCollection() {
 
 /** INITIALIZATION **/
 async function init() {
-    logger("Iniciando RetroCollection v114...");
+    logger("Iniciando RetroCollection v115...");
     try {
         await dbService.open();
         logger("DB Conectado.");
 
-        // Auto-Sync Logos logic for v114
-        if (!localStorage.getItem('logos_synced_v114')) {
+        // Auto-Sync Logos logic for v115
+        if (!localStorage.getItem('logos_synced_v115')) {
             await autoSyncLogos();
-            localStorage.setItem('logos_synced_v114', 'true');
+            localStorage.setItem('logos_synced_v115', 'true');
         }
 
         // v98 Resilient Startup

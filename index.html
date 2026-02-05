@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport"
         content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>RetroCollection v114 🔍✅🎮</title>
+    <title>RetroCollection v115 ✅❌🔍🎮</title>
 
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1e1e24">
@@ -349,20 +349,20 @@
             return false;
         };
 
-        log("Arranque v114 iniciado...");
+        log("Arranque v115 iniciado...");
 
         // v102 AGGRESSIVE SETUP & UPDATE
         const urlParams = new URLSearchParams(window.location.search);
         const forceUpdate = urlParams.get('update');
 
-        if (localStorage.getItem('app_v') !== '114' || forceUpdate === '114') {
-            log("Actualização Crítica v114...");
-            localStorage.setItem('app_v', '114');
+        if (localStorage.getItem('app_v') !== '115' || forceUpdate === '115') {
+            log("Actualização Crítica v115...");
+            localStorage.setItem('app_v', '115');
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.getRegistrations().then(rs => {
                     Promise.all(rs.map(r => r.unregister())).then(() => {
                         log("Cache renovado. A reiniciar...");
-                        location.href = location.href.split('?')[0] + '?v=114';
+                        location.href = location.href.split('?')[0] + '?v=115';
                     });
                 });
             } else {
@@ -370,7 +370,7 @@
             }
         }
 
-        // Hanging check v114 + Emergency Button
+        // Hanging check v115 + Emergency Button
         setTimeout(() => {
             const title = document.querySelector('.v29-title-zone h2');
             if (title && title.innerText.includes('A carregar')) {
@@ -384,6 +384,7 @@
         document.getElementById('emergency-btn').onclick = async () => {
             if (confirm("Isto irá limpar o cache e desinstalar a App para tentar resolver o problema. Continuar?")) {
                 localStorage.removeItem('app_v');
+                localStorage.removeItem('logos_synced_v115');
                 localStorage.removeItem('logos_synced_v114');
                 localStorage.removeItem('logos_synced_v112');
                 localStorage.removeItem('logos_synced_v111');
@@ -404,19 +405,19 @@
                 }
                 const keys = await caches.keys();
                 for (let k of keys) await caches.delete(k);
-                location.href = location.href.split('?')[0] + '?update=114';
+                location.href = location.href.split('?')[0] + '?update=115';
             }
         };
     </script>
 
-    <script type="module" src="js/app.js?v=114"></script>
+    <script type="module" src="js/app.js?v=115"></script>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 // v111.1: Better error handling for localhost
                 navigator.serviceWorker.register('sw.js')
                     .then((registration) => {
-                        log("v114 Pronta.");
+                        log("v115 Pronta.");
                         console.log('SW registered:', registration);
                     })
                     .catch(e => {
