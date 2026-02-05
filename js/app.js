@@ -362,8 +362,9 @@ async function renderGenericGrid(viewTitle, itemsFilter) {
             scrollEl.innerHTML = `
                 <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap:12px;">
                     ${filtered.map(item => {
-                // v111: Validation status indicator
-                const validationIcon = item.validated ?
+                // v112: Fixed validation status indicator (handle boolean, string, number)
+                        const isValidated = item.validated === true || item.validated === 'true' || item.validated === 1;
+                        const validationIcon = isValidated ?
                     '<span style="color:#22c55e; font-size:0.7rem; margin-left:4px;" title="Validado">✅</span>' :
                     '<span style="color:#ef4444; font-size:0.7rem; margin-left:4px;" title="Não Validado">❌</span>';
 
