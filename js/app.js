@@ -1,10 +1,10 @@
-import { dbService } from './services/db.js?v=112';
-import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js?v=112';
-import { coverSearchService } from './services/coverSearch.js?v=112';
-import WebuyService from './services/webuyService.js?v=112';
-import { localFileSync } from './services/localFileSync.js?v=112';
-import { metadataService } from './services/metadataService.js?v=112';
-import { cloudSyncService } from './services/cloudSyncService.js?v=112';
+import { dbService } from './services/db.js?v=114';
+import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js?v=114';
+import { coverSearchService } from './services/coverSearch.js?v=114';
+import WebuyService from './services/webuyService.js?v=114';
+import { localFileSync } from './services/localFileSync.js?v=114';
+import { metadataService } from './services/metadataService.js?v=114';
+import { cloudSyncService } from './services/cloudSyncService.js?v=114';
 
 // Global Exposure
 window.navigate = navigate;
@@ -169,7 +169,7 @@ async function renderDashboard() {
         const ownedTotal = ownedGames.length + ownedConsoles.length;
         const wishlistTotal = games.filter(g => g.isWishlist).length + consoles.filter(c => c.isWishlist).length;
 
-        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v112</span></h2>`;
+        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v114</span></h2>`;
 
         const platData = await getPlatformOptions();
 
@@ -362,9 +362,11 @@ async function renderGenericGrid(viewTitle, itemsFilter) {
             scrollEl.innerHTML = `
                 <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap:12px;">
                     ${filtered.map(item => {
-                // v112: Fixed validation status indicator (handle boolean, string, number)
-                        const isValidated = item.isValidated === true || item.isValidated === 'true' || item.isValidated === 1;
-                        const validationIcon = isValidated ?
+                // v114: Fixed validation status indicator (handle boolean, string, number) + DEBUG
+                console.log('[DEBUG] Item:', item.title, 'isValidated:', item.isValidated, 'type:', typeof item.isValidated);
+                const isValidated = item.isValidated === true || item.isValidated === 'true' || item.isValidated === 1;
+                console.log('[DEBUG] Result isValidated:', isValidated);
+                const validationIcon = isValidated ?
                     '<span style="color:#22c55e; font-size:0.7rem; margin-left:4px;" title="Validado">✅</span>' :
                     '<span style="color:#ef4444; font-size:0.7rem; margin-left:4px;" title="Não Validado">❌</span>';
 
@@ -924,7 +926,7 @@ async function renderSyncView() {
                     </div>
                  </div>
                  
-                <p style="margin-top:15px; font-size:0.75rem; color:#22c55e; font-weight:700; text-align:center;">🤖 Sentinela de Sync Ativo (v112)</p>
+                <p style="margin-top:15px; font-size:0.75rem; color:#22c55e; font-weight:700; text-align:center;">🤖 Sentinela de Sync Ativo (v114)</p>
             </div>
 
             <!-- Legacy Local Sync Section -->
@@ -1039,7 +1041,7 @@ async function pushToCloud(silent = false) {
         const platforms = await dbService.getAll('platforms');
 
         const data = {
-            version: "v112",
+            version: "v114",
             timestamp: new Date().toISOString(),
             games,
             consoles,
@@ -1166,15 +1168,15 @@ async function importCollection() {
 
 /** INITIALIZATION **/
 async function init() {
-    logger("Iniciando RetroCollection v112...");
+    logger("Iniciando RetroCollection v114...");
     try {
         await dbService.open();
         logger("DB Conectado.");
 
-        // Auto-Sync Logos logic for v112
-        if (!localStorage.getItem('logos_synced_v112')) {
+        // Auto-Sync Logos logic for v114
+        if (!localStorage.getItem('logos_synced_v114')) {
             await autoSyncLogos();
-            localStorage.setItem('logos_synced_v112', 'true');
+            localStorage.setItem('logos_synced_v114', 'true');
         }
 
         // v98 Resilient Startup
