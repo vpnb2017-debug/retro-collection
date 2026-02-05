@@ -411,10 +411,16 @@
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                // v104.1: Removed query string - causes fetch errors on some local servers
+                // v111.1: Better error handling for localhost
                 navigator.serviceWorker.register('sw.js')
-                    .then(() => log("v111 Pronta."))
-                    .catch(e => log("Falha: " + e.message));
+                    .then((registration) => {
+                        log("v111 Pronta.");
+                        console.log('SW registered:', registration);
+                    })
+                    .catch(e => {
+                        log("SW Falhou (App continua a funcionar): " + e.message);
+                        console.warn('SW registration failed (app will work without offline support):', e);
+                    });
             });
         }
     </script>
