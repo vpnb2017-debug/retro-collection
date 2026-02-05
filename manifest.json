@@ -1,11 +1,13 @@
 {
   "name": "RetroCollection",
   "short_name": "RetroCol",
-  "start_url": "index.html",
+  "description": "Gestão de Coleção de Jogos Retro",
+  "start_url": "./",
+  "scope": "./",
   "display": "standalone",
-  "background_color": "#0f172a",
-  "theme_color": "#0f172a",
-  "orientation": "portrait-primary",
+  "background_color": "#1e1e24",
+  "theme_color": "#1e1e24",
+  "orientation": "any",
   "icons": [
     {
       "src": "assets/icon-192.png",
