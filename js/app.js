@@ -1,11 +1,11 @@
-import { dbService } from './services/db.js?v=118';
-import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js?v=118';
-import { coverSearchService } from './services/coverSearch.js?v=118';
-import WebuyService from './services/webuyService.js?v=118';
-import { localFileSync } from './services/localFileSync.js?v=118';
-import { metadataService } from './services/metadataService.js?v=118';
-import { cloudSyncService } from './services/cloudSyncService.js?v=118';
-import { theGamesDBService } from './services/theGamesDBService.js?v=118';
+import { dbService } from './services/db.js?v=119';
+import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js?v=119';
+import { coverSearchService } from './services/coverSearch.js?v=119';
+import WebuyService from './services/webuyService.js?v=119';
+import { localFileSync } from './services/localFileSync.js?v=119';
+import { metadataService } from './services/metadataService.js?v=119';
+import { cloudSyncService } from './services/cloudSyncService.js?v=119';
+import { theGamesDBService } from './services/theGamesDBService.js?v=119';
 
 // Global Exposure
 window.navigate = navigate;
@@ -171,7 +171,7 @@ async function renderDashboard() {
         const ownedTotal = ownedGames.length + ownedConsoles.length;
         const wishlistTotal = games.filter(g => g.isWishlist).length + consoles.filter(c => c.isWishlist).length;
 
-        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v118</span></h2>`;
+        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v119</span></h2>`;
 
         const platData = await getPlatformOptions();
 
@@ -593,27 +593,24 @@ async function searchCover() {
     const plat = document.getElementById('add-platform').value;
     if (!title) return uiService.alert("Escreva o título primeiro!");
 
-    const tgdbKey = localStorage.getItem('thegamesdb_api_key');
-    let results = [];
-
-    try {
-        if (tgdbKey) {
-            logger("A pesquisar capas no TheGamesDB.net... 📦");
-            try {
-                results = await theGamesDBService.search(`${title} ${plat}`, tgdbKey);
-            } catch (tgdbErr) {
-                logger("TheGamesDB falhou, a recorrer ao Bing: " + tgdbErr.message);
-                results = await WebuyService.search(`${title} ${plat}`);
-            }
+    let tgdbKey = localStorage.getItem('thegamesdb_api_key');
+    if (!tgdbKey) {
+        const inputKey = prompt("Introduza a sua TheGamesDB API Key (para capas físicas):");
+        if (inputKey && inputKey.trim()) {
+            tgdbKey = inputKey.trim();
+            localStorage.setItem('thegamesdb_api_key', tgdbKey);
         } else {
-            logger("A pesquisar capas via Bing Images... 🔍");
-            results = await WebuyService.search(`${title} ${plat}`);
+            return uiService.alert("É necessária a TheGamesDB API Key para pesquisar capas. Insira a chave em 'Nuvem & Definições ☁️'.");
         }
+    }
 
+    logger("A pesquisar capas no TheGamesDB.net... 📦");
+    try {
+        const results = await theGamesDBService.search(`${title} ${plat}`, tgdbKey);
         const grid = document.getElementById('search-grid');
         const modal = document.getElementById('search-results-modal');
 
-        if (results.length === 0) return uiService.alert("Nenhuma capa encontrada.");
+        if (results.length === 0) return uiService.alert("Nenhuma capa encontrada no TheGamesDB.net.");
 
         grid.innerHTML = results.map(r => `
             <div onclick="selectCover('${r.image}')" style="aspect-ratio:3/4; background:#000 url(${r.image}) center/contain no-repeat; border-radius:8px; cursor:pointer; border:1px solid #333; position:relative;" title="${r.title}">
@@ -622,7 +619,10 @@ async function searchCover() {
         `).join('');
 
         modal.style.display = 'flex';
-    } catch (err) { logger("SEARCH ERR: " + err.message); }
+    } catch (err) {
+        logger("THEGAMESDB ERR: " + err.message);
+        uiService.alert("Erro no TheGamesDB.net: " + err.message);
+    }
 }
 
 async function selectCover(url) {
@@ -954,7 +954,7 @@ async function renderSyncView() {
                     </div>
                  </div>
                  
-                <p style="margin-top:15px; font-size:0.75rem; color:#22c55e; font-weight:700; text-align:center;">🤖 Sentinela de Sync Ativo (v118)</p>
+                <p style="margin-top:15px; font-size:0.75rem; color:#22c55e; font-weight:700; text-align:center;">🤖 Sentinela de Sync Ativo (v119)</p>
             </div>
 
             <!-- Legacy Local Sync Section -->
@@ -1074,7 +1074,7 @@ async function pushToCloud(silent = false) {
         const platforms = await dbService.getAll('platforms');
 
         const data = {
-            version: "v118",
+            version: "v119",
             timestamp: new Date().toISOString(),
             games,
             consoles,
@@ -1201,15 +1201,15 @@ async function importCollection() {
 
 /** INITIALIZATION **/
 async function init() {
-    logger("Iniciando RetroCollection v118...");
+    logger("Iniciando RetroCollection v119...");
     try {
         await dbService.open();
         logger("DB Conectado.");
 
-        // Auto-Sync Logos logic for v118
-        if (!localStorage.getItem('logos_synced_v118')) {
+        // Auto-Sync Logos logic for v119
+        if (!localStorage.getItem('logos_synced_v119')) {
             await autoSyncLogos();
-            localStorage.setItem('logos_synced_v118', 'true');
+            localStorage.setItem('logos_synced_v119', 'true');
         }
 
         // v98 Resilient Startup
