@@ -13,51 +13,56 @@ const WebuyService = {
 
         try {
             console.log(`[CoverSearch] Searching for: ${query}`);
-            let html = "";
 
-            // Try local PowerShell /proxy first if on localhost
+            // 1. If running on localhost with server.ps1, use local /proxy for 100% accurate Bing results
             if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
                 try {
                     const response = await fetch(`/proxy?url=${encodeURIComponent(targetUrl)}`);
                     if (response.ok) {
-                        html = await response.text();
+                        const html = await response.text();
+                        const results = this.parseBingResults(html);
+                        if (results.length > 0) return results;
                     }
                 } catch (e) {
-                    console.warn("Local proxy failed, falling back to public CORS proxies...", e);
+                    console.warn("Local proxy failed, falling back to Wikipedia API...", e);
                 }
             }
 
-            // Fallback for GitHub Pages / static hosting or if local proxy fails
-            if (!html) {
-                const proxies = [
-                    async (url) => {
-                        const r = await fetch(`https://corsproxy.io/?${encodeURIComponent(url)}`);
-                        if (!r.ok) throw new Error("corsproxy failed");
-                        return await r.text();
-                    },
-                    async (url) => {
-                        const r = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`);
-                        if (!r.ok) throw new Error("allorigins failed");
-                        const json = await r.json();
-                        return json.contents || "";
-                    }
-                ];
-
-                for (const getHtml of proxies) {
-                    try {
-                        html = await getHtml(targetUrl);
-                        if (html) break;
-                    } catch (e) {
-                        console.warn("CORS proxy attempt failed", e);
-                    }
-                }
-            }
-
-            if (!html) throw new Error("Não foi possível aceder à pesquisa no GitHub Pages.");
-
-            return this.parseBingResults(html);
+            // 2. On GitHub Pages / Production without server.ps1, query Wikipedia API natively via CORS
+            return await this.searchWikipediaCover(query);
         } catch (error) {
             console.error("[CoverSearch] Error:", error);
+            return [];
+        }
+    },
+
+    async searchWikipediaCover(title) {
+        try {
+            console.log(`[CoverSearch] Searching Wikipedia Image API for: ${title}`);
+            const cleanTitle = title.replace(/\(.*\)/g, '').trim();
+            const searchUrl = `https://en.wikipedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(cleanTitle + " video game")}&gsrlimit=8&prop=pageimages&pithumbsize=600&format=json&origin=*`;
+            
+            const response = await fetch(searchUrl);
+            if (!response.ok) return [];
+
+            const data = await response.json();
+            if (!data.query || !data.query.pages) return [];
+
+            const results = [];
+            Object.values(data.query.pages).forEach(page => {
+                if (page.thumbnail && page.thumbnail.source) {
+                    results.push({
+                        title: `${page.title}`,
+                        image: page.thumbnail.source,
+                        platform: "Wikipedia",
+                        price: ""
+                    });
+                }
+            });
+
+            return results;
+        } catch (err) {
+            console.error("[CoverSearch] Wikipedia fallback error:", err);
             return [];
         }
     },
