@@ -56,50 +56,56 @@ export const theGamesDBService = {
     async search(query, apiKey) {
         if (!query || !apiKey) return [];
 
-        try {
-            console.log(`[TheGamesDB] Searching for: ${query}`);
-            const searchUrl = `https://api.thegamesdb.net/v1/Games/ByGameName?apikey=${encodeURIComponent(apiKey)}&name=${encodeURIComponent(query)}`;
-            
-            const data = await fetchJsonWithFallback(searchUrl);
-            if (!data || !data.data || !data.data.games || data.data.games.length === 0) {
-                console.log("[TheGamesDB] No game matches found.");
-                return [];
-            }
-
-            const games = data.data.games.slice(0, 6); // Top 6 matching games
-            const gameIds = games.map(g => g.id).join(',');
-
-            // Fetch images associated with these games
-            const imagesUrl = `https://api.thegamesdb.net/v1/Games/Images?apikey=${encodeURIComponent(apiKey)}&games_id=${gameIds}`;
-            const imgData = await fetchJsonWithFallback(imagesUrl);
-
-            const baseUrl = imgData.data?.base_url?.original || imgData.data?.base_url?.large || "https://cdn.thegamesdb.net/images/original/";
-
-            const results = [];
-            const imagesObj = imgData.data?.images || {};
-
-            games.forEach(game => {
-                const gameImages = imagesObj[game.id] || [];
-                // Filter specifically for front box art
-                const frontCovers = gameImages.filter(img => img.type === 'boxart' && (img.side === 'front' || !img.side));
-                
-                frontCovers.forEach(img => {
-                    const imgPath = img.filename;
-                    const fullImgUrl = imgPath.startsWith('http') ? imgPath : `${baseUrl}${imgPath}`;
-                    
-                    results.push({
-                        title: game.game_title,
-                        image: fullImgUrl,
-                        platform: "TheGamesDB",
-                        price: ""
-                    });
-                });
-            });
-
-            return results;
-        } catch (error) {
-            console.error("[TheGamesDB] Search Error:", error);
-            throw error;
+        const searchTerms = [query.trim()];
+        const cleanTitle = query.replace(/\s+(playstation|ps\d|xbox|nintendo|sega|game boy|pc|switch|wii|ds|3ds|psp|vita|mega drive|snes|nes|genesis|saturn|dreamcast).*/i, '').trim();
+        if (cleanTitle && cleanTitle.toLowerCase() !== query.trim().toLowerCase()) {
+            searchTerms.push(cleanTitle);
         }
+
+        for (const term of searchTerms) {
+            try {
+                console.log(`[TheGamesDB] Searching for term: "${term}"`);
+                const searchUrl = `https://api.thegamesdb.net/v1/Games/ByGameName?apikey=${encodeURIComponent(apiKey)}&name=${encodeURIComponent(term)}`;
+                
+                const data = await fetchJsonWithFallback(searchUrl);
+                if (data && data.data && data.data.games && data.data.games.length > 0) {
+                    const games = data.data.games.slice(0, 8); // Top 8 matching games
+                    const gameIds = games.map(g => g.id).join(',');
+
+                    const imagesUrl = `https://api.thegamesdb.net/v1/Games/Images?apikey=${encodeURIComponent(apiKey)}&games_id=${gameIds}`;
+                    const imgData = await fetchJsonWithFallback(imagesUrl);
+
+                    const baseUrl = imgData.data?.base_url?.original || imgData.data?.base_url?.large || "https://cdn.thegamesdb.net/images/original/";
+
+                    const results = [];
+                    const imagesObj = imgData.data?.images || {};
+
+                    games.forEach(game => {
+                        const gameImages = imagesObj[game.id] || [];
+                        // Filter specifically for front box art
+                        const frontCovers = gameImages.filter(img => img.type === 'boxart' && (img.side === 'front' || !img.side));
+                        
+                        frontCovers.forEach(img => {
+                            const imgPath = img.filename;
+                            const fullImgUrl = imgPath.startsWith('http') ? imgPath : `${baseUrl}${imgPath}`;
+                            
+                            results.push({
+                                title: game.game_title,
+                                image: fullImgUrl,
+                                platform: "TheGamesDB",
+                                price: ""
+                            });
+                        });
+                    });
+
+                    if (results.length > 0) return results;
+                }
+            } catch (error) {
+                console.error(`[TheGamesDB] Search Error for "${term}":`, error);
+                if (term === searchTerms[searchTerms.length - 1]) throw error;
+            }
+        }
+
+        return [];
     }
 };
