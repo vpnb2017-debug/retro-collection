@@ -9,6 +9,9 @@
 - **Execução Local (Desenvolvimento)**:
   - Servidor HTTP local em PowerShell (`.\server.ps1`) acessível em `http://localhost:8080`.
   - **ATENÇÃO**: Nunca abrir a app como ficheiro local (`file:///`), pois os navegadores bloqueiam módulos JS (`type="module"`) e Service Workers por regras de CORS.
+- **Autenticação e Credenciais Git**:
+  - As credenciais de autorização de escrita para publicar no Git estão guardadas localmente no ficheiro privado `.git/config` da máquina do programador (fora do histórico público do Git por motivos de segurança).
+
 
 ## 2. Regra de Versionamento por Publicação no Git
 - **Incremento Obrigatório de Versão**:
