@@ -1,11 +1,11 @@
-import { dbService } from './services/db.js?v=121';
-import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js?v=121';
-import { coverSearchService } from './services/coverSearch.js?v=121';
-import WebuyService from './services/webuyService.js?v=121';
-import { localFileSync } from './services/localFileSync.js?v=121';
-import { metadataService } from './services/metadataService.js?v=121';
-import { cloudSyncService } from './services/cloudSyncService.js?v=121';
-import { theGamesDBService } from './services/theGamesDBService.js?v=121';
+import { dbService } from './services/db.js?v=122';
+import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js?v=122';
+import { coverSearchService } from './services/coverSearch.js?v=122';
+import WebuyService from './services/webuyService.js?v=122';
+import { localFileSync } from './services/localFileSync.js?v=122';
+import { metadataService } from './services/metadataService.js?v=122';
+import { cloudSyncService } from './services/cloudSyncService.js?v=122';
+import { theGamesDBService } from './services/theGamesDBService.js?v=122';
 
 // Global Exposure
 window.navigate = navigate;
@@ -171,7 +171,7 @@ async function renderDashboard() {
         const ownedTotal = ownedGames.length + ownedConsoles.length;
         const wishlistTotal = games.filter(g => g.isWishlist).length + consoles.filter(c => c.isWishlist).length;
 
-        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v121</span></h2>`;
+        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v122</span></h2>`;
 
         const platData = await getPlatformOptions();
 
@@ -595,7 +595,7 @@ async function searchCover() {
 
     let tgdbKey = localStorage.getItem('thegamesdb_api_key');
     if (!tgdbKey) {
-        const inputKey = prompt("Introduza a sua TheGamesDB API Key (para capas físicas):");
+        const inputKey = prompt("TheGamesDB API Key não detetada neste endereço.\nPor favor cole aqui a sua API Key do TheGamesDB.net (ficará guardada para futuras pesquisas):");
         if (inputKey && inputKey.trim()) {
             tgdbKey = inputKey.trim();
             localStorage.setItem('thegamesdb_api_key', tgdbKey);
@@ -610,7 +610,7 @@ async function searchCover() {
         const grid = document.getElementById('search-grid');
         const modal = document.getElementById('search-results-modal');
 
-        if (results.length === 0) return uiService.alert("Nenhuma capa encontrada no TheGamesDB.net.");
+        if (results.length === 0) return uiService.alert(`Nenhuma capa encontrada no TheGamesDB.net para "${title}".`);
 
         grid.innerHTML = results.map(r => `
             <div onclick="selectCover('${r.image}')" style="aspect-ratio:3/4; background:#000 url(${r.image}) center/contain no-repeat; border-radius:8px; cursor:pointer; border:1px solid #333; position:relative;" title="${r.title}">
@@ -954,7 +954,7 @@ async function renderSyncView() {
                     </div>
                  </div>
                  
-                <p style="margin-top:15px; font-size:0.75rem; color:#22c55e; font-weight:700; text-align:center;">🤖 Sentinela de Sync Ativo (v121)</p>
+                <p style="margin-top:15px; font-size:0.75rem; color:#22c55e; font-weight:700; text-align:center;">🤖 Sentinela de Sync Ativo (v122)</p>
             </div>
 
             <!-- Legacy Local Sync Section -->
@@ -1074,7 +1074,7 @@ async function pushToCloud(silent = false) {
         const platforms = await dbService.getAll('platforms');
 
         const data = {
-            version: "v121",
+            version: "v122",
             timestamp: new Date().toISOString(),
             games,
             consoles,
@@ -1201,15 +1201,15 @@ async function importCollection() {
 
 /** INITIALIZATION **/
 async function init() {
-    logger("Iniciando RetroCollection v121...");
+    logger("Iniciando RetroCollection v122...");
     try {
         await dbService.open();
         logger("DB Conectado.");
 
-        // Auto-Sync Logos logic for v121
-        if (!localStorage.getItem('logos_synced_v121')) {
+        // Auto-Sync Logos logic for v122
+        if (!localStorage.getItem('logos_synced_v122')) {
             await autoSyncLogos();
-            localStorage.setItem('logos_synced_v121', 'true');
+            localStorage.setItem('logos_synced_v122', 'true');
         }
 
         // v98 Resilient Startup
