@@ -3,6 +3,49 @@
  * Handles searching and fetching official retail box art covers from TheGamesDB API v1
  */
 
+async function fetchJsonWithFallback(targetUrl) {
+    // 1. Try local PowerShell /proxy if on localhost
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        try {
+            const res = await fetch(`/proxy?url=${encodeURIComponent(targetUrl)}`);
+            if (res.ok) return await res.json();
+        } catch (e) {
+            console.warn("[TheGamesDB] Local proxy failed, trying direct fetch...", e);
+        }
+    }
+
+    // 2. Try direct fetch
+    try {
+        const res = await fetch(targetUrl);
+        if (res.ok) return await res.json();
+        if (res.status === 401) throw new Error("Chave API do TheGamesDB inválida (401). Verifica a tua chave nas Definições.");
+        if (res.status === 403) throw new Error("Acesso negado pela API do TheGamesDB (403). Verifica se a tua chave é válida.");
+    } catch (e) {
+        if (e.message.includes("401") || e.message.includes("403")) throw e;
+        console.warn("[TheGamesDB] Direct fetch failed, trying CORS proxy fallback...", e);
+    }
+
+    // 3. Fallback for GitHub Pages CORS restrictions
+    const proxies = [
+        `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`,
+        `https://corsproxy.io/?url=${encodeURIComponent(targetUrl)}`
+    ];
+
+    for (const pUrl of proxies) {
+        try {
+            const res = await fetch(pUrl);
+            if (res.ok) {
+                const data = await res.json();
+                if (data) return data;
+            }
+        } catch (e) {
+            console.warn("[TheGamesDB] CORS proxy failed:", pUrl, e);
+        }
+    }
+
+    throw new Error("Não foi possível ligar à API do TheGamesDB.net. Verifica a ligação ou a tua API Key.");
+}
+
 export const theGamesDBService = {
     /**
      * Search for game covers on TheGamesDB.net
@@ -17,16 +60,8 @@ export const theGamesDBService = {
             console.log(`[TheGamesDB] Searching for: ${query}`);
             const searchUrl = `https://api.thegamesdb.net/v1/Games/ByGameName?apikey=${encodeURIComponent(apiKey)}&name=${encodeURIComponent(query)}`;
             
-            const response = await fetch(searchUrl);
-            if (!response.ok) {
-                if (response.status === 401) {
-                    throw new Error("Chave de API do TheGamesDB inválida ou não autorizada (Erro 401).");
-                }
-                throw new Error(`Erro na API TheGamesDB (${response.status})`);
-            }
-
-            const data = await response.json();
-            if (!data.data || !data.data.games || data.data.games.length === 0) {
+            const data = await fetchJsonWithFallback(searchUrl);
+            if (!data || !data.data || !data.data.games || data.data.games.length === 0) {
                 console.log("[TheGamesDB] No game matches found.");
                 return [];
             }
@@ -36,12 +71,8 @@ export const theGamesDBService = {
 
             // Fetch images associated with these games
             const imagesUrl = `https://api.thegamesdb.net/v1/Games/Images?apikey=${encodeURIComponent(apiKey)}&games_id=${gameIds}`;
-            const imgResponse = await fetch(imagesUrl);
-            if (!imgResponse.ok) {
-                throw new Error(`Erro ao obter imagens do TheGamesDB (${imgResponse.status})`);
-            }
+            const imgData = await fetchJsonWithFallback(imagesUrl);
 
-            const imgData = await imgResponse.json();
             const baseUrl = imgData.data?.base_url?.original || imgData.data?.base_url?.large || "https://cdn.thegamesdb.net/images/original/";
 
             const results = [];
