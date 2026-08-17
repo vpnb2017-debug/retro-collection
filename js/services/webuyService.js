@@ -13,10 +13,48 @@ const WebuyService = {
 
         try {
             console.log(`[CoverSearch] Searching for: ${query}`);
-            const response = await fetch(`/proxy?url=${encodeURIComponent(targetUrl)}`);
-            if (!response.ok) throw new Error("Proxy request failed");
+            let html = "";
 
-            const html = await response.text();
+            // Try local PowerShell /proxy first if on localhost
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                try {
+                    const response = await fetch(`/proxy?url=${encodeURIComponent(targetUrl)}`);
+                    if (response.ok) {
+                        html = await response.text();
+                    }
+                } catch (e) {
+                    console.warn("Local proxy failed, falling back to public CORS proxies...", e);
+                }
+            }
+
+            // Fallback for GitHub Pages / static hosting or if local proxy fails
+            if (!html) {
+                const proxies = [
+                    async (url) => {
+                        const r = await fetch(`https://corsproxy.io/?${encodeURIComponent(url)}`);
+                        if (!r.ok) throw new Error("corsproxy failed");
+                        return await r.text();
+                    },
+                    async (url) => {
+                        const r = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`);
+                        if (!r.ok) throw new Error("allorigins failed");
+                        const json = await r.json();
+                        return json.contents || "";
+                    }
+                ];
+
+                for (const getHtml of proxies) {
+                    try {
+                        html = await getHtml(targetUrl);
+                        if (html) break;
+                    } catch (e) {
+                        console.warn("CORS proxy attempt failed", e);
+                    }
+                }
+            }
+
+            if (!html) throw new Error("Não foi possível aceder à pesquisa no GitHub Pages.");
+
             return this.parseBingResults(html);
         } catch (error) {
             console.error("[CoverSearch] Error:", error);
