@@ -1,10 +1,11 @@
-import { dbService } from './services/db.js?v=115';
-import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js?v=115';
-import { coverSearchService } from './services/coverSearch.js?v=115';
-import WebuyService from './services/webuyService.js?v=115';
-import { localFileSync } from './services/localFileSync.js?v=115';
-import { metadataService } from './services/metadataService.js?v=115';
-import { cloudSyncService } from './services/cloudSyncService.js?v=115';
+import { dbService } from './services/db.js?v=116';
+import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js?v=116';
+import { coverSearchService } from './services/coverSearch.js?v=116';
+import WebuyService from './services/webuyService.js?v=116';
+import { localFileSync } from './services/localFileSync.js?v=116';
+import { metadataService } from './services/metadataService.js?v=116';
+import { cloudSyncService } from './services/cloudSyncService.js?v=116';
+import { theGamesDBService } from './services/theGamesDBService.js?v=116';
 
 // Global Exposure
 window.navigate = navigate;
@@ -170,7 +171,7 @@ async function renderDashboard() {
         const ownedTotal = ownedGames.length + ownedConsoles.length;
         const wishlistTotal = games.filter(g => g.isWishlist).length + consoles.filter(c => c.isWishlist).length;
 
-        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v115</span></h2>`;
+        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v116</span></h2>`;
 
         const platData = await getPlatformOptions();
 
@@ -592,29 +593,33 @@ async function searchCover() {
     const plat = document.getElementById('add-platform').value;
     if (!title) return uiService.alert("Escreva o título primeiro!");
 
-    logger("A pesquisar capas...");
+    const tgdbKey = localStorage.getItem('thegamesdb_api_key');
+    let results = [];
+
     try {
-        const results = await WebuyService.search(`${title} ${plat}`);
+        if (tgdbKey) {
+            logger("A pesquisar capas no TheGamesDB.net... 📦");
+            try {
+                results = await theGamesDBService.search(`${title} ${plat}`, tgdbKey);
+            } catch (tgdbErr) {
+                logger("TheGamesDB falhou, a recorrer ao Bing: " + tgdbErr.message);
+                results = await WebuyService.search(`${title} ${plat}`);
+            }
+        } else {
+            logger("A pesquisar capas via Bing Images... 🔍");
+            results = await WebuyService.search(`${title} ${plat}`);
+        }
+
         const grid = document.getElementById('search-grid');
         const modal = document.getElementById('search-results-modal');
 
         if (results.length === 0) return uiService.alert("Nenhuma capa encontrada.");
 
         grid.innerHTML = results.map(r => `
-            <div onclick="selectCover('${r.image}')" style="aspect-ratio:3/4; background:#000 url(${r.image}) center/contain no-repeat; border-radius:8px; cursor:pointer; border:1px solid #333;"></div>
+            <div onclick="selectCover('${r.image}')" style="aspect-ratio:3/4; background:#000 url(${r.image}) center/contain no-repeat; border-radius:8px; cursor:pointer; border:1px solid #333; position:relative;" title="${r.title}">
+                <span style="position:absolute; bottom:2px; left:2px; right:2px; background:rgba(0,0,0,0.75); color:#ffc978; font-size:0.55rem; padding:2px 4px; border-radius:4px; text-overflow:ellipsis; overflow:hidden; white-space:nowrap; text-align:center;">${r.title}</span>
+            </div>
         `).join('');
-
-        // Validated logic
-        const cb = document.getElementById('add-validated');
-        const ds = document.getElementById('add-validation-date');
-        cb.onchange = (e) => {
-            if (e.target.checked) {
-                const n = new Date();
-                ds.innerText = `${String(n.getDate()).padStart(2, '0')}/${String(n.getMonth() + 1).padStart(2, '0')}/${n.getFullYear()}`;
-            } else {
-                ds.innerText = '';
-            }
-        };
 
         modal.style.display = 'flex';
     } catch (err) { logger("SEARCH ERR: " + err.message); }
@@ -889,6 +894,7 @@ async function renderSyncView() {
     const { titleEl, scrollEl } = getZones();
     const cloudUrl = localStorage.getItem('cloud_sync_url') || '';
     const githubToken = localStorage.getItem('github_token') || '';
+    const tgdbKey = localStorage.getItem('thegamesdb_api_key') || '';
     const lastSync = localStorage.getItem('last_sync_timestamp') || 'Nunca';
 
     // Status Logic
@@ -923,10 +929,16 @@ async function renderSyncView() {
                     <input type="text" id="cloud-url-input" placeholder="https://gist.github.com/..." value="${cloudUrl}" style="background:#1a1a20; border:1px solid #444; color:white; padding:15px; border-radius:12px; font-size:0.9rem;">
                  </div>
 
-                 <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:24px;">
+                 <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:20px;">
                     <label style="font-size:0.75rem; color:#ff9f0a; font-weight:700; margin-left:5px;">GitHub Token (Escrita)</label>
                     <input type="password" id="github-token-input" placeholder="ghp_..." value="${githubToken}" style="background:#1a1a20; border:1px solid #444; color:white; padding:15px; border-radius:12px; font-size:0.9rem;">
-                    <p style="font-size:0.65rem; opacity:0.4; margin-top:4px;">Invisível por segurança. Necessário para enviar dados para a nuvem.</p>
+                    <p style="font-size:0.65rem; opacity:0.4; margin-top:2px;">Invisível por segurança. Necessário para enviar dados para a nuvem.</p>
+                 </div>
+
+                 <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:24px;">
+                    <label style="font-size:0.75rem; color:#ff9f0a; font-weight:700; margin-left:5px;">TheGamesDB.net API Key (Opcional - Capas Físicas)</label>
+                    <input type="password" id="tgdb-key-input" placeholder="Chave de API do TheGamesDB.net..." value="${tgdbKey}" style="background:#1a1a20; border:1px solid #444; color:white; padding:15px; border-radius:12px; font-size:0.9rem;">
+                    <p style="font-size:0.65rem; opacity:0.4; margin-top:2px;">Se preenchido, a pesquisa de capas priorizará os scans oficiais do TheGamesDB.net.</p>
                  </div>
 
                  <div style="display:flex; flex-direction:column; gap:12px;">
@@ -942,7 +954,7 @@ async function renderSyncView() {
                     </div>
                  </div>
                  
-                <p style="margin-top:15px; font-size:0.75rem; color:#22c55e; font-weight:700; text-align:center;">🤖 Sentinela de Sync Ativo (v115)</p>
+                <p style="margin-top:15px; font-size:0.75rem; color:#22c55e; font-weight:700; text-align:center;">🤖 Sentinela de Sync Ativo (v116)</p>
             </div>
 
             <!-- Legacy Local Sync Section -->
@@ -974,14 +986,19 @@ async function renderSyncView() {
 async function saveCloudLink() {
     const url = document.getElementById('cloud-url-input').value.trim();
     const token = document.getElementById('github-token-input').value.trim();
+    const tgdbKey = document.getElementById('tgdb-key-input')?.value.trim();
 
-    if (!url) return uiService.alert("Por favor insira um link válido.");
+    if (!url && !tgdbKey) return uiService.alert("Por favor insira um link ou chave válida.");
 
-    localStorage.setItem('cloud_sync_url', url);
+    if (url) localStorage.setItem('cloud_sync_url', url);
     if (token) localStorage.setItem('github_token', token);
+    if (tgdbKey !== undefined) {
+        if (tgdbKey) localStorage.setItem('thegamesdb_api_key', tgdbKey);
+        else localStorage.removeItem('thegamesdb_api_key');
+    }
     localStorage.removeItem('last_push_error'); // Limpa erro ao gravar novas chaves
 
-    uiService.alert("Chaves guardadas com sucesso! 💎", "Configurado!");
+    uiService.alert("Definições guardadas com sucesso! 💎", "Configurado!");
 }
 
 async function pullFromCloud(silent = false) {
@@ -1057,7 +1074,7 @@ async function pushToCloud(silent = false) {
         const platforms = await dbService.getAll('platforms');
 
         const data = {
-            version: "v115",
+            version: "v116",
             timestamp: new Date().toISOString(),
             games,
             consoles,
@@ -1184,15 +1201,15 @@ async function importCollection() {
 
 /** INITIALIZATION **/
 async function init() {
-    logger("Iniciando RetroCollection v115...");
+    logger("Iniciando RetroCollection v116...");
     try {
         await dbService.open();
         logger("DB Conectado.");
 
-        // Auto-Sync Logos logic for v115
-        if (!localStorage.getItem('logos_synced_v115')) {
+        // Auto-Sync Logos logic for v116
+        if (!localStorage.getItem('logos_synced_v116')) {
             await autoSyncLogos();
-            localStorage.setItem('logos_synced_v115', 'true');
+            localStorage.setItem('logos_synced_v116', 'true');
         }
 
         // v98 Resilient Startup

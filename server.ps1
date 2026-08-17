@@ -34,74 +34,77 @@ Write-Host "Pressione Ctrl+C para parar."
 
 try {
     while ($listener.IsListening) {
-        $context = $listener.GetContext()
-        $request = $context.Request
-        $response = $context.Response
+        try {
+            $context = $listener.GetContext()
+            $request = $context.Request
+            $response = $context.Response
 
-        $path = $request.Url.LocalPath.TrimStart('/')
+            $path = $request.Url.LocalPath.TrimStart('/')
 
-        # --- PROXY HANDLER (Fix CORS) ---
-        if ($path -eq "proxy") {
-            try {
-                $targetUrl = $request.QueryString["url"]
-                if ([string]::IsNullOrWhiteSpace($targetUrl)) { throw "URL missing" }
+            # --- PROXY HANDLER (Fix CORS) ---
+            if ($path -eq "proxy") {
+                try {
+                    $targetUrl = $request.QueryString["url"]
+                    if ([string]::IsNullOrWhiteSpace($targetUrl)) { throw "URL missing" }
 
-                Write-Host "Proxying: $targetUrl"
-                
-                # Fetch remote image
-                $remoteReq = [System.Net.WebRequest]::Create($targetUrl)
-                $remoteResp = $remoteReq.GetResponse()
-                $stream = $remoteResp.GetResponseStream()
+                    Write-Host "Proxying: $targetUrl"
+                    
+                    # Fetch remote image
+                    $remoteReq = [System.Net.WebRequest]::Create($targetUrl)
+                    $remoteResp = $remoteReq.GetResponse()
+                    $stream = $remoteResp.GetResponseStream()
 
-                $response.ContentType = $remoteResp.ContentType
-                $response.AddHeader("Access-Control-Allow-Origin", "*")
+                    $response.ContentType = $remoteResp.ContentType
+                    $response.AddHeader("Access-Control-Allow-Origin", "*")
 
-                $buffer = New-Object byte[] 4096
-                while (($count = $stream.Read($buffer, 0, $buffer.Length)) -gt 0) {
-                    $response.OutputStream.Write($buffer, 0, $count)
+                    $buffer = New-Object byte[] 4096
+                    while (($count = $stream.Read($buffer, 0, $buffer.Length)) -gt 0) {
+                        $response.OutputStream.Write($buffer, 0, $count)
+                    }
+                    
+                    $response.StatusCode = 200
+                    $stream.Dispose()
+                    $remoteResp.Close()
+                    $response.Close()
+                    continue
+                } catch {
+                    Write-Host "Proxy Error: $_" -ForegroundColor Red
+                    try { $response.StatusCode = 500; $response.Close() } catch {}
+                    continue
                 }
-                
-                $response.StatusCode = 200
-                $stream.Dispose()
-                $remoteResp.Close()
-                $response.Close()
-                continue
-            } catch {
-                Write-Host "Proxy Error: $_" -ForegroundColor Red
-                $response.StatusCode = 500
-                $response.Close()
-                continue
             }
-        }
-        # ---------------------------------
+            # ---------------------------------
 
-        if ($path -eq "") { $path = "index.html" }
-        
-        $localPath = Join-Path $root $path
-        
-        if (Test-Path $localPath -PathType Leaf) {
-            $content = [System.IO.File]::ReadAllBytes($localPath)
+            if ($path -eq "") { $path = "index.html" }
             
-            # Simple Mime Types
-            $ext = [System.IO.Path]::GetExtension($localPath).ToLower()
-            switch ($ext) {
-                ".html" { $response.ContentType = "text/html" }
-                ".css"  { $response.ContentType = "text/css" }
-                ".js"   { $response.ContentType = "application/javascript" }
-                ".json" { $response.ContentType = "application/json" }
-                ".png"  { $response.ContentType = "image/png" }
-                ".jpg"  { $response.ContentType = "image/jpeg" }
-                ".svg"  { $response.ContentType = "image/svg+xml" }
-                Default { $response.ContentType = "application/octet-stream" }
-            }
+            $localPath = Join-Path $root $path
+            
+            if (Test-Path $localPath -PathType Leaf) {
+                $content = [System.IO.File]::ReadAllBytes($localPath)
+                
+                # Simple Mime Types
+                $ext = [System.IO.Path]::GetExtension($localPath).ToLower()
+                switch ($ext) {
+                    ".html" { $response.ContentType = "text/html; charset=utf-8" }
+                    ".css"  { $response.ContentType = "text/css" }
+                    ".js"   { $response.ContentType = "application/javascript" }
+                    ".json" { $response.ContentType = "application/json" }
+                    ".png"  { $response.ContentType = "image/png" }
+                    ".jpg"  { $response.ContentType = "image/jpeg" }
+                    ".svg"  { $response.ContentType = "image/svg+xml" }
+                    Default { $response.ContentType = "application/octet-stream" }
+                }
 
-            $response.ContentLength64 = $content.Length
-            $response.OutputStream.Write($content, 0, $content.Length)
-            $response.StatusCode = 200
-        } else {
-            $response.StatusCode = 404
+                $response.ContentLength64 = $content.Length
+                $response.OutputStream.Write($content, 0, $content.Length)
+                $response.StatusCode = 200
+            } else {
+                $response.StatusCode = 404
+            }
+            $response.Close()
+        } catch {
+            Write-Host "Aviso (Conexão interrompida): $_" -ForegroundColor Yellow
         }
-        $response.Close()
     }
 } finally {
     $listener.Stop()
