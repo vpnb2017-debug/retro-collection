@@ -1,14 +1,14 @@
-import { dbService } from './services/db.js?v=123';
-import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js?v=123';
-import { coverSearchService } from './services/coverSearch.js?v=123';
-import WebuyService from './services/webuyService.js?v=123';
-import { localFileSync } from './services/localFileSync.js?v=123';
-import { metadataService } from './services/metadataService.js?v=123';
-import { cloudSyncService } from './services/cloudSyncService.js?v=123';
-import { theGamesDBService } from './services/theGamesDBService.js?v=123';
-import { barcodeScannerService } from './services/barcodeScannerService.js?v=123';
-import { chartService } from './services/chartService.js?v=123';
-import { exportService } from './services/exportService.js?v=123';
+import { dbService } from './services/db.js?v=124';
+import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js?v=124';
+import { coverSearchService } from './services/coverSearch.js?v=124';
+import WebuyService from './services/webuyService.js?v=124';
+import { localFileSync } from './services/localFileSync.js?v=124';
+import { metadataService } from './services/metadataService.js?v=124';
+import { cloudSyncService } from './services/cloudSyncService.js?v=124';
+import { theGamesDBService } from './services/theGamesDBService.js?v=124';
+import { barcodeScannerService } from './services/barcodeScannerService.js?v=124';
+import { chartService } from './services/chartService.js?v=124';
+import { exportService } from './services/exportService.js?v=124';
 
 // Global Exposure
 window.navigate = navigate;
@@ -185,7 +185,7 @@ async function renderDashboard() {
         const ownedTotal = ownedGames.length + ownedConsoles.length;
         const wishlistTotal = games.filter(g => g.isWishlist).length + consoles.filter(c => c.isWishlist).length;
 
-        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v123</span></h2>`;
+        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v124</span></h2>`;
 
         const platData = await getPlatformOptions();
 
@@ -310,10 +310,10 @@ async function renderDashboard() {
                 <button onclick="navigate('nav-platforms')" style="flex:1; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); padding:14px; border-radius:14px; color:white; font-size:0.85rem; cursor:pointer; font-weight:600;">Consolas 🕹️</button>
             </div>
 
-            <!-- v123: Charts & Analytics Section -->
-            <div style="margin-top:25px; background:rgba(255,255,255,0.03); padding:24px; border-radius:20px; border:1px solid rgba(255,255,255,0.05);">
+            <!-- v124: Charts & Analytics Section -->
+            <div style="margin-top:25px; background:rgba(255,255,255,0.03); padding:24px; border-radius:20px; border:1px solid rgba(255,255,255,0.05); box-sizing:border-box;">
                 <h3 style="margin-bottom:20px; font-size:1rem; color:#ffc978; font-weight:800;">📊 Analytics & Estatísticas</h3>
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:20px; box-sizing:border-box;">
                     <div>
                         <p style="font-size:0.7rem; color:#ff9f0a; font-weight:700; margin-bottom:8px;">Por Consola</p>
                         <div style="height:160px;"><canvas id="chart-platform"></canvas></div>
@@ -378,27 +378,27 @@ async function renderGenericGrid(viewTitle, itemsFilter) {
         const platformOptions = platforms.map(p => `<option value="${p.name}" ${state.filterPlatform === p.name ? 'selected' : ''}>${p.name}</option>`).join('');
 
         titleEl.innerHTML = `<h2>${viewTitle}</h2>`;
-           filterEl.innerHTML = `
-            <div style="display:flex; gap:8px; flex-wrap:wrap; background:rgba(255,159,10,0.05); padding:10px; border-radius:14px; border:1px solid rgba(255,159,10,0.15);">
-                <div style="display:flex; gap:6px; width:100%; margin-bottom:4px;">
-                    <select id="f-type" style="flex:1; background:#1e1e24; border:1px solid #444; color:white; padding:10px; border-radius:10px; font-size:0.85rem;">
+        filterEl.innerHTML = `
+            <div style="display:flex; flex-direction:column; gap:8px; background:rgba(255,159,10,0.05); padding:10px; border-radius:14px; border:1px solid rgba(255,159,10,0.15); width:100%; box-sizing:border-box;">
+                <div class="filter-controls-row">
+                    <select id="f-type" style="background:#1e1e24; border:1px solid #444; color:white; padding:10px; border-radius:10px; font-size:0.85rem;">
                         <option value="all" ${state.filterType === 'all' ? 'selected' : ''}>Tudo</option>
                         <option value="games" ${state.filterType === 'games' ? 'selected' : ''}>Jogos</option>
                         <option value="consoles" ${state.filterType === 'consoles' ? 'selected' : ''}>Hardware</option>
                     </select>
-                    <select id="f-plat" style="flex:1; background:#1e1e24; border:1px solid #444; color:white; padding:10px; border-radius:10px; font-size:0.85rem;">
+                    <select id="f-plat" style="background:#1e1e24; border:1px solid #444; color:white; padding:10px; border-radius:10px; font-size:0.85rem;">
                         <option value="all" ${state.filterPlatform === 'all' ? 'selected' : ''}>Plataformas</option>
                         <option value="(Sem Consola)" ${state.filterPlatform === '(Sem Consola)' ? 'selected' : ''}>(Sem Consola)</option>
                         ${platformOptions}
                     </select>
-                    <select id="f-validation" style="flex:1; background:#1e1e24; border:1px solid #444; color:white; padding:10px; border-radius:10px; font-size:0.85rem;">
+                    <select id="f-validation" style="background:#1e1e24; border:1px solid #444; color:white; padding:10px; border-radius:10px; font-size:0.85rem;">
                         <option value="all" ${state.filterValidation === 'all' ? 'selected' : ''}>Todos</option>
                         <option value="validated" ${state.filterValidation === 'validated' ? 'selected' : ''}>&#x2705; Validados</option>
                         <option value="not-validated" ${state.filterValidation === 'not-validated' ? 'selected' : ''}>&#x274c; Não Validados</option>
                     </select>
                 </div>
-                <div style="display:flex; gap:6px; width:100%;">
-                    <input id="f-search" type="text" placeholder="&#x1F50D; Procurar..." value="${state.filterSearch}" style="flex:1; background:#1e1e24; border:1px solid #444; color:white; padding:10px; border-radius:10px; font-size:0.85rem;">
+                <div class="search-controls-row">
+                    <input id="f-search" type="text" placeholder="&#x1F50D; Procurar..." value="${state.filterSearch}" style="background:#1e1e24; border:1px solid #444; color:white; padding:10px; border-radius:10px; font-size:0.85rem;">
                     <button onclick="toggleViewMode('grid')" id="btn-view-grid" class="view-toggle-btn ${state.viewMode !== 'shelf' ? 'active' : ''}" title="Vista Grelha">⊞</button>
                     <button onclick="toggleViewMode('shelf')" id="btn-view-shelf" class="view-toggle-btn ${state.viewMode === 'shelf' ? 'active' : ''}" title="Prateleira 3D">📚</button>
                 </div>
@@ -1189,7 +1189,7 @@ async function renderSyncView() {
                     </div>
                  </div>
                  
-                <p style="margin-top:15px; font-size:0.75rem; color:#22c55e; font-weight:700; text-align:center;">🤖 Sentinela de Sync Ativo (v123)</p>
+                <p style="margin-top:15px; font-size:0.75rem; color:#22c55e; font-weight:700; text-align:center;">🤖 Sentinela de Sync Ativo (v124)</p>
             </div>
 
             <!-- v123: Enhanced Export Section -->
@@ -1313,7 +1313,7 @@ async function pushToCloud(silent = false) {
         const platforms = await dbService.getAll('platforms');
 
         const data = {
-            version: "v123",
+            version: "v124",
             timestamp: new Date().toISOString(),
             games,
             consoles,
@@ -1386,7 +1386,7 @@ async function exportCollection() {
         const platforms = await dbService.getAll('platforms');
 
         const data = {
-            version: "v123",
+            version: "v124",
             timestamp: new Date().toISOString(),
             games,
             consoles,
@@ -1460,15 +1460,15 @@ async function importCollection() {
 
 /** INITIALIZATION **/
 async function init() {
-    logger("Iniciando RetroCollection v123...");
+    logger("Iniciando RetroCollection v124...");
     try {
         await dbService.open();
         logger("DB Conectado.");
 
-        // Auto-Sync Logos logic for v123
-        if (!localStorage.getItem('logos_synced_v123')) {
+        // Auto-Sync Logos logic for v124
+        if (!localStorage.getItem('logos_synced_v124')) {
             await autoSyncLogos();
-            localStorage.setItem('logos_synced_v123', 'true');
+            localStorage.setItem('logos_synced_v124', 'true');
         }
 
         // v98 Resilient Startup
