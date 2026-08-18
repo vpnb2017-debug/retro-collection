@@ -21,15 +21,29 @@
   - `js/app.js`: Versão nos `import` dos serviços e na propriedade `version` da exportação para a Nuvem.
 - **Motivo**: Garantir que o Service Worker da PWA invalida a cache anterior no navegador do utilizador e descarrega o código atualizado imediatamente.
 
-## 3. Arquitetura e Serviços de Dados
+## 3. Regra de Atualização do Histórico
+- **OBRIGATÓRIO**: Sempre que uma nova versão for implementada (local ou publicada no Git), o ficheiro `.agent/historico.md` **DEVE ser atualizado** com:
+  - Número da versão e data.
+  - Lista de novas funcionalidades adicionadas.
+  - Lista de correções efetuadas.
+  - Lista de ficheiros criados e modificados.
+- **Localização**: `.agent/historico.md` na raiz do projeto.
+- **Formato**: Seguir o formato Markdown existente no ficheiro (secções por versão em ordem decrescente).
+
+## 4. Arquitetura e Serviços de Dados
 - **Armazenamento Local**: IndexedDB (`RetroCollectionDB`, v5) para persistência offline de jogos, consolas e imagens em Base64.
 - **Sincronização Cloud**: Sincronização bidirecional automática e manual via GitHub Gist privado.
 - **Pesquisa de Capas**:
   - **Prioridade 1**: TheGamesDB.net API (`theGamesDBService.js`) quando a chave `thegamesdb_api_key` estiver configurada nas Definições.
   - **Fallback**: Bing Images (`webuyService.js`) através da rota `/proxy`.
 - **Metadados Automáticos**: Integração com a MediaWiki / Wikipedia API (`metadataService.js`).
+- **Serviços Adicionais (v123+)**:
+  - `barcodeScannerService.js`: Leitor de código de barras EAN/UPC via câmara.
+  - `chartService.js`: Renderização de gráficos no Dashboard.
+  - `exportService.js`: Exportação para PDF e Excel com imagens.
 
-## 4. Diretrizes Comportamentais do Agente
+## 5. Diretrizes Comportamentais do Agente
 - Ler obrigatoriamente este ficheiro (`.agent/agent_rules.md`) no início de cada sessão.
 - Garantir sempre o cumprimento estrito das regras de versão antes de fazer commits no repositório.
+- **Atualizar obrigatoriamente o ficheiro `.agent/historico.md`** sempre que uma nova versão for implementada.
 - Manter o código limpo, sem dependências desnecessárias de frameworks pesadas, utilizando ES Modules nativos e CSS Vanilla.

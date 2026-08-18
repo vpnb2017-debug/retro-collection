@@ -1,11 +1,14 @@
-import { dbService } from './services/db.js?v=122';
-import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js?v=122';
-import { coverSearchService } from './services/coverSearch.js?v=122';
-import WebuyService from './services/webuyService.js?v=122';
-import { localFileSync } from './services/localFileSync.js?v=122';
-import { metadataService } from './services/metadataService.js?v=122';
-import { cloudSyncService } from './services/cloudSyncService.js?v=122';
-import { theGamesDBService } from './services/theGamesDBService.js?v=122';
+import { dbService } from './services/db.js?v=123';
+import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js?v=123';
+import { coverSearchService } from './services/coverSearch.js?v=123';
+import WebuyService from './services/webuyService.js?v=123';
+import { localFileSync } from './services/localFileSync.js?v=123';
+import { metadataService } from './services/metadataService.js?v=123';
+import { cloudSyncService } from './services/cloudSyncService.js?v=123';
+import { theGamesDBService } from './services/theGamesDBService.js?v=123';
+import { barcodeScannerService } from './services/barcodeScannerService.js?v=123';
+import { chartService } from './services/chartService.js?v=123';
+import { exportService } from './services/exportService.js?v=123';
 
 // Global Exposure
 window.navigate = navigate;
@@ -16,6 +19,8 @@ window.searchCover = searchCover;
 window.selectCover = selectCover;
 window.navigateByPlatform = navigateByPlatform;
 window.exportCollection = exportCollection;
+window.exportPDF = exportPDF;
+window.exportExcel = exportExcel;
 window.importCollection = importCollection;
 window.editPlatform = editPlatform;
 window.pickLogoForPlatform = pickLogoForPlatform;
@@ -26,6 +31,8 @@ window.clearMetadata = clearMetadata;
 window.pullFromCloud = pullFromCloud;
 window.pushToCloud = pushToCloud;
 window.saveCloudLink = saveCloudLink;
+window.openBarcodeScanner = openBarcodeScanner;
+window.toggleViewMode = toggleViewMode;
 // window.state moved down to avoid TDZ error
 
 // Utility for logging 
@@ -95,10 +102,17 @@ const state = {
     filterSearch: '',
     filterDecade: null, // v107: Dedicated decade filter
     filterValidation: 'all', // v115: Validation filter (all, validated, not-validated)
-    viewMode: 'grid',
+    viewMode: 'grid', // v123: 'grid' | 'shelf'
     lastFilteredList: []
 };
 window.state = state; // Global Exposure after init
+
+// v123: Toggle between grid and shelf view
+function toggleViewMode(mode) {
+    state.viewMode = mode;
+    if (state.view === 'nav-collection') renderCollection();
+    else if (state.view === 'nav-wishlist') renderWishlist();
+}
 
 /** NAVIGATE **/
 async function navigate(id, params = null) {
@@ -171,7 +185,7 @@ async function renderDashboard() {
         const ownedTotal = ownedGames.length + ownedConsoles.length;
         const wishlistTotal = games.filter(g => g.isWishlist).length + consoles.filter(c => c.isWishlist).length;
 
-        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v122</span></h2>`;
+        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v123</span></h2>`;
 
         const platData = await getPlatformOptions();
 
@@ -295,8 +309,64 @@ async function renderDashboard() {
                 <button onclick="navigate('nav-sync')" style="flex:1; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); padding:14px; border-radius:14px; color:white; font-size:0.85rem; cursor:pointer; font-weight:600;">Definições Cloud ☁️</button>
                 <button onclick="navigate('nav-platforms')" style="flex:1; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); padding:14px; border-radius:14px; color:white; font-size:0.85rem; cursor:pointer; font-weight:600;">Consolas 🕹️</button>
             </div>
+
+            <!-- v123: Charts & Analytics Section -->
+            <div style="margin-top:25px; background:rgba(255,255,255,0.03); padding:24px; border-radius:20px; border:1px solid rgba(255,255,255,0.05);">
+                <h3 style="margin-bottom:20px; font-size:1rem; color:#ffc978; font-weight:800;">📊 Analytics & Estatísticas</h3>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+                    <div>
+                        <p style="font-size:0.7rem; color:#ff9f0a; font-weight:700; margin-bottom:8px;">Por Consola</p>
+                        <div style="height:160px;"><canvas id="chart-platform"></canvas></div>
+                    </div>
+                    <div>
+                        <p style="font-size:0.7rem; color:#ff9f0a; font-weight:700; margin-bottom:8px;">Validados</p>
+                        <div style="height:160px;"><canvas id="chart-validation"></canvas></div>
+                    </div>
+                    <div>
+                        <p style="font-size:0.7rem; color:#ff9f0a; font-weight:700; margin-bottom:8px;">Top Géneros</p>
+                        <div style="height:160px;"><canvas id="chart-genres"></canvas></div>
+                    </div>
+                    <div>
+                        <p style="font-size:0.7rem; color:#ff9f0a; font-weight:700; margin-bottom:8px;">Aquisições por Ano</p>
+                        <div style="height:160px;"><canvas id="chart-timeline"></canvas></div>
+                    </div>
+                </div>
+            </div>
         </div>
         `;
+
+        // v123: Render charts after DOM is updated
+        chartService.destroyAll();
+        await chartService.ensureChartJs();
+
+        // Platform donut data
+        const platCount = {};
+        [...games, ...consoles].filter(i => !i.isWishlist).forEach(i => {
+            const p = i.platform || 'Geral';
+            platCount[p] = (platCount[p] || 0) + 1;
+        });
+        chartService.renderPlatformDonut('chart-platform', platCount);
+
+        // Validation gauge
+        const totalOwned = games.filter(g => !g.isWishlist).length + consoles.filter(c => !c.isWishlist).length;
+        const totalValidated = [...games, ...consoles].filter(i => !i.isWishlist && (i.isValidated === true || i.isValidated === 'true' || i.isValidated === 1)).length;
+        chartService.renderValidationGauge('chart-validation', totalValidated, totalOwned);
+
+        // Genre bars
+        const genreCount = {};
+        games.filter(g => g.genre && !g.isWishlist).forEach(g => {
+            genreCount[g.genre] = (genreCount[g.genre] || 0) + 1;
+        });
+        chartService.renderGenreBars('chart-genres', genreCount);
+
+        // Timeline by acquisition year
+        const timelineCount = {};
+        [...games, ...consoles].filter(i => i.acquiredDate && !i.isWishlist).forEach(i => {
+            const match = i.acquiredDate.match(/(\d{4})/);
+            if (match) { const yr = match[1]; timelineCount[yr] = (timelineCount[yr] || 0) + 1; }
+        });
+        if (Object.keys(timelineCount).length > 0) chartService.renderAcquisitionLine('chart-timeline', timelineCount);
+
     } catch (err) { logger("DASH ERR: " + err.message); }
 }
 
@@ -308,25 +378,31 @@ async function renderGenericGrid(viewTitle, itemsFilter) {
         const platformOptions = platforms.map(p => `<option value="${p.name}" ${state.filterPlatform === p.name ? 'selected' : ''}>${p.name}</option>`).join('');
 
         titleEl.innerHTML = `<h2>${viewTitle}</h2>`;
-        filterEl.innerHTML = `
+           filterEl.innerHTML = `
             <div style="display:flex; gap:8px; flex-wrap:wrap; background:rgba(255,159,10,0.05); padding:10px; border-radius:14px; border:1px solid rgba(255,159,10,0.15);">
-                <select id="f-type" style="flex:1; background:#1e1e24; border:1px solid #444; color:white; padding:10px; border-radius:10px; font-size:0.85rem; min-width:90px;">
-                    <option value="all" ${state.filterType === 'all' ? 'selected' : ''}>Tudo</option>
-                    <option value="games" ${state.filterType === 'games' ? 'selected' : ''}>Jogos</option>
-                    <option value="consoles" ${state.filterType === 'consoles' ? 'selected' : ''}>Hardware</option>
-                </select>
-                <select id="f-plat" style="flex:1; background:#1e1e24; border:1px solid #444; color:white; padding:10px; border-radius:10px; font-size:0.85rem; min-width:110px;">
-                    <option value="all" ${state.filterPlatform === 'all' ? 'selected' : ''}>Plataformas</option>
-                    <option value="(Sem Consola)" ${state.filterPlatform === '(Sem Consola)' ? 'selected' : ''}>( Sem Consola)</option>
-                    ${platformOptions}
-                </select>
-                <select id="f-validation" style="flex:1; background:#1e1e24; border:1px solid #444; color:white; padding:10px; border-radius:10px; font-size:0.85rem; min-width:110px;">
-                    <option value="all" ${state.filterValidation === 'all' ? 'selected' : ''}>Todos</option>
-                    <option value="validated" ${state.filterValidation === 'validated' ? 'selected' : ''}>✅ Validados</option>
-                    <option value="not-validated" ${state.filterValidation === 'not-validated' ? 'selected' : ''}>❌ Não Validados</option>
-                </select>
-                <input id="f-search" type="text" placeholder="🔍 Procurar..." value="${state.filterSearch}" style="width:100%; background:#1e1e24; border:1px solid #444; color:white; padding:10px; border-radius:10px; font-size:0.85rem; margin-top:2px;">
-                <button onclick="window.clearFilters()" style="width:100%; background:rgba(255,159,10,0.1); border:1px dashed rgba(255,159,10,0.3); color:#ff9f0a; padding:8px; border-radius:10px; font-size:0.75rem; font-weight:700; cursor:pointer; margin-top:5px;">Limpar Filtros 🧹</button>
+                <div style="display:flex; gap:6px; width:100%; margin-bottom:4px;">
+                    <select id="f-type" style="flex:1; background:#1e1e24; border:1px solid #444; color:white; padding:10px; border-radius:10px; font-size:0.85rem;">
+                        <option value="all" ${state.filterType === 'all' ? 'selected' : ''}>Tudo</option>
+                        <option value="games" ${state.filterType === 'games' ? 'selected' : ''}>Jogos</option>
+                        <option value="consoles" ${state.filterType === 'consoles' ? 'selected' : ''}>Hardware</option>
+                    </select>
+                    <select id="f-plat" style="flex:1; background:#1e1e24; border:1px solid #444; color:white; padding:10px; border-radius:10px; font-size:0.85rem;">
+                        <option value="all" ${state.filterPlatform === 'all' ? 'selected' : ''}>Plataformas</option>
+                        <option value="(Sem Consola)" ${state.filterPlatform === '(Sem Consola)' ? 'selected' : ''}>(Sem Consola)</option>
+                        ${platformOptions}
+                    </select>
+                    <select id="f-validation" style="flex:1; background:#1e1e24; border:1px solid #444; color:white; padding:10px; border-radius:10px; font-size:0.85rem;">
+                        <option value="all" ${state.filterValidation === 'all' ? 'selected' : ''}>Todos</option>
+                        <option value="validated" ${state.filterValidation === 'validated' ? 'selected' : ''}>&#x2705; Validados</option>
+                        <option value="not-validated" ${state.filterValidation === 'not-validated' ? 'selected' : ''}>&#x274c; Não Validados</option>
+                    </select>
+                </div>
+                <div style="display:flex; gap:6px; width:100%;">
+                    <input id="f-search" type="text" placeholder="&#x1F50D; Procurar..." value="${state.filterSearch}" style="flex:1; background:#1e1e24; border:1px solid #444; color:white; padding:10px; border-radius:10px; font-size:0.85rem;">
+                    <button onclick="toggleViewMode('grid')" id="btn-view-grid" class="view-toggle-btn ${state.viewMode !== 'shelf' ? 'active' : ''}" title="Vista Grelha">⊞</button>
+                    <button onclick="toggleViewMode('shelf')" id="btn-view-shelf" class="view-toggle-btn ${state.viewMode === 'shelf' ? 'active' : ''}" title="Prateleira 3D">📚</button>
+                </div>
+                <button onclick="window.clearFilters()" style="width:100%; background:rgba(255,159,10,0.1); border:1px dashed rgba(255,159,10,0.3); color:#ff9f0a; padding:8px; border-radius:10px; font-size:0.75rem; font-weight:700; cursor:pointer;">Limpar Filtros 🧹</button>
             </div>
         `;
 
@@ -374,35 +450,76 @@ async function renderGenericGrid(viewTitle, itemsFilter) {
 
             state.lastFilteredList = filtered;
 
-            scrollEl.innerHTML = `
-                <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap:12px;">
-                    ${filtered.map(item => {
-                // v114: Fixed validation status indicator (handle boolean, string, number) + DEBUG
-                console.log('[DEBUG] Item:', item.title, 'isValidated:', item.isValidated, 'type:', typeof item.isValidated);
-                const isValidated = item.isValidated === true || item.isValidated === 'true' || item.isValidated === 1;
-                console.log('[DEBUG] Result isValidated:', isValidated);
-                const validationIcon = isValidated ?
-                    '<span style="color:#22c55e; font-size:0.7rem; margin-left:4px;" title="Validado">✅</span>' :
-                    '<span style="color:#ef4444; font-size:0.7rem; margin-left:4px;" title="Não Validado">❌</span>';
+            if (state.viewMode === 'shelf') {
+                // v123: 3D Shelf View — use post-render DOM pass to safely set base64 backgroundImage
+                const grouped = {};
+                filtered.forEach(item => {
+                    const p = item.platform || 'Geral';
+                    if (!grouped[p]) grouped[p] = [];
+                    grouped[p].push(item);
+                });
+                if (filtered.length === 0) {
+                    scrollEl.innerHTML = '<div class="shelf-empty"><span style="font-size:3rem;">📚</span><p>Nenhum item na coleção.</p></div>';
+                } else {
+                    // Build HTML without embedding base64 in template (avoids broken inner-template-literal)
+                    let shelfHtml = '';
+                    Object.entries(grouped).forEach(([platform, items]) => {
+                        let rowHtml = '';
+                        items.forEach(item => {
+                            const safeTitle = item.title.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+                            const displayTitle = item.title.length > 35 ? item.title.substring(0,35) + '…' : item.title;
+                            const noImgLabel = !item.image ? item.title.substring(0,18) : '';
+                            const noCoverClass = !item.image ? ' shelf-item-no-cover' : '';
+                            rowHtml += `<div class="shelf-item" data-itemid="${item.id}" onclick="navigate('nav-add', '${item.id}')">
+                                <div class="shelf-item-tooltip">${displayTitle}<span>${platform}${item.year ? ' &middot; ' + item.year : ''}</span></div>
+                                <div class="shelf-item-cover${noCoverClass}">${noImgLabel}</div>
+                            </div>`;
+                        });
+                        shelfHtml += `<div style="margin-bottom:35px;">
+                            <p style="font-size:0.7rem;color:#ff9f0a;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;padding-left:10px;">${platform}</p>
+                            <div class="shelf-container"><div class="shelf-row">${rowHtml}</div></div>
+                        </div>`;
+                    });
+                    scrollEl.innerHTML = shelfHtml;
 
-                return `
-                        <div onclick="navigate('nav-add', '${item.id}')" style="background:rgba(255,255,255,0.05); border-radius:12px; overflow:hidden; border:1px solid rgba(255,255,255,0.1); height:210px; cursor:pointer; display:flex; flex-direction:column; transition: transform 0.2s;">
-                            <div style="height:130px; background:#000 url(${item.image || ''}) center/contain no-repeat; pointer-events:none;"></div>
-                            <div style="padding:10px; flex:1; display:flex; flex-direction:column; justify-content:space-between;">
-                                <div>
-                                    <h4 style="font-size:0.75rem; overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; line-height:1.2; font-weight:600; margin-bottom:2px;">${item.title}</h4>
-                                    ${item.year ? `<div style="font-size:0.6rem; opacity:0.5; margin-bottom:4px;">${item.year}</div>` : ''}
-                                </div>
-                                <div style="display:flex; align-items:center;">
-                                    <span style="font-size:0.65rem; color:#ffc978; font-weight:800; text-transform:uppercase;">${item.platform || 'Geral'}</span>
-                                    ${validationIcon}
+                    // Post-render DOM pass: safely set backgroundImage (works with base64)
+                    scrollEl.querySelectorAll('.shelf-item[data-itemid]').forEach(el => {
+                        const itemId = el.dataset.itemid;
+                        const item = filtered.find(i => i.id === itemId);
+                        if (item && item.image) {
+                            const coverEl = el.querySelector('.shelf-item-cover');
+                            if (coverEl) coverEl.style.backgroundImage = 'url(' + item.image + ')';
+                        }
+                    });
+                }
+            } else {
+                // Grid View
+                scrollEl.innerHTML = `
+                    <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap:12px;">
+                        ${filtered.map(item => {
+                    const isValidated = item.isValidated === true || item.isValidated === 'true' || item.isValidated === 1;
+                    const validationIcon = isValidated ?
+                        '<span style="color:#22c55e; font-size:0.7rem; margin-left:4px;" title="Validado">✅</span>' :
+                        '<span style="color:#ef4444; font-size:0.7rem; margin-left:4px;" title="Não Validado">❌</span>';
+                    return `
+                            <div onclick="navigate('nav-add', '${item.id}')" style="background:rgba(255,255,255,0.05); border-radius:12px; overflow:hidden; border:1px solid rgba(255,255,255,0.1); height:210px; cursor:pointer; display:flex; flex-direction:column; transition: transform 0.2s;">
+                                <div style="height:130px; background:#000 url(${item.image || ''}) center/contain no-repeat; pointer-events:none;"></div>
+                                <div style="padding:10px; flex:1; display:flex; flex-direction:column; justify-content:space-between;">
+                                    <div>
+                                        <h4 style="font-size:0.75rem; overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; line-height:1.2; font-weight:600; margin-bottom:2px;">${item.title}</h4>
+                                        ${item.year ? `<div style="font-size:0.6rem; opacity:0.5; margin-bottom:4px;">${item.year}</div>` : ''}
+                                    </div>
+                                    <div style="display:flex; align-items:center;">
+                                        <span style="font-size:0.65rem; color:#ffc978; font-weight:800; text-transform:uppercase;">${item.platform || 'Geral'}</span>
+                                        ${validationIcon}
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    `}).join('')}
-                </div>
-                ${filtered.length === 0 ? '<p style="text-align:center; margin-top:3rem; opacity:0.4; font-size:0.9rem;">Nenhum item encontrado.</p>' : ''}
-            `;
+                        `}).join('')}
+                    </div>
+                    ${filtered.length === 0 ? '<p style="text-align:center; margin-top:3rem; opacity:0.4; font-size:0.9rem;">Nenhum item encontrado.</p>' : ''}
+                `;
+            }
         };
 
         document.getElementById('f-type').onchange = updateUI;
@@ -483,7 +600,9 @@ async function renderAddForm(item) {
                 <div style="display:flex; flex-direction:column; gap:10px;">
                     <div style="display:flex; gap:10px;">
                         <input id="add-title" type="text" placeholder="Ex: God of War" value="${item ? item.title : ''}" style="flex:1; padding:15px; background:#2b2b36; border:1px solid #444; color:white; border-radius:12px; font-size:1rem; height:54px;">
-                        <button onclick="searchCover()" style="background:#ff9f0a; border:none; color:white; padding:0 15px; border-radius:12px; font-weight:700; cursor:pointer;"><span style="font-size:1.2rem;">🔍</span></button>
+                        <!-- v123: Barcode scanner button -->
+                        <button onclick="openBarcodeScanner()" title="Ler Código de Barras" style="background:#2b2b36; border:1px solid #444; color:white; padding:0 12px; border-radius:12px; font-size:1.2rem; cursor:pointer; height:54px;">📷</button>
+                        <button onclick="searchCover()" style="background:#ff9f0a; border:none; color:white; padding:0 15px; border-radius:12px; font-weight:700; cursor:pointer; height:54px;"><span style="font-size:1.2rem;">🔍</span></button>
                     </div>
                     <div style="display:flex; gap:10px;">
                         <button onclick="fetchMetadata()" style="flex:1; background:rgba(255,159,10,0.1); border:1px solid #ff9f0a; color:#ff9f0a; padding:12px; border-radius:12px; font-weight:700; cursor:pointer;">🤖 Auto-Preencher</button>
@@ -606,17 +725,24 @@ async function searchCover() {
 
     logger("A pesquisar capas no TheGamesDB.net... 📦");
     try {
-        const results = await theGamesDBService.search(`${title} ${plat}`, tgdbKey);
+        // v123: Use searchWithDetails to get metadata along with images
+        const results = await theGamesDBService.searchWithDetails(`${title} ${plat}`, tgdbKey);
         const grid = document.getElementById('search-grid');
         const modal = document.getElementById('search-results-modal');
 
         if (results.length === 0) return uiService.alert(`Nenhuma capa encontrada no TheGamesDB.net para "${title}".`);
 
-        grid.innerHTML = results.map(r => `
-            <div onclick="selectCover('${r.image}')" style="aspect-ratio:3/4; background:#000 url(${r.image}) center/contain no-repeat; border-radius:8px; cursor:pointer; border:1px solid #333; position:relative;" title="${r.title}">
-                <span style="position:absolute; bottom:2px; left:2px; right:2px; background:rgba(0,0,0,0.75); color:#ffc978; font-size:0.55rem; padding:2px 4px; border-radius:4px; text-overflow:ellipsis; overflow:hidden; white-space:nowrap; text-align:center;">${r.title}</span>
-            </div>
-        `).join('');
+        // Store meta in a data attribute via JSON encoded in a hidden map
+        window._coverMeta = {};
+        grid.innerHTML = results.map((r, i) => {
+            const metaId = `cover_${i}`;
+            window._coverMeta[metaId] = r.meta || {};
+            return `
+                <div onclick="selectCover('${r.image}', '${metaId}')" style="aspect-ratio:3/4; background:#000 url(${r.image}) center/contain no-repeat; border-radius:8px; cursor:pointer; border:1px solid #333; position:relative;" title="${r.title}">
+                    <span style="position:absolute; bottom:2px; left:2px; right:2px; background:rgba(0,0,0,0.75); color:#ffc978; font-size:0.55rem; padding:2px 4px; border-radius:4px; text-overflow:ellipsis; overflow:hidden; white-space:nowrap; text-align:center;">${r.title}</span>
+                </div>
+            `;
+        }).join('');
 
         modal.style.display = 'flex';
     } catch (err) {
@@ -625,7 +751,31 @@ async function searchCover() {
     }
 }
 
-async function selectCover(url) {
+// v123: Open barcode scanner
+async function openBarcodeScanner() {
+    try {
+        await barcodeScannerService.openScanner(async (barcode) => {
+            logger(`Código detetado: ${barcode}. A procurar título...`);
+            const result = await barcodeScannerService.lookupBarcode(barcode);
+            if (result && result.title) {
+                document.getElementById('add-title').value = result.title;
+                if (result.platform) {
+                    const platSel = document.getElementById('add-platform');
+                    const opt = Array.from(platSel.options).find(o => o.text.toLowerCase().includes(result.platform.toLowerCase()));
+                    if (opt) platSel.value = opt.value;
+                }
+                logger(`Jogo encontrado: ${result.title}. A pesquisar capas...`);
+                await searchCover();
+            } else {
+                uiService.alert(`Código ${barcode} não encontrado na base de dados. Escreve o título manualmente.`);
+            }
+        });
+    } catch (err) {
+        uiService.alert('Erro na câmara: ' + err.message);
+    }
+}
+
+async function selectCover(url, metaId) {
     document.getElementById('search-results-modal').style.display = 'none';
     logger("A converter imagem...");
     try {
@@ -637,6 +787,24 @@ async function selectCover(url) {
         document.getElementById('add-image').value = url;
         window.updatePreview(url);
         logger("Guardado link (Base64 falhou)");
+    }
+
+    // v123: Auto-fill metadata from TheGamesDB cover search result
+    if (metaId && window._coverMeta && window._coverMeta[metaId]) {
+        const meta = window._coverMeta[metaId];
+        const yearEl = document.getElementById('add-year');
+        const genreEl = document.getElementById('add-genre');
+        const devEl = document.getElementById('add-developer');
+        const notesEl = document.getElementById('add-notes');
+
+        if (meta.year && yearEl && !yearEl.value) yearEl.value = meta.year;
+        if (meta.genre && genreEl && !genreEl.value) genreEl.value = meta.genre;
+        if (meta.developer && devEl && !devEl.value) devEl.value = meta.developer;
+        if (meta.description && notesEl && !notesEl.value) notesEl.value = meta.description;
+
+        if (meta.year || meta.genre || meta.developer) {
+            logger('Metadados auto-preenchidos via TheGamesDB!');
+        }
     }
 }
 
@@ -650,10 +818,81 @@ async function saveItem(id) {
     }
 
     const store = document.getElementById('add-type').value;
+    const platform = document.getElementById('add-platform').value;
+    const isWishlist = document.getElementById('add-wishlist').checked;
+
+    // v123: Duplicate Detection (only for new items)
+    if (!id) {
+        const games = await dbService.getAll('games');
+        const consoles = await dbService.getAll('consoles');
+        const all = [...games, ...consoles];
+        const duplicate = all.find(i =>
+            i.title.toLowerCase().trim() === title.toLowerCase().trim() &&
+            (i.platform || '') === (platform || '')
+        );
+        if (duplicate) {
+            const isInWishlist = duplicate.isWishlist;
+            const location = isInWishlist ? 'Wishlist' : 'Coleção';
+            const msg = `"${title}" já existe na tua ${location} (${duplicate.platform || 'Sem plataforma'})!
+${isInWishlist ? 'Queres mover da Wishlist para a Coleção?' : 'Desejas adicionar na mesma ou editar o existente?'}`;
+
+            const duplicateOverlay = document.createElement('div');
+            duplicateOverlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:9500;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px);';
+            duplicateOverlay.innerHTML = `
+                <div style="background:#2b2b36;border:2px solid #ff9f0a;padding:28px;border-radius:20px;width:90%;max-width:380px;text-align:center;">
+                    <div style="font-size:2.5rem;margin-bottom:12px;">🚨</div>
+                    <h3 style="color:#ff9f0a;margin-bottom:12px;">Duplicado Detetado!</h3>
+                    <p style="font-size:0.85rem;opacity:0.9;margin-bottom:20px;line-height:1.5;">${msg}</p>
+                    <div style="display:flex;flex-direction:column;gap:10px;">
+                        ${isInWishlist ? `
+                            <button id="dup-move" style="background:#22c55e;border:none;color:white;padding:12px;border-radius:12px;font-weight:800;cursor:pointer;">✅ Mover para Coleção</button>
+                        ` : `
+                            <button id="dup-view" style="background:#3b82f6;border:none;color:white;padding:12px;border-radius:12px;font-weight:800;cursor:pointer;">👁️ Ver Existente</button>
+                        `}
+                        <button id="dup-add" style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:white;padding:12px;border-radius:12px;font-weight:700;cursor:pointer;">➕ Adicionar na Mesma</button>
+                        <button id="dup-cancel" style="background:none;border:none;color:#aaa;padding:8px;cursor:pointer;font-size:0.8rem;">Cancelar</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(duplicateOverlay);
+
+            return new Promise(resolve => {
+                if (isInWishlist) {
+                    document.getElementById('dup-move').onclick = async () => {
+                        duplicateOverlay.remove();
+                        duplicate.isWishlist = false;
+                        duplicate.updatedAt = new Date().toISOString();
+                        const dupStore = games.find(g => g.id === duplicate.id) ? 'games' : 'consoles';
+                        await dbService.add(dupStore, duplicate);
+                        pushToCloud(true);
+                        navigate('nav-collection');
+                        resolve();
+                    };
+                } else {
+                    document.getElementById('dup-view').onclick = () => {
+                        duplicateOverlay.remove();
+                        navigate('nav-add', duplicate.id);
+                        resolve();
+                    };
+                }
+                document.getElementById('dup-add').onclick = async () => {
+                    duplicateOverlay.remove();
+                    await _doSaveItem(id, store, title, platform, acquiredDate, isWishlist);
+                    resolve();
+                };
+                document.getElementById('dup-cancel').onclick = () => { duplicateOverlay.remove(); resolve(); };
+            });
+        }
+    }
+
+    await _doSaveItem(id, store, title, platform, acquiredDate, isWishlist);
+}
+
+async function _doSaveItem(id, store, title, platform, acquiredDate, isWishlist) {
     const newItem = {
         id: id || crypto.randomUUID(),
         title: title,
-        platform: document.getElementById('add-platform').value,
+        platform: platform,
         image: document.getElementById('add-image').value,
         price: parseFloat(document.getElementById('add-price').value) || 0,
         acquiredDate: acquiredDate,
@@ -663,18 +902,14 @@ async function saveItem(id) {
         notes: document.getElementById('add-notes').value,
         isValidated: document.getElementById('add-validated').checked,
         validatedDate: document.getElementById('add-validation-date').innerText,
-        isWishlist: document.getElementById('add-wishlist').checked,
+        isWishlist: isWishlist,
         updatedAt: new Date().toISOString()
     };
 
     try {
         await dbService.add(store, newItem);
         uiService.alert("Guardado com sucesso!", "Parabéns ✨");
-
-        // v92: Auto-Push in background
         pushToCloud(true);
-
-        // Go back to the right view with filters preserved
         const targetView = newItem.isWishlist ? 'nav-wishlist' : 'nav-collection';
         navigate(targetView);
     } catch (err) { logger("SAVE ERR: " + err.message); }
@@ -954,15 +1189,19 @@ async function renderSyncView() {
                     </div>
                  </div>
                  
-                <p style="margin-top:15px; font-size:0.75rem; color:#22c55e; font-weight:700; text-align:center;">🤖 Sentinela de Sync Ativo (v122)</p>
+                <p style="margin-top:15px; font-size:0.75rem; color:#22c55e; font-weight:700; text-align:center;">🤖 Sentinela de Sync Ativo (v123)</p>
             </div>
 
-            <!-- Legacy Local Sync Section -->
+            <!-- v123: Enhanced Export Section -->
             <div style="background:rgba(255,255,255,0.03); padding:24px; border-radius:20px; border:1px solid rgba(255,255,255,0.05);">
-                 <h3 style="margin-bottom:10px; font-size:1rem; opacity:0.7;">Ficheiro Local (Manual) 📂</h3>
+                 <h3 style="margin-bottom:15px; font-size:1rem; opacity:0.7;">Exportar Coleção 📂</h3>
+                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
+                    <button onclick="exportPDF()" style="border:none; padding:16px; border-radius:14px; background:rgba(239,68,68,0.15); color:#fca5a5; font-weight:700; cursor:pointer; font-size:0.85rem; border:1px solid rgba(239,68,68,0.3); display:flex; flex-direction:column; align-items:center; gap:6px;"><span style="font-size:1.5rem;">📄</span>PDF<span style="font-size:0.6rem; opacity:0.6;">Catálogo Visual</span></button>
+                    <button onclick="exportExcel()" style="border:none; padding:16px; border-radius:14px; background:rgba(34,197,94,0.15); color:#86efac; font-weight:700; cursor:pointer; font-size:0.85rem; border:1px solid rgba(34,197,94,0.3); display:flex; flex-direction:column; align-items:center; gap:6px;"><span style="font-size:1.5rem;">📊</span>Excel<span style="font-size:0.6rem; opacity:0.6;">.xlsx completo</span></button>
+                 </div>
                  <div style="display:flex; flex-direction:column; gap:10px;">
-                    <button onclick="exportCollection()" style="width:100%; border:none; padding:16px; border-radius:14px; background:rgba(255,255,255,0.05); color:white; font-weight:700; cursor:pointer; font-size:0.9rem; border:1px solid rgba(255,255,255,0.1);">📤 Exportar JSON</button>
-                    <button onclick="importCollection()" style="width:100%; border:none; padding:16px; border-radius:14px; background:rgba(255,255,255,0.05); color:white; font-weight:700; cursor:pointer; font-size:0.9rem; border:1px solid rgba(255,255,255,0.1);">📥 Importar JSON</button>
+                    <button onclick="exportCollection()" style="width:100%; border:none; padding:14px; border-radius:14px; background:rgba(255,255,255,0.05); color:white; font-weight:700; cursor:pointer; font-size:0.85rem; border:1px solid rgba(255,255,255,0.1);">📦 Exportar JSON (Backup Completo)</button>
+                    <button onclick="importCollection()" style="width:100%; border:none; padding:14px; border-radius:14px; background:rgba(255,255,255,0.05); color:white; font-weight:700; cursor:pointer; font-size:0.85rem; border:1px solid rgba(255,255,255,0.1);">📥 Importar JSON</button>
                  </div>
             </div>
             
@@ -1074,7 +1313,7 @@ async function pushToCloud(silent = false) {
         const platforms = await dbService.getAll('platforms');
 
         const data = {
-            version: "v122",
+            version: "v123",
             timestamp: new Date().toISOString(),
             games,
             consoles,
@@ -1147,21 +1386,12 @@ async function exportCollection() {
         const platforms = await dbService.getAll('platforms');
 
         const data = {
-            version: "v92",
+            version: "v123",
             timestamp: new Date().toISOString(),
             games,
             consoles,
             platforms
         };
-
-        // Forçar escolha de local no PC
-        if (window.showSaveFilePicker) {
-            const chosen = await localFileSync.selectFileForSave();
-            if (!chosen) {
-                logger("Exportação cancelada.");
-                return;
-            }
-        }
 
         const result = await localFileSync.save(data);
         if (result === "saved") {
@@ -1173,6 +1403,35 @@ async function exportCollection() {
     } catch (err) {
         logger("EXPORT ERR: " + err.message);
         uiService.alert("Erro ao exportar: " + err.message);
+    }
+}
+
+// v123: Export to PDF
+async function exportPDF() {
+    logger("A gerar PDF...");
+    try {
+        const games = await dbService.getAll('games');
+        const consoles = await dbService.getAll('consoles');
+        await exportService.exportPDF(games, consoles);
+        logger("PDF gerado com sucesso!");
+    } catch (err) {
+        logger("PDF ERR: " + err.message);
+        uiService.alert("Erro ao gerar PDF: " + err.message);
+    }
+}
+
+// v123: Export to Excel
+async function exportExcel() {
+    logger("A gerar Excel...");
+    try {
+        const games = await dbService.getAll('games');
+        const consoles = await dbService.getAll('consoles');
+        const platforms = await dbService.getAll('platforms');
+        await exportService.exportExcel(games, consoles, platforms);
+        logger("Excel gerado com sucesso!");
+    } catch (err) {
+        logger("EXCEL ERR: " + err.message);
+        uiService.alert("Erro ao gerar Excel: " + err.message);
     }
 }
 
@@ -1201,15 +1460,15 @@ async function importCollection() {
 
 /** INITIALIZATION **/
 async function init() {
-    logger("Iniciando RetroCollection v122...");
+    logger("Iniciando RetroCollection v123...");
     try {
         await dbService.open();
         logger("DB Conectado.");
 
-        // Auto-Sync Logos logic for v122
-        if (!localStorage.getItem('logos_synced_v122')) {
+        // Auto-Sync Logos logic for v123
+        if (!localStorage.getItem('logos_synced_v123')) {
             await autoSyncLogos();
-            localStorage.setItem('logos_synced_v122', 'true');
+            localStorage.setItem('logos_synced_v123', 'true');
         }
 
         // v98 Resilient Startup
@@ -1323,6 +1582,11 @@ window.navigateByPlatform = navigateByPlatform;
 window.navigateByGenre = navigateByGenre; // v105
 window.navigateByDecade = navigateByDecade; // v105
 window.exportCollection = exportCollection;
+window.exportPDF = exportPDF; // v123
+window.exportExcel = exportExcel; // v123
 window.importCollection = importCollection;
+window.openBarcodeScanner = openBarcodeScanner; // v123
+window.toggleViewMode = toggleViewMode; // v123
 
 init();
+

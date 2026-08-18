@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport"
         content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>RetroCollection v122 ✅❌🔍🎮</title>
+    <title>RetroCollection v123 ✅❌🔍🎮</title>
 
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1e1e24">
@@ -240,6 +240,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <!-- v123: Shelf 3D styles -->
+    <link rel="stylesheet" href="css/shelf.css">
 </head>
 
 <body>
@@ -324,6 +326,8 @@
     </div>
 
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+    <!-- v123: jsPDF for PDF export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
     <script>
         // LOGGING TOOL
@@ -349,20 +353,20 @@
             return false;
         };
 
-        log("Arranque v122 iniciado...");
+        log("Arranque v123 iniciado...");
 
         // v102 AGGRESSIVE SETUP & UPDATE
         const urlParams = new URLSearchParams(window.location.search);
         const forceUpdate = urlParams.get('update');
 
-        if (localStorage.getItem('app_v') !== '122' || forceUpdate === '122') {
-            log("Actualização Crítica v122...");
-            localStorage.setItem('app_v', '122');
+        if (localStorage.getItem('app_v') !== '123' || forceUpdate === '123') {
+            log("Actualização Crítica v123...");
+            localStorage.setItem('app_v', '123');
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.getRegistrations().then(rs => {
                     Promise.all(rs.map(r => r.unregister())).then(() => {
                         log("Cache renovado. A reiniciar...");
-                        location.href = location.href.split('?')[0] + '?v=122';
+                        location.href = location.href.split('?')[0] + '?v=123';
                     });
                 });
             } else {
@@ -384,6 +388,7 @@
         document.getElementById('emergency-btn').onclick = async () => {
             if (confirm("Isto irá limpar o cache e desinstalar a App para tentar resolver o problema. Continuar?")) {
                 localStorage.removeItem('app_v');
+                localStorage.removeItem('logos_synced_v123');
                 localStorage.removeItem('logos_synced_v122');
                 localStorage.removeItem('logos_synced_v121');
                 localStorage.removeItem('logos_synced_v120');
@@ -412,19 +417,18 @@
                 }
                 const keys = await caches.keys();
                 for (let k of keys) await caches.delete(k);
-                location.href = location.href.split('?')[0] + '?update=122';
+                location.href = location.href.split('?')[0] + '?update=123';
             }
         };
     </script>
 
-    <script type="module" src="js/app.js?v=122"></script>
+    <script type="module" src="js/app.js?v=123"></script>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                // v111.1: Better error handling for localhost
                 navigator.serviceWorker.register('sw.js')
                     .then((registration) => {
-                        log("v122 Pronta.");
+                        log("v123 Pronta.");
                         console.log('SW registered:', registration);
                     })
                     .catch(e => {
