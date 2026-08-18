@@ -4,6 +4,30 @@ Registo completo de todas as alterações efetuadas em cada versão da aplicaç�
 
 ---
 
+## v128 — 2026-08-18
+### ✨ Melhorias de UX & Estados de Carregamento Assíncrono
+- **Indicadores de Carregamento na Pesquisa de Capas (TheGamesDB)**:
+  - O botão de pesquisa `🔍` passa a exibir um spinner animado de rotação e pulso suave durante a comunicação com a API.
+  - Bloqueio de cliques múltiplos acidentais (`disabled` e bloqueio por flag de concorrência `isSearchingCover`).
+  - Adicionada barra de estado dinâmica (`#search-feedback-zone`) que informa o utilizador em tempo real (ex: `⏳ A pesquisar capas no TheGamesDB para "Super Mario"...`, `✅ X capa(s) encontrada(s)!` ou `⚠️ Nenhuma capa encontrada`).
+- **Estados de Carregamento no Auto-Preencher (Wikipedia)**:
+  - O botão `🤖 Auto-Preencher` exibe spinner animado e texto `⏳ A consultar Wikipedia...`, com feedback claro e bloqueio de cliques múltiplos.
+- **Feedback no Leitor de Código de Barras**:
+  - O botão `📷` passa a exibir spinner de carregamento enquanto consulta os metadados do código detetado antes de abrir a pesquisa de capas.
+- **Harmonização do Formulário com Temas Retro**:
+  - Todos os campos, seletores, caixas de verificação, botões de ação e modal de seleção de capas utilizam agora variáveis CSS dinâmicas (`var(--accent-color)`, `var(--bg-surface)`, `var(--border-subtle)`).
+- **Invalidação de Cache e Service Worker**:
+  - `sw.js` e `index.html` atualizados para a versão `v128`.
+
+### 🔧 Ficheiros Modificados
+- `css/themes.css` → classes `.btn-loading`, `.spinner-icon`, `.btn-pulse` e `.search-status-bar`
+- `js/app.js` → implementação de loading states, barras de feedback e transição para variáveis CSS no formulário
+- `index.html` → versão v128 e links de cache busting
+- `sw.js` → versão v128
+- `.agent/historico.md` → registo da versão v128
+
+---
+
 ## v127 — 2026-08-18
 ### 🔧 Correções e Melhorias no Motor de Temas
 - **Correção da Seleção de Temas**: Corrigido o evento de clique nos cartões de tema para alternar instantaneamente e atualizar todas as vistas ativas.

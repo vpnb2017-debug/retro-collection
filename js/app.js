@@ -1,15 +1,15 @@
-import { dbService } from './services/db.js?v=127';
-import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js?v=127';
-import { coverSearchService } from './services/coverSearch.js?v=127';
-import WebuyService from './services/webuyService.js?v=127';
-import { localFileSync } from './services/localFileSync.js?v=127';
-import { metadataService } from './services/metadataService.js?v=127';
-import { cloudSyncService } from './services/cloudSyncService.js?v=127';
-import { theGamesDBService } from './services/theGamesDBService.js?v=127';
-import { barcodeScannerService } from './services/barcodeScannerService.js?v=127';
-import { chartService } from './services/chartService.js?v=127';
-import { exportService } from './services/exportService.js?v=127';
-import { themeService } from './services/themeService.js?v=127';
+import { dbService } from './services/db.js?v=128';
+import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js?v=128';
+import { coverSearchService } from './services/coverSearch.js?v=128';
+import WebuyService from './services/webuyService.js?v=128';
+import { localFileSync } from './services/localFileSync.js?v=128';
+import { metadataService } from './services/metadataService.js?v=128';
+import { cloudSyncService } from './services/cloudSyncService.js?v=128';
+import { theGamesDBService } from './services/theGamesDBService.js?v=128';
+import { barcodeScannerService } from './services/barcodeScannerService.js?v=128';
+import { chartService } from './services/chartService.js?v=128';
+import { exportService } from './services/exportService.js?v=128';
+import { themeService } from './services/themeService.js?v=128';
 
 // Global Exposure
 window.navigate = navigate;
@@ -196,7 +196,7 @@ async function renderDashboard() {
         const ownedTotal = ownedGames.length + ownedConsoles.length;
         const wishlistTotal = games.filter(g => g.isWishlist).length + consoles.filter(c => c.isWishlist).length;
 
-        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:var(--accent-color); border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v127</span></h2>`;
+        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:var(--accent-color); border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v128</span></h2>`;
 
         const platData = await getPlatformOptions();
 
@@ -594,37 +594,40 @@ async function renderAddForm(item) {
 
             <div class="v74-form-row">
                 <div style="flex:1; display:flex; flex-direction:column; gap:5px;">
-                    <label style="font-size:0.75rem; color:#ff9f0a; font-weight:700; margin-left:5px;">Tipo de Item</label>
-                    <select id="add-type" style="padding:15px; background:#2b2b36; border:1px solid #444; color:white; border-radius:12px; font-size:1rem; height:54px;">
+                    <label style="font-size:0.75rem; color:var(--accent-color); font-weight:700; margin-left:5px;">Tipo de Item</label>
+                    <select id="add-type" style="padding:15px; background:var(--bg-surface, #2b2b36); border:1px solid var(--border-subtle, #444); color:white; border-radius:12px; font-size:1rem; height:54px;">
                         <option value="games" ${type === 'games' ? 'selected' : ''}>💾 Jogo</option>
                         <option value="consoles" ${type === 'consoles' ? 'selected' : ''}>🕹️ Consola</option>
                     </select>
                 </div>
-                <div style="display:flex; align-items:center; gap:12px; background:#2b2b36; border:1px solid #444; padding:0 20px; border-radius:12px; height:54px; margin-top:auto;">
-                    <input type="checkbox" id="add-wishlist" style="width:22px; height:22px;" ${item && item.isWishlist ? 'checked' : ''}>
-                    <label for="add-wishlist" style="font-size:1rem; font-weight:600;">Wishlist</label>
+                <div style="display:flex; align-items:center; gap:12px; background:var(--bg-surface, #2b2b36); border:1px solid var(--border-subtle, #444); padding:0 20px; border-radius:12px; height:54px; margin-top:auto;">
+                    <input type="checkbox" id="add-wishlist" style="width:22px; height:22px; accent-color:var(--accent-color);" ${item && item.isWishlist ? 'checked' : ''}>
+                    <label for="add-wishlist" style="font-size:1rem; font-weight:600; cursor:pointer;">Wishlist</label>
                 </div>
             </div>
 
             <div style="display:flex; flex-direction:column; gap:5px;">
-                <label style="font-size:0.75rem; color:#ff9f0a; font-weight:700; margin-left:5px;">Título / Nome</label>
+                <label style="font-size:0.75rem; color:var(--accent-color); font-weight:700; margin-left:5px;">Título / Nome</label>
                 <div style="display:flex; flex-direction:column; gap:10px;">
-                    <div style="display:flex; gap:10px;">
-                        <input id="add-title" type="text" placeholder="Ex: God of War" value="${item ? item.title : ''}" style="flex:1; padding:15px; background:#2b2b36; border:1px solid #444; color:white; border-radius:12px; font-size:1rem; height:54px;">
+                    <div style="display:flex; gap:10px; align-items:center;">
+                        <input id="add-title" type="text" placeholder="Ex: God of War" value="${item ? item.title : ''}" style="flex:1; padding:15px; background:var(--bg-surface, #2b2b36); border:1px solid var(--border-subtle, #444); color:white; border-radius:12px; font-size:1rem; height:54px;">
                         <!-- v123: Barcode scanner button -->
-                        <button onclick="openBarcodeScanner()" title="Ler Código de Barras" style="background:#2b2b36; border:1px solid #444; color:white; padding:0 12px; border-radius:12px; font-size:1.2rem; cursor:pointer; height:54px;">📷</button>
-                        <button onclick="searchCover()" style="background:#ff9f0a; border:none; color:white; padding:0 15px; border-radius:12px; font-weight:700; cursor:pointer; height:54px;"><span style="font-size:1.2rem;">🔍</span></button>
+                        <button id="btn-barcode-scan" onclick="openBarcodeScanner()" title="Ler Código de Barras" style="background:var(--bg-surface, #2b2b36); border:1px solid var(--border-subtle, #444); color:white; padding:0 14px; border-radius:12px; font-size:1.2rem; cursor:pointer; height:54px; transition:all 0.2s;">📷</button>
+                        <!-- v128: Cover search button with interactive loading states -->
+                        <button id="btn-search-cover" onclick="searchCover()" title="Pesquisar Capa no TheGamesDB" style="background:var(--accent-color); border:none; color:white; padding:0 18px; border-radius:12px; font-weight:700; cursor:pointer; height:54px; min-width:54px; display:flex; align-items:center; justify-content:center; transition:all 0.2s;"><span style="font-size:1.2rem;">🔍</span></button>
                     </div>
+                    <!-- v128: Dynamic search feedback notification zone -->
+                    <div id="search-feedback-zone" style="display:none;"></div>
                     <div style="display:flex; gap:10px;">
-                        <button onclick="fetchMetadata()" style="flex:1; background:rgba(255,159,10,0.1); border:1px solid #ff9f0a; color:#ff9f0a; padding:12px; border-radius:12px; font-weight:700; cursor:pointer;">🤖 Auto-Preencher</button>
-                        <button onclick="clearMetadata()" style="background:rgba(255,255,255,0.05); border:1px solid #444; color:#fff; padding:0 15px; border-radius:12px; font-size:1.1rem; cursor:pointer;">🧹</button>
+                        <button id="btn-fetch-meta" onclick="fetchMetadata()" style="flex:1; background:var(--accent-subtle, rgba(255,159,10,0.1)); border:1px solid var(--accent-color); color:var(--accent-color); padding:12px; border-radius:12px; font-weight:700; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; transition:all 0.2s;">🤖 Auto-Preencher</button>
+                        <button onclick="clearMetadata()" title="Limpar Metadados" style="background:rgba(255,255,255,0.05); border:1px solid #444; color:#fff; padding:0 15px; border-radius:12px; font-size:1.1rem; cursor:pointer;">🧹</button>
                     </div>
                 </div>
             </div>
             
             <div style="display:flex; flex-direction:column; gap:5px;">
-                <label style="font-size:0.75rem; color:#ff9f0a; font-weight:700; margin-left:5px;">Plataforma / Consola</label>
-                <select id="add-platform" style="padding:15px; background:#2b2b36; border:1px solid #444; color:white; border-radius:12px; font-size:1rem; height:54px;">
+                <label style="font-size:0.75rem; color:var(--accent-color); font-weight:700; margin-left:5px;">Plataforma / Consola</label>
+                <select id="add-platform" style="padding:15px; background:var(--bg-surface, #2b2b36); border:1px solid var(--border-subtle, #444); color:white; border-radius:12px; font-size:1rem; height:54px;">
                     <option value="">Selecionar Sistema</option>
                     ${pOptions}
                 </select>
@@ -632,63 +635,63 @@ async function renderAddForm(item) {
 
             <div class="v74-form-row">
                 <div style="flex:1; display:flex; flex-direction:column; gap:5px;">
-                    <label style="font-size:0.75rem; color:#ff9f0a; font-weight:700; margin-left:5px;">Lançamento (Ano)</label>
-                    <input id="add-year" type="number" placeholder="Ex: 1991" value="${item ? (item.year || '') : ''}" style="padding:15px; background:#2b2b36; border:1px solid #444; color:white; border-radius:12px; font-size:1rem; height:54px;">
+                    <label style="font-size:0.75rem; color:var(--accent-color); font-weight:700; margin-left:5px;">Lançamento (Ano)</label>
+                    <input id="add-year" type="number" placeholder="Ex: 1991" value="${item ? (item.year || '') : ''}" style="padding:15px; background:var(--bg-surface, #2b2b36); border:1px solid var(--border-subtle, #444); color:white; border-radius:12px; font-size:1rem; height:54px;">
                 </div>
                 <div style="flex:1; display:flex; flex-direction:column; gap:5px;">
-                    <label style="font-size:0.75rem; color:#ff9f0a; font-weight:700; margin-left:5px;">Género</label>
-                    <input id="add-genre" type="text" placeholder="Ex: RPG" value="${item ? (item.genre || '') : ''}" style="padding:15px; background:#2b2b36; border:1px solid #444; color:white; border-radius:12px; font-size:1rem; height:54px;">
+                    <label style="font-size:0.75rem; color:var(--accent-color); font-weight:700; margin-left:5px;">Género</label>
+                    <input id="add-genre" type="text" placeholder="Ex: RPG" value="${item ? (item.genre || '') : ''}" style="padding:15px; background:var(--bg-surface, #2b2b36); border:1px solid var(--border-subtle, #444); color:white; border-radius:12px; font-size:1rem; height:54px;">
                 </div>
             </div>
 
             <div style="display:flex; flex-direction:column; gap:5px;">
-                <label style="font-size:0.75rem; color:#ff9f0a; font-weight:700; margin-left:5px;">Desenvolvedora</label>
-                <input id="add-developer" type="text" placeholder="Ex: SEGA" value="${item ? (item.developer || '') : ''}" style="padding:14px; background:#2b2b36; border:1px solid #444; color:white; border-radius:12px; font-size:0.9rem;">
+                <label style="font-size:0.75rem; color:var(--accent-color); font-weight:700; margin-left:5px;">Desenvolvedora</label>
+                <input id="add-developer" type="text" placeholder="Ex: SEGA" value="${item ? (item.developer || '') : ''}" style="padding:14px; background:var(--bg-surface, #2b2b36); border:1px solid var(--border-subtle, #444); color:white; border-radius:12px; font-size:0.9rem;">
             </div>
 
             <div style="display:flex; flex-direction:column; gap:5px;">
-                <label style="font-size:0.75rem; color:#ff9f0a; font-weight:700; margin-left:5px;">Capa (URL ou Base64)</label>
+                <label style="font-size:0.75rem; color:var(--accent-color); font-weight:700; margin-left:5px;">Capa (URL ou Base64)</label>
                 <div style="display:flex; gap:12px;">
-                    <input id="add-image" type="text" placeholder="URL da Capa" value="${item ? (item.image || '') : ''}" oninput="updatePreview(this.value)" style="flex:1; padding:14px; background:#2b2b36; border:1px solid #444; color:white; border-radius:12px; font-size:0.9rem;">
-                    <button onclick="document.getElementById('add-image').value = ''; updatePreview('')" style="background:#444; border:none; color:white; padding:0 18px; border-radius:12px; font-size:1.1rem;">🗑️</button>
+                    <input id="add-image" type="text" placeholder="URL da Capa" value="${item ? (item.image || '') : ''}" oninput="updatePreview(this.value)" style="flex:1; padding:14px; background:var(--bg-surface, #2b2b36); border:1px solid var(--border-subtle, #444); color:white; border-radius:12px; font-size:0.9rem;">
+                    <button onclick="document.getElementById('add-image').value = ''; updatePreview('')" style="background:#444; border:none; color:white; padding:0 18px; border-radius:12px; font-size:1.1rem; cursor:pointer;">🗑️</button>
                 </div>
             </div>
 
             <div class="v74-form-row">
                 <div style="flex:1; display:flex; flex-direction:column; gap:5px;">
-                    <label style="font-size:0.75rem; color:#ff9f0a; font-weight:700; margin-left:5px;">Preço Pago (€)</label>
+                    <label style="font-size:0.75rem; color:var(--accent-color); font-weight:700; margin-left:5px;">Preço Pago (€)</label>
                     <div style="position:relative;">
                         <span style="position:absolute; left:12px; top:15px; opacity:0.5; font-size:1rem;">€</span>
-                        <input id="add-price" type="number" step="0.01" placeholder="0.00" value="${item ? (item.price || '') : ''}" style="width:100%; padding:15px 15px 15px 35px; background:#2b2b36; border:1px solid #444; color:white; border-radius:12px; font-size:1rem; height:54px;">
+                        <input id="add-price" type="number" step="0.01" placeholder="0.00" value="${item ? (item.price || '') : ''}" style="width:100%; padding:15px 15px 15px 35px; background:var(--bg-surface, #2b2b36); border:1px solid var(--border-subtle, #444); color:white; border-radius:12px; font-size:1rem; height:54px;">
                     </div>
                 </div>
                 <div style="flex:1; display:flex; flex-direction:column; gap:5px;">
-                    <label style="font-size:0.75rem; color:#ff9f0a; font-weight:700; margin-left:5px;">Data (DD/MM/AAAA)</label>
-                    <input id="add-date" type="text" placeholder="DD/MM/AAAA" maxlength="10" value="${item ? (item.acquiredDate || '') : ''}" style="padding:15px; background:#2b2b36; border:1px solid #444; color:white; border-radius:12px; font-size:1rem; height:54px;">
+                    <label style="font-size:0.75rem; color:var(--accent-color); font-weight:700; margin-left:5px;">Data (DD/MM/AAAA)</label>
+                    <input id="add-date" type="text" placeholder="DD/MM/AAAA" maxlength="10" value="${item ? (item.acquiredDate || '') : ''}" style="padding:15px; background:var(--bg-surface, #2b2b36); border:1px solid var(--border-subtle, #444); color:white; border-radius:12px; font-size:1rem; height:54px;">
                 </div>
             </div>
 
             <div style="margin-top:10px;">
-                <label style="font-size:0.75rem; color:#ff9f0a; font-weight:700; margin-left:5px;">Notas / Observações</label>
-                <textarea id="add-notes" placeholder="Detalhes, estado, série, etc..." style="width:100%; padding:14px; background:#2b2b36; border:1px solid #444; color:white; border-radius:12px; font-size:0.9rem; min-height:80px; font-family:inherit; margin-top:5px;">${item ? (item.notes || '') : ''}</textarea>
+                <label style="font-size:0.75rem; color:var(--accent-color); font-weight:700; margin-left:5px;">Notas / Observações</label>
+                <textarea id="add-notes" placeholder="Detalhes, estado, série, etc..." style="width:100%; padding:14px; background:var(--bg-surface, #2b2b36); border:1px solid var(--border-subtle, #444); color:white; border-radius:12px; font-size:0.9rem; min-height:80px; font-family:inherit; margin-top:5px;">${item ? (item.notes || '') : ''}</textarea>
             </div>
 
-            <div style="margin-top:10px; display:flex; align-items:center; gap:12px; background:rgba(255,159,10,0.05); padding:15px; border-radius:15px; border:1px solid rgba(255,159,10,0.1);">
-                <input type="checkbox" id="add-validated" style="width:20px; height:20px; accent-color:#ff9f0a;" ${item && item.isValidated ? 'checked' : ''}>
-                <label for="add-validated" style="font-size:0.9rem; font-weight:700;">Validado</label>
-                <span id="add-validation-date" style="font-size:0.8rem; opacity:0.7; margin-left:auto; color:#ff9f0a; font-weight:800;">${item && item.isValidated ? (item.validatedDate || '') : ''}</span>
+            <div style="margin-top:10px; display:flex; align-items:center; gap:12px; background:var(--accent-subtle, rgba(255,159,10,0.05)); padding:15px; border-radius:15px; border:1px solid var(--border-color, rgba(255,159,10,0.1));">
+                <input type="checkbox" id="add-validated" style="width:20px; height:20px; accent-color:var(--accent-color);" ${item && item.isValidated ? 'checked' : ''}>
+                <label for="add-validated" style="font-size:0.9rem; font-weight:700; cursor:pointer;">Validado</label>
+                <span id="add-validation-date" style="font-size:0.8rem; opacity:0.7; margin-left:auto; color:var(--accent-color); font-weight:800;">${item && item.isValidated ? (item.validatedDate || '') : ''}</span>
             </div>
 
-            <button onclick="saveItem('${item ? item.id : ''}')" class="btn-primary" style="padding:18px; background:#ff9f0a; border:none; color:white; font-weight:800; border-radius:18px; margin-top:15px; font-size:1rem; cursor:pointer;">💾 Guardar Alterações</button>
+            <button onclick="saveItem('${item ? item.id : ''}')" class="btn-primary" style="padding:18px; background:var(--accent-color); border:none; color:white; font-weight:800; border-radius:18px; margin-top:15px; font-size:1rem; cursor:pointer; box-shadow:0 4px 15px var(--accent-subtle);">💾 Guardar Alterações</button>
 
             ${item ? `<button onclick="deleteItem('${item.id}', '${type}')" style="background:#ff4d4d; border:none; color:white; padding:12px; border-radius:18px; margin-top:25px; font-weight:700; opacity:0.8; font-size:0.85rem; cursor:pointer;">Eliminar Permanente</button>` : ''}
         </div>
 
-        <div id="search-results-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); z-index:6000; padding:20px; overflow-y:auto;">
+        <div id="search-results-modal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.92); z-index:6000; padding:20px; overflow-y:auto; backdrop-filter:blur(10px);">
             <div style="max-width:800px; margin:0 auto;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                    <h3>Escolha a Capa</h3>
-                    <button onclick="document.getElementById('search-results-modal').style.display='none'" style="background:none; border:none; color:white; font-size:1.5rem;">✕</button>
+                    <h3 style="color:var(--text-main); font-size:1.2rem;">Escolha a Capa</h3>
+                    <button onclick="document.getElementById('search-results-modal').style.display='none'" style="background:none; border:none; color:white; font-size:1.5rem; cursor:pointer;">✕</button>
                 </div>
                 <div id="search-grid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap:10px;"></div>
             </div>
@@ -718,9 +721,16 @@ window.updatePreview = (url) => {
     }
 };
 
+let isSearchingCover = false;
+
 async function searchCover() {
-    const title = document.getElementById('add-title').value;
-    const plat = document.getElementById('add-platform').value;
+    if (isSearchingCover) return;
+
+    const titleInput = document.getElementById('add-title');
+    const platInput = document.getElementById('add-platform');
+    const title = titleInput ? titleInput.value.trim() : '';
+    const plat = platInput ? platInput.value : '';
+
     if (!title) return uiService.alert("Escreva o título primeiro!");
 
     let tgdbKey = localStorage.getItem('thegamesdb_api_key');
@@ -734,6 +744,25 @@ async function searchCover() {
         }
     }
 
+    const btnSearch = document.getElementById('btn-search-cover');
+    const feedbackZone = document.getElementById('search-feedback-zone');
+
+    isSearchingCover = true;
+    if (btnSearch) {
+        btnSearch.classList.add('btn-loading', 'btn-pulse');
+        btnSearch.innerHTML = '<span class="spinner-icon"></span>';
+        btnSearch.setAttribute('disabled', 'true');
+    }
+    if (feedbackZone) {
+        feedbackZone.style.display = 'block';
+        feedbackZone.innerHTML = `
+            <div class="search-status-bar">
+                <span class="spinner-icon" style="width:14px; height:14px; border-width:2px; border-top-color:var(--accent-color);"></span>
+                <span>A pesquisar capas no TheGamesDB para <b>"${title}"</b>...</span>
+            </div>
+        `;
+    }
+
     logger("A pesquisar capas no TheGamesDB.net... 📦");
     try {
         // v123: Use searchWithDetails to get metadata along with images
@@ -741,7 +770,26 @@ async function searchCover() {
         const grid = document.getElementById('search-grid');
         const modal = document.getElementById('search-results-modal');
 
-        if (results.length === 0) return uiService.alert(`Nenhuma capa encontrada no TheGamesDB.net para "${title}".`);
+        if (!results || results.length === 0) {
+            if (feedbackZone) {
+                feedbackZone.innerHTML = `
+                    <div class="search-status-bar" style="background:rgba(239,68,68,0.15); border-color:#ef4444; color:#fca5a5;">
+                        <span>⚠️ Nenhuma capa encontrada para "${title}".</span>
+                    </div>
+                `;
+                setTimeout(() => { if (feedbackZone) feedbackZone.style.display = 'none'; }, 4000);
+            }
+            return uiService.alert(`Nenhuma capa encontrada no TheGamesDB.net para "${title}".`);
+        }
+
+        if (feedbackZone) {
+            feedbackZone.innerHTML = `
+                <div class="search-status-bar" style="background:rgba(34,197,94,0.15); border-color:#22c55e; color:#86efac;">
+                    <span>✅ ${results.length} capa(s) encontrada(s)!</span>
+                </div>
+            `;
+            setTimeout(() => { if (feedbackZone) feedbackZone.style.display = 'none'; }, 3000);
+        }
 
         // Store meta in a data attribute via JSON encoded in a hidden map
         window._coverMeta = {};
@@ -749,8 +797,8 @@ async function searchCover() {
             const metaId = `cover_${i}`;
             window._coverMeta[metaId] = r.meta || {};
             return `
-                <div onclick="selectCover('${r.image}', '${metaId}')" style="aspect-ratio:3/4; background:#000 url(${r.image}) center/contain no-repeat; border-radius:8px; cursor:pointer; border:1px solid #333; position:relative;" title="${r.title}">
-                    <span style="position:absolute; bottom:2px; left:2px; right:2px; background:rgba(0,0,0,0.75); color:#ffc978; font-size:0.55rem; padding:2px 4px; border-radius:4px; text-overflow:ellipsis; overflow:hidden; white-space:nowrap; text-align:center;">${r.title}</span>
+                <div onclick="selectCover('${r.image}', '${metaId}')" style="aspect-ratio:3/4; background:#000 url(${r.image}) center/contain no-repeat; border-radius:8px; cursor:pointer; border:1px solid #333; position:relative; transition:transform 0.2s, border-color 0.2s;" onmouseover="this.style.borderColor='var(--accent-color)'; this.style.transform='scale(1.03)'" onmouseout="this.style.borderColor='#333'; this.style.transform='none'" title="${r.title}">
+                    <span style="position:absolute; bottom:2px; left:2px; right:2px; background:rgba(0,0,0,0.75); color:var(--text-muted); font-size:0.55rem; padding:2px 4px; border-radius:4px; text-overflow:ellipsis; overflow:hidden; white-space:nowrap; text-align:center;">${r.title}</span>
                 </div>
             `;
         }).join('');
@@ -758,27 +806,54 @@ async function searchCover() {
         modal.style.display = 'flex';
     } catch (err) {
         logger("THEGAMESDB ERR: " + err.message);
+        if (feedbackZone) {
+            feedbackZone.innerHTML = `
+                <div class="search-status-bar" style="background:rgba(239,68,68,0.15); border-color:#ef4444; color:#fca5a5;">
+                    <span>❌ Erro na pesquisa: ${err.message}</span>
+                </div>
+            `;
+            setTimeout(() => { if (feedbackZone) feedbackZone.style.display = 'none'; }, 5000);
+        }
         uiService.alert("Erro no TheGamesDB.net: " + err.message);
+    } finally {
+        isSearchingCover = false;
+        if (btnSearch) {
+            btnSearch.classList.remove('btn-loading', 'btn-pulse');
+            btnSearch.innerHTML = '<span style="font-size:1.2rem;">🔍</span>';
+            btnSearch.removeAttribute('disabled');
+        }
     }
 }
 
 // v123: Open barcode scanner
 async function openBarcodeScanner() {
+    const btnScan = document.getElementById('btn-barcode-scan');
     try {
         await barcodeScannerService.openScanner(async (barcode) => {
             logger(`Código detetado: ${barcode}. A procurar título...`);
-            const result = await barcodeScannerService.lookupBarcode(barcode);
-            if (result && result.title) {
-                document.getElementById('add-title').value = result.title;
-                if (result.platform) {
-                    const platSel = document.getElementById('add-platform');
-                    const opt = Array.from(platSel.options).find(o => o.text.toLowerCase().includes(result.platform.toLowerCase()));
-                    if (opt) platSel.value = opt.value;
+            if (btnScan) {
+                btnScan.classList.add('btn-loading');
+                btnScan.innerHTML = '<span class="spinner-icon" style="width:14px; height:14px; border-width:2px;"></span>';
+            }
+            try {
+                const result = await barcodeScannerService.lookupBarcode(barcode);
+                if (result && result.title) {
+                    document.getElementById('add-title').value = result.title;
+                    if (result.platform) {
+                        const platSel = document.getElementById('add-platform');
+                        const opt = Array.from(platSel.options).find(o => o.text.toLowerCase().includes(result.platform.toLowerCase()));
+                        if (opt) platSel.value = opt.value;
+                    }
+                    logger(`Jogo encontrado: ${result.title}. A pesquisar capas...`);
+                    await searchCover();
+                } else {
+                    uiService.alert(`Código ${barcode} não encontrado na base de dados. Escreve o título manualmente.`);
                 }
-                logger(`Jogo encontrado: ${result.title}. A pesquisar capas...`);
-                await searchCover();
-            } else {
-                uiService.alert(`Código ${barcode} não encontrado na base de dados. Escreve o título manualmente.`);
+            } finally {
+                if (btnScan) {
+                    btnScan.classList.remove('btn-loading');
+                    btnScan.innerHTML = '📷';
+                }
             }
         });
     } catch (err) {
@@ -937,15 +1012,51 @@ async function deleteItem(id, store) {
     }
 }
 
+let isFetchingMeta = false;
+
 async function fetchMetadata() {
-    const title = document.getElementById('add-title').value;
-    const platform = document.getElementById('add-platform').value;
+    if (isFetchingMeta) return;
+
+    const titleInput = document.getElementById('add-title');
+    const platformInput = document.getElementById('add-platform');
+    const title = titleInput ? titleInput.value.trim() : '';
+    const platform = platformInput ? platformInput.value : '';
+
     if (!title) return uiService.alert("Escreva o título primeiro!");
+
+    const btnMeta = document.getElementById('btn-fetch-meta');
+    const feedbackZone = document.getElementById('search-feedback-zone');
+
+    isFetchingMeta = true;
+    if (btnMeta) {
+        btnMeta.classList.add('btn-loading');
+        btnMeta.innerHTML = '<span class="spinner-icon" style="width:14px; height:14px; border-width:2px; border-top-color:var(--accent-color);"></span> A consultar Wikipedia...';
+        btnMeta.setAttribute('disabled', 'true');
+    }
+    if (feedbackZone) {
+        feedbackZone.style.display = 'block';
+        feedbackZone.innerHTML = `
+            <div class="search-status-bar">
+                <span class="spinner-icon" style="width:14px; height:14px; border-width:2px; border-top-color:var(--accent-color);"></span>
+                <span>A consultar Wikipedia para <b>"${title}"</b>...</span>
+            </div>
+        `;
+    }
 
     logger("A consultar Wikipedia... 🤖");
     try {
         const data = await metadataService.fetchMetadata(title, platform);
-        if (!data) return uiService.alert("Não encontrei dados para este título.");
+        if (!data) {
+            if (feedbackZone) {
+                feedbackZone.innerHTML = `
+                    <div class="search-status-bar" style="background:rgba(239,68,68,0.15); border-color:#ef4444; color:#fca5a5;">
+                        <span>⚠️ Não foram encontrados metadados para "${title}".</span>
+                    </div>
+                `;
+                setTimeout(() => { if (feedbackZone) feedbackZone.style.display = 'none'; }, 4000);
+            }
+            return uiService.alert("Não encontrei dados para este título.");
+        }
 
         if (data.year) document.getElementById('add-year').value = data.year;
         if (data.genre) document.getElementById('add-genre').value = data.genre;
@@ -955,11 +1066,35 @@ async function fetchMetadata() {
             document.getElementById('add-notes').value = data.description;
         }
 
+        if (feedbackZone) {
+            feedbackZone.innerHTML = `
+                <div class="search-status-bar" style="background:rgba(34,197,94,0.15); border-color:#22c55e; color:#86efac;">
+                    <span>✅ Metadados preenchidos com sucesso!</span>
+                </div>
+            `;
+            setTimeout(() => { if (feedbackZone) feedbackZone.style.display = 'none'; }, 3000);
+        }
+
         logger("Metadados preenchidos!");
         uiService.alert("Dados carregados da Wikipedia com sucesso!", "Inteligência 🤖");
     } catch (err) {
         logger("METADATA ERR: " + err.message);
+        if (feedbackZone) {
+            feedbackZone.innerHTML = `
+                <div class="search-status-bar" style="background:rgba(239,68,68,0.15); border-color:#ef4444; color:#fca5a5;">
+                    <span>❌ Erro ao consultar metadados.</span>
+                </div>
+            `;
+            setTimeout(() => { if (feedbackZone) feedbackZone.style.display = 'none'; }, 4000);
+        }
         uiService.alert("Erro ao consultar metadados.");
+    } finally {
+        isFetchingMeta = false;
+        if (btnMeta) {
+            btnMeta.classList.remove('btn-loading');
+            btnMeta.innerHTML = '🤖 Auto-Preencher';
+            btnMeta.removeAttribute('disabled');
+        }
     }
 }
 
@@ -1226,7 +1361,7 @@ async function renderSyncView() {
                     </div>
                  </div>
                  
-                <p style="margin-top:15px; font-size:0.75rem; color:#22c55e; font-weight:700; text-align:center;">🤖 Sentinela de Sync Ativo (v127)</p>
+                <p style="margin-top:15px; font-size:0.75rem; color:#22c55e; font-weight:700; text-align:center;">🤖 Sentinela de Sync Ativo (v128)</p>
             </div>
 
             <!-- v123: Enhanced Export Section -->
@@ -1349,7 +1484,7 @@ async function pushToCloud(silent = false) {
         const platforms = await dbService.getAll('platforms');
 
         const data = {
-            version: "v127",
+            version: "v128",
             timestamp: new Date().toISOString(),
             games,
             consoles,
@@ -1422,7 +1557,7 @@ async function exportCollection() {
         const platforms = await dbService.getAll('platforms');
 
         const data = {
-            version: "v127",
+            version: "v128",
             timestamp: new Date().toISOString(),
             games,
             consoles,
@@ -1496,7 +1631,7 @@ async function importCollection() {
 
 /** INITIALIZATION **/
 async function init() {
-    logger("Iniciando RetroCollection v127...");
+    logger("Iniciando RetroCollection v128...");
     try {
         themeService.init();
         window.addEventListener('themeChanged', () => {
@@ -1510,10 +1645,10 @@ async function init() {
         await dbService.open();
         logger("DB Conectado.");
 
-        // Auto-Sync Logos logic for v127
-        if (!localStorage.getItem('logos_synced_v127')) {
+        // Auto-Sync Logos logic for v128
+        if (!localStorage.getItem('logos_synced_v128')) {
             await autoSyncLogos();
-            localStorage.setItem('logos_synced_v127', 'true');
+            localStorage.setItem('logos_synced_v128', 'true');
         }
 
         // v98 Resilient Startup

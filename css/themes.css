@@ -390,3 +390,70 @@ select:focus, input:focus, textarea:focus {
 ::-webkit-scrollbar-thumb:hover {
     background: var(--accent-color) !important;
 }
+
+/* ── Interactive Loading Indicators & Spinners (v128) ── */
+.btn-loading {
+    position: relative;
+    pointer-events: none !important;
+    opacity: 0.85 !important;
+    cursor: wait !important;
+}
+
+.spinner-icon {
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    border: 2.5px solid rgba(255, 255, 255, 0.35);
+    border-radius: 50%;
+    border-top-color: #ffffff;
+    animation: spin 0.6s linear infinite;
+    vertical-align: middle;
+    box-sizing: border-box;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.btn-pulse {
+    animation: btnPulse 1.2s ease-in-out infinite;
+}
+
+@keyframes btnPulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 var(--accent-subtle);
+    }
+    50% {
+        transform: scale(1.03);
+        box-shadow: 0 0 16px 3px var(--accent-glow);
+    }
+}
+
+/* Async Status Message Bar */
+.search-status-bar {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--accent-color);
+    background: var(--accent-subtle);
+    border: 1px solid var(--border-color);
+    padding: 8px 14px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    animation: statusSlideDown 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    box-sizing: border-box;
+}
+
+@keyframes statusSlideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-6px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
