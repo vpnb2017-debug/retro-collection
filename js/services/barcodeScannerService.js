@@ -1,9 +1,9 @@
 /**
- * Barcode Scanner Service — RetroCollection v129
+ * Barcode Scanner Service — RetroCollection v130
  * Uses native BarcodeDetector API (Chrome/Edge) with Quagga2 fallback.
  * Supports EAN-13 and UPC-A for physical game box scanning.
- * Includes intelligent lens selection (preventing telephoto zoom),
- * explicit 1x zoom constraints, zoom toggling, and torch support.
+ * Includes Ultra-Wide (0.5x), Main (1x), and Telephoto (2x) lens switching,
+ * digital zoom constraints, zoom selector pills, and torch support.
  */
 
 export const barcodeScannerService = {
@@ -13,6 +13,11 @@ export const barcodeScannerService = {
     currentTrack: null,
     currentZoom: 1,
     isTorchOn: false,
+    activeOnDetected: null,
+    backCameras: [],
+    mainDeviceId: null,
+    ultraWideDeviceId: null,
+    teleDeviceId: null,
 
     async isSupported() {
         return ('BarcodeDetector' in window) || await this._loadQuagga();
@@ -31,8 +36,8 @@ export const barcodeScannerService = {
     },
 
     async openScanner(onDetected) {
-        // Stop any existing stream
         this.stopScanner();
+        this.activeOnDetected = onDetected;
 
         const overlay = document.createElement('div');
         overlay.id = 'barcode-overlay';
@@ -73,10 +78,11 @@ export const barcodeScannerService = {
                     </div>
                 </div>
 
-                <!-- Zoom Controls (1x / 2x) -->
-                <div id="barcode-zoom-controls" style="position:absolute; bottom:20px; display:none; gap:10px; background:rgba(0,0,0,0.6); padding:6px 12px; border-radius:30px; backdrop-filter:blur(8px); border:1px solid rgba(255,255,255,0.2);">
-                    <button id="zoom-1x" class="zoom-btn active" style="background:var(--accent-color, #ff9f0a); color:white; border:none; padding:4px 12px; border-radius:15px; font-size:0.75rem; font-weight:800; cursor:pointer;">1x</button>
-                    <button id="zoom-2x" class="zoom-btn" style="background:transparent; color:white; border:none; padding:4px 12px; border-radius:15px; font-size:0.75rem; font-weight:800; cursor:pointer;">2x</button>
+                <!-- Zoom Controls (0.5x / 1x / 2x) -->
+                <div id="barcode-zoom-controls" style="position:absolute; bottom:20px; display:flex; gap:8px; background:rgba(0,0,0,0.65); padding:6px 10px; border-radius:30px; backdrop-filter:blur(10px); border:1px solid rgba(255,255,255,0.25); z-index:20;">
+                    <button id="zoom-05x" class="zoom-btn" style="background:transparent; color:white; border:none; padding:5px 12px; border-radius:16px; font-size:0.8rem; font-weight:800; cursor:pointer; transition:all 0.2s;">0.5x</button>
+                    <button id="zoom-1x" class="zoom-btn active" style="background:var(--accent-color, #ff9f0a); color:white; border:none; padding:5px 12px; border-radius:16px; font-size:0.8rem; font-weight:800; cursor:pointer; transition:all 0.2s;">1x</button>
+                    <button id="zoom-2x" class="zoom-btn" style="background:transparent; color:white; border:none; padding:5px 12px; border-radius:16px; font-size:0.8rem; font-weight:800; cursor:pointer; transition:all 0.2s;">2x</button>
                 </div>
 
                 <canvas id="barcode-canvas" style="display:none;"></canvas>
@@ -110,26 +116,19 @@ export const barcodeScannerService = {
         document.getElementById('barcode-close-bottom').onclick = closeHandler;
 
         try {
-            // Intelligent camera selection: Prefer standard wide-angle rear camera (prevent telephoto zoom)
-            const constraints = await this._getOptimalCameraConstraints();
-            this.stream = await navigator.mediaDevices.getUserMedia(constraints);
-            
-            const video = document.getElementById('barcode-video');
-            if (!video) return;
-            video.srcObject = this.stream;
-            await video.play();
-
-            this.currentTrack = this.stream.getVideoTracks()[0];
-            await this._configureTrackFeatures();
+            await this._discoverCameraDevices();
+            await this._startCameraStream(this.mainDeviceId, 1);
 
             const status = document.getElementById('barcode-status');
-            if (status) status.textContent = 'Câmara ativa (1x). A procurar código...';
+            if (status) status.textContent = 'Câmara ativa. A procurar código...';
+
+            this._setupZoomButtons();
 
             if ('BarcodeDetector' in window) {
-                await this._scanWithNativeAPI(onDetected);
+                await this._scanWithNativeAPI(this.activeOnDetected);
             } else {
                 await this._loadQuagga();
-                await this._scanWithQuagga(onDetected);
+                await this._scanWithQuagga(this.activeOnDetected);
             }
         } catch (err) {
             this.stopScanner();
@@ -137,90 +136,104 @@ export const barcodeScannerService = {
         }
     },
 
-    async _getOptimalCameraConstraints() {
-        let bestDeviceId = null;
+    async _discoverCameraDevices() {
+        this.backCameras = [];
+        this.mainDeviceId = null;
+        this.ultraWideDeviceId = null;
+        this.teleDeviceId = null;
+
         try {
             if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
                 const devices = await navigator.mediaDevices.enumerateDevices();
                 const videoDevices = devices.filter(d => d.kind === 'videoinput');
                 
-                // Filter rear cameras
-                const backCameras = videoDevices.filter(d => {
+                this.backCameras = videoDevices.filter(d => {
                     const label = (d.label || '').toLowerCase();
-                    return label.includes('back') || label.includes('rear') || label.includes('traseira') || label.includes('environment');
+                    return label.includes('back') || label.includes('rear') || label.includes('traseira') || label.includes('environment') || label.includes('0') || label.includes('camera2 0');
                 });
 
-                if (backCameras.length > 0) {
-                    // Pick the standard wide camera (avoid telephoto, macro, depth, ultra-wide)
-                    const standardBack = backCameras.find(d => {
-                        const l = d.label.toLowerCase();
-                        return !l.includes('tele') && !l.includes('macro') && !l.includes('2x') && !l.includes('3x') && !l.includes('5x') && !l.includes('wide') && !l.includes('ultra');
-                    }) || backCameras[0];
-                    
-                    bestDeviceId = standardBack.deviceId;
+                if (this.backCameras.length === 0 && videoDevices.length > 0) {
+                    this.backCameras = videoDevices;
+                }
+
+                // Identify Ultra-Wide (0.5x), Main (1x), and Telephoto (2x) lenses
+                this.backCameras.forEach(cam => {
+                    const l = cam.label.toLowerCase();
+                    if (l.includes('ultra') || l.includes('0.5') || l.includes('wide-angle') || l.includes('fov') || l.includes('camera2 2')) {
+                        if (!this.ultraWideDeviceId) this.ultraWideDeviceId = cam.deviceId;
+                    } else if (l.includes('tele') || l.includes('2x') || l.includes('3x') || l.includes('5x') || l.includes('zoom')) {
+                        if (!this.teleDeviceId) this.teleDeviceId = cam.deviceId;
+                    } else {
+                        if (!this.mainDeviceId) this.mainDeviceId = cam.deviceId;
+                    }
+                });
+
+                if (!this.mainDeviceId && this.backCameras.length > 0) {
+                    this.mainDeviceId = this.backCameras[0].deviceId;
+                }
+                if (!this.ultraWideDeviceId && this.backCameras.length > 1) {
+                    // In many Android devices with multiple back lenses, index 1 or 2 is the ultrawide
+                    const otherCam = this.backCameras.find(c => c.deviceId !== this.mainDeviceId);
+                    if (otherCam) this.ultraWideDeviceId = otherCam.deviceId;
                 }
             }
         } catch (e) {
-            console.warn('Device enumeration not supported or failed:', e);
+            console.warn('Camera device discovery error:', e);
+        }
+    },
+
+    async _startCameraStream(preferredDeviceId, targetZoom = 1) {
+        if (this.stream) {
+            this.stream.getTracks().forEach(t => t.stop());
+            this.stream = null;
         }
 
-        const videoConstraint = {
+        const videoConstraints = {
             facingMode: { ideal: 'environment' },
             width: { ideal: 1920, min: 640 },
             height: { ideal: 1080, min: 480 }
         };
 
-        if (bestDeviceId) {
-            videoConstraint.deviceId = { ideal: bestDeviceId };
+        if (preferredDeviceId) {
+            videoConstraints.deviceId = { exact: preferredDeviceId };
         }
 
-        return { video: videoConstraint };
+        try {
+            this.stream = await navigator.mediaDevices.getUserMedia({ video: videoConstraints });
+        } catch (e) {
+            // Fallback to basic environment facing mode
+            this.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+        }
+
+        const video = document.getElementById('barcode-video');
+        if (video) {
+            video.srcObject = this.stream;
+            await video.play();
+        }
+
+        this.currentTrack = this.stream.getVideoTracks()[0];
+        await this._applyZoomAndConfigureTrack(targetZoom);
     },
 
-    async _configureTrackFeatures() {
+    async _applyZoomAndConfigureTrack(targetZoom) {
         if (!this.currentTrack) return;
         const capabilities = this.currentTrack.getCapabilities ? this.currentTrack.getCapabilities() : {};
 
-        // 1. Force Minimum Zoom 1.0x (Eliminate default lens zoom)
+        // Apply Zoom level (e.g. 0.5, 1.0, 2.0)
         if (capabilities.zoom) {
-            const minZoom = capabilities.zoom.min || 1;
-            this.currentZoom = minZoom;
+            const minZ = capabilities.zoom.min || 1;
+            const maxZ = capabilities.zoom.max || 1;
+            const clampedZoom = Math.max(minZ, Math.min(maxZ, targetZoom));
+            this.currentZoom = clampedZoom;
+
             try {
-                await this.currentTrack.applyConstraints({ advanced: [{ zoom: minZoom }] });
-            } catch (e) { console.warn('Failed to set zoom 1x:', e); }
-
-            // Show Zoom Controls if multiple zoom levels exist
-            if (capabilities.zoom.max > minZoom) {
-                const zoomCtrl = document.getElementById('barcode-zoom-controls');
-                const btn1x = document.getElementById('zoom-1x');
-                const btn2x = document.getElementById('zoom-2x');
-
-                if (zoomCtrl && btn1x && btn2x) {
-                    zoomCtrl.style.display = 'flex';
-                    const target2x = Math.min(2, capabilities.zoom.max);
-
-                    btn1x.onclick = async () => {
-                        try {
-                            await this.currentTrack.applyConstraints({ advanced: [{ zoom: minZoom }] });
-                            this.currentZoom = minZoom;
-                            btn1x.style.background = 'var(--accent-color, #ff9f0a)';
-                            btn2x.style.background = 'transparent';
-                        } catch (e) { }
-                    };
-
-                    btn2x.onclick = async () => {
-                        try {
-                            await this.currentTrack.applyConstraints({ advanced: [{ zoom: target2x }] });
-                            this.currentZoom = target2x;
-                            btn2x.style.background = 'var(--accent-color, #ff9f0a)';
-                            btn1x.style.background = 'transparent';
-                        } catch (e) { }
-                    };
-                }
+                await this.currentTrack.applyConstraints({ advanced: [{ zoom: clampedZoom }] });
+            } catch (e) {
+                console.warn('Could not apply zoom level:', targetZoom, e);
             }
         }
 
-        // 2. Torch / Flashlight Control
+        // Torch / Flashlight Button
         if (capabilities.torch) {
             const torchBtn = document.getElementById('barcode-torch-btn');
             if (torchBtn) {
@@ -235,6 +248,66 @@ export const barcodeScannerService = {
                     } catch (e) { console.warn('Torch toggle failed:', e); }
                 };
             }
+        }
+    },
+
+    _setupZoomButtons() {
+        const btn05 = document.getElementById('zoom-05x');
+        const btn1x = document.getElementById('zoom-1x');
+        const btn2x = document.getElementById('zoom-2x');
+
+        const updateBtnStyles = (activeBtn) => {
+            [btn05, btn1x, btn2x].forEach(b => {
+                if (b) {
+                    b.style.background = (b === activeBtn) ? 'var(--accent-color, #ff9f0a)' : 'transparent';
+                    b.classList.toggle('active', b === activeBtn);
+                }
+            });
+        };
+
+        if (btn05) {
+            btn05.onclick = async () => {
+                updateBtnStyles(btn05);
+                const status = document.getElementById('barcode-status');
+                if (status) status.textContent = 'A mudar para 0.5x (Grande Angular)...';
+
+                if (this.ultraWideDeviceId && this.ultraWideDeviceId !== this.mainDeviceId) {
+                    await this._startCameraStream(this.ultraWideDeviceId, 0.5);
+                } else {
+                    await this._applyZoomAndConfigureTrack(0.5);
+                }
+                if (status) status.textContent = 'Modo 0.5x ativo.';
+            };
+        }
+
+        if (btn1x) {
+            btn1x.onclick = async () => {
+                updateBtnStyles(btn1x);
+                const status = document.getElementById('barcode-status');
+                if (status) status.textContent = 'A mudar para 1x (Normal)...';
+
+                if (this.mainDeviceId) {
+                    await this._startCameraStream(this.mainDeviceId, 1);
+                } else {
+                    await this._applyZoomAndConfigureTrack(1);
+                }
+                if (status) status.textContent = 'Modo 1x ativo.';
+            };
+        }
+
+        if (btn2x) {
+            btn2x.onclick = async () => {
+                updateBtnStyles(btn2x);
+                const status = document.getElementById('barcode-status');
+                if (status) status.textContent = 'A mudar para 2x (Zoom)...';
+
+                if (this.teleDeviceId) {
+                    await this._startCameraStream(this.teleDeviceId, 2);
+                } else {
+                    await this._applyZoomAndConfigureTrack(2);
+                }
+                if (status) status.textContent = 'Modo 2x ativo.';
+            };
         }
     },
 
@@ -301,7 +374,6 @@ export const barcodeScannerService = {
         if (this.stream) {
             this.stream.getTracks().forEach(t => {
                 try {
-                    // Turn off torch before stopping track
                     if (t.getCapabilities && t.getCapabilities().torch) {
                         t.applyConstraints({ advanced: [{ torch: false }] });
                     }

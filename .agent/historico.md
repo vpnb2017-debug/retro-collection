@@ -4,6 +4,24 @@ Registo completo de todas as alterações efetuadas em cada versão da aplicaç�
 
 ---
 
+## v130 — 2026-08-18
+### 🔍 Modo Ultra-Grande Angular (Zoom 0.5x) no Leitor de Código de Barras
+- **Suporte a Zoom 0.5x & Alternância de Lentes**:
+  - Adicionado seletor com opção **0.5x** (Ultra-Wide / Grande Angular Ampla), **1x** (Normal) e **2x** (Zoom).
+  - Deteção e comutação automática entre a câmara Ultra-Grande Angular do telemóvel e a câmara principal via `enumerateDevices()` e restrições avançadas de zoom de hardware.
+  - Permite enquadrar caixas de jogos completas a curta distância sem necessidade de afastar o telemóvel.
+- **Invalidação de Cache e Service Worker**:
+  - `sw.js`, `index.html` e `js/app.js` atualizados para a versão `v130`.
+
+### 🔧 Ficheiros Modificados
+- `js/services/barcodeScannerService.js` → suporte a lente 0.5x Ultra-Wide, comutador dinâmico de fluxo de câmara e botões 0.5x/1x/2x
+- `js/app.js` → importações e registo da versão v130
+- `index.html` → versão v130 e scripts de cache control
+- `sw.js` → versão v130
+- `.agent/historico.md` → registo da versão v130
+
+---
+
 ## v129 — 2026-08-18
 ### 📷 Correção de Zoom e Melhorias no Leitor de Código de Barras
 - **Seleção Inteligente da Lente Principal (Eliminação do Zoom Automático)**:
