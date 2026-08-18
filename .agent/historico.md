@@ -4,6 +4,30 @@ Registo completo de todas as alterações efetuadas em cada versão da aplicaç�
 
 ---
 
+## v129 — 2026-08-18
+### 📷 Correção de Zoom e Melhorias no Leitor de Código de Barras
+- **Seleção Inteligente da Lente Principal (Eliminação do Zoom Automático)**:
+  - Implementada enumeração inteligente de câmaras (`enumerateDevices()`) para selecionar a lente traseira normal/grande angular e evitar a ativação automática de lentes teleobjetiva (2x/3x) ou macro em telemóveis multilente.
+  - Eliminação de restrições horizontais fixas (`1280x720`) que causavam *crop* (recorte) forçado do sensor em ecrãs verticais.
+  - Aplicação explícita de `zoom: 1.0` via `MediaTrackConstraints.advanced` para abrir a câmara sempre no campo de visão natural (1x).
+- **Controlos Rápidos de Zoom & Tocha/Lanterna**:
+  - Adicionados botões de alternância rápida de zoom (`1x` / `2x`) quando o hardware e o navegador suportam controlo de zoom.
+  - Adicionado botão de lanterna/tocha (`🔦 Lanterna`) para leitura em ambientes com pouca luz quando suportado.
+- **Interface e Mira Laser Dinâmica**:
+  - Nova mira de leitura com cantos destacados e animação laser contínua sincronizada com a cor do tema ativo (`var(--accent-color)`).
+  - Encerramento seguro de faixas de vídeo e desativação automática da lanterna ao fechar o scanner.
+- **Invalidação de Cache e Service Worker**:
+  - `sw.js`, `index.html` e `js/app.js` atualizados para a versão `v129`.
+
+### 🔧 Ficheiros Modificados
+- `js/services/barcodeScannerService.js` → motor de seleção de lente, restrição de zoom 1x, controlos de zoom/tocha e animação laser
+- `js/app.js` → importações e registo da versão v129
+- `index.html` → versão v129 e scripts de cache control
+- `sw.js` → versão v129
+- `.agent/historico.md` → registo da versão v129
+
+---
+
 ## v128 — 2026-08-18
 ### ✨ Melhorias de UX & Estados de Carregamento Assíncrono
 - **Indicadores de Carregamento na Pesquisa de Capas (TheGamesDB)**:
