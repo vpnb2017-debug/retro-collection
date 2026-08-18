@@ -1,15 +1,15 @@
-import { dbService } from './services/db.js?v=125';
-import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js?v=125';
-import { coverSearchService } from './services/coverSearch.js?v=125';
-import WebuyService from './services/webuyService.js?v=125';
-import { localFileSync } from './services/localFileSync.js?v=125';
-import { metadataService } from './services/metadataService.js?v=125';
-import { cloudSyncService } from './services/cloudSyncService.js?v=125';
-import { theGamesDBService } from './services/theGamesDBService.js?v=125';
-import { barcodeScannerService } from './services/barcodeScannerService.js?v=125';
-import { chartService } from './services/chartService.js?v=125';
-import { exportService } from './services/exportService.js?v=125';
-import { themeService } from './services/themeService.js?v=125';
+import { dbService } from './services/db.js?v=127';
+import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js?v=127';
+import { coverSearchService } from './services/coverSearch.js?v=127';
+import WebuyService from './services/webuyService.js?v=127';
+import { localFileSync } from './services/localFileSync.js?v=127';
+import { metadataService } from './services/metadataService.js?v=127';
+import { cloudSyncService } from './services/cloudSyncService.js?v=127';
+import { theGamesDBService } from './services/theGamesDBService.js?v=127';
+import { barcodeScannerService } from './services/barcodeScannerService.js?v=127';
+import { chartService } from './services/chartService.js?v=127';
+import { exportService } from './services/exportService.js?v=127';
+import { themeService } from './services/themeService.js?v=127';
 
 // Global Exposure
 window.navigate = navigate;
@@ -37,7 +37,11 @@ window.toggleViewMode = toggleViewMode;
 window.setTheme = (themeId) => themeService.setTheme(themeId);
 window.selectTheme = (themeId) => {
     themeService.setTheme(themeId);
-    if (state.view === 'nav-sync') renderSyncView();
+    if (state.view === 'nav-sync') {
+        renderSyncView();
+    } else if (state.view === 'nav-dashboard') {
+        renderDashboard();
+    }
 };
 window.themeService = themeService;
 // window.state moved down to avoid TDZ error
@@ -192,7 +196,7 @@ async function renderDashboard() {
         const ownedTotal = ownedGames.length + ownedConsoles.length;
         const wishlistTotal = games.filter(g => g.isWishlist).length + consoles.filter(c => c.isWishlist).length;
 
-        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:var(--accent-color); border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v125</span></h2>`;
+        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:var(--accent-color); border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v127</span></h2>`;
 
         const platData = await getPlatformOptions();
 
@@ -245,9 +249,9 @@ async function renderDashboard() {
                     </div>
                 </div>
             <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap:12px; margin-top:5px;">
-                <div onclick="navigate('nav-collection')" style="background:rgba(255,159,10,0.12); padding:20px; border-radius:18px; border:1px solid rgba(255,159,10,0.25); cursor:pointer;">
+                <div onclick="navigate('nav-collection')" style="background:var(--accent-subtle, rgba(255,159,10,0.12)); padding:20px; border-radius:18px; border:1px solid var(--border-color, rgba(255,159,10,0.25)); cursor:pointer;">
                     <h3 style="font-size:0.85rem; opacity:0.8; margin-bottom:8px;">Coleção</h3>
-                    <p style="font-size:2.2rem; font-weight:800; color:#ff9f0a;">${ownedTotal}</p>
+                    <p style="font-size:2.2rem; font-weight:800; color:var(--accent-color);">${ownedTotal}</p>
                 </div>
                 <div onclick="navigate('nav-wishlist')" style="background:rgba(255,255,255,0.05); padding:24px; border-radius:20px; border:1px solid rgba(255,255,255,0.1); cursor:pointer;">
                     <h3 style="font-size:0.85rem; opacity:0.8; margin-bottom:8px;">Pretendidos</h3>
@@ -257,28 +261,28 @@ async function renderDashboard() {
 
             <div style="margin-top:25px; display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
                 <div style="background:rgba(255,255,255,0.03); padding:20px; border-radius:20px; border:1px solid rgba(255,255,255,0.05);">
-                    <h3 style="margin-bottom:12px; font-size:0.85rem; color:#ffc978; font-weight:800;">🎨 Top Géneros</h3>
+                    <h3 style="margin-bottom:12px; font-size:0.85rem; color:var(--text-muted); font-weight:800;">🎨 Top Géneros</h3>
                     <div style="display:flex; flex-direction:column; gap:8px;">
                         ${Object.entries(groupBy(games.filter(g => g.genre), 'genre'))
                 .sort((a, b) => b[1].length - a[1].length)
                 .slice(0, 5)
                 .map(([g, items]) => `
-                                <div onclick="navigateByGenre('${g}')" style="display:flex; justify-content:space-between; font-size:0.75rem; cursor:pointer; padding:6px 8px; border-radius:8px; transition:background 0.2s;" onmouseover="this.style.background='rgba(255,159,10,0.1)'" onmouseout="this.style.background='transparent'">
+                                <div onclick="navigateByGenre('${g}')" style="display:flex; justify-content:space-between; font-size:0.75rem; cursor:pointer; padding:6px 8px; border-radius:8px; transition:background 0.2s;" onmouseover="this.style.background='var(--accent-subtle)'" onmouseout="this.style.background='transparent'">
                                     <span style="opacity:0.7;">${g}</span>
-                                    <span style="font-weight:800; color:#ff9f0a;">${items.length}</span>
+                                    <span style="font-weight:800; color:var(--accent-color);">${items.length}</span>
                                 </div>
                             `).join('') || '<p style="font-size:0.65rem; opacity:0.4;">Sem dados de género.</p>'}
                     </div>
                 </div>
                 <div style="background:rgba(255,255,255,0.03); padding:20px; border-radius:20px; border:1px solid rgba(255,255,255,0.05);">
-                    <h3 style="margin-bottom:12px; font-size:0.85rem; color:#ffc978; font-weight:800;">📅 Décadas</h3>
+                    <h3 style="margin-bottom:12px; font-size:0.85rem; color:var(--text-muted); font-weight:800;">📅 Décadas</h3>
                     <div style="display:flex; flex-direction:column; gap:8px;">
                         ${Object.entries(groupBy(games.filter(g => g.year), g => Math.floor(g.year / 10) * 10))
                 .sort((a, b) => b[0] - a[0])
                 .map(([d, items]) => `
-                                <div onclick="navigateByDecade(${d})" style="display:flex; justify-content:space-between; font-size:0.75rem; cursor:pointer; padding:6px 8px; border-radius:8px; transition:background 0.2s;" onmouseover="this.style.background='rgba(255,159,10,0.1)'" onmouseout="this.style.background='transparent'">
+                                <div onclick="navigateByDecade(${d})" style="display:flex; justify-content:space-between; font-size:0.75rem; cursor:pointer; padding:6px 8px; border-radius:8px; transition:background 0.2s;" onmouseover="this.style.background='var(--accent-subtle)'" onmouseout="this.style.background='transparent'">
                                     <span style="opacity:0.7;">Anos ${d}</span>
-                                    <span style="font-weight:800; color:#ff9f0a;">${items.length}</span>
+                                    <span style="font-weight:800; color:var(--accent-color);">${items.length}</span>
                                 </div>
                             `).join('') || '<p style="font-size:0.65rem; opacity:0.4;">Sem dados de ano.</p>'}
                     </div>
@@ -286,17 +290,17 @@ async function renderDashboard() {
             </div>
 
             <div style="margin-top:25px; background:rgba(255,255,255,0.03); padding:24px; border-radius:20px; border:1px solid rgba(255,255,255,0.05);">
-                <h3 style="margin-bottom:15px; font-size:1rem; color:#ffc978; font-weight:800;">📊 Stats por Consola</h3>
+                <h3 style="margin-bottom:15px; font-size:1rem; color:var(--text-muted); font-weight:800;">📊 Stats por Consola</h3>
                 <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap:10px;">
                     ${Object.entries(groupBy(games.concat(consoles), 'platform'))
                 .sort((a, b) => b[1].length - a[1].length)
                 .map(([p, items]) => {
                     const platInfo = platData.find(x => x.name === p);
                     const logo = platInfo?.logo;
-                    const fallbackHtml = `<div style="width:24px; height:24px; background:rgba(255,159,10,0.2); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.6rem; font-weight:800; color:#ff9f0a;">${p.substring(0, 2).toUpperCase()}</div>`;
+                    const fallbackHtml = `<div style="width:24px; height:24px; background:var(--accent-subtle); border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.6rem; font-weight:800; color:var(--accent-color);">${p.substring(0, 2).toUpperCase()}</div>`;
 
                     const logoHtml = logo
-                        ? `<img src="${logo}" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex'" style="width:24px; height:24px; object-fit:contain; border-radius:4px;"><div style="display:none; width:24px; height:24px; background:rgba(255,159,10,0.2); border-radius:50%; align-items:center; justify-content:center; font-size:0.6rem; font-weight:800; color:#ff9f0a;">${p.substring(0, 2).toUpperCase()}</div>`
+                        ? `<img src="${logo}" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex'" style="width:24px; height:24px; object-fit:contain; border-radius:4px;"><div style="display:none; width:24px; height:24px; background:var(--accent-subtle); border-radius:50%; align-items:center; justify-content:center; font-size:0.6rem; font-weight:800; color:var(--accent-color);">${p.substring(0, 2).toUpperCase()}</div>`
                         : fallbackHtml;
 
                     return `
@@ -304,7 +308,7 @@ async function renderDashboard() {
                             ${logoHtml}
                             <div style="display:flex; flex-direction:column; gap:2px; min-width:0;">
                                 <span style="font-size:0.6rem; opacity:0.6; text-transform:uppercase; letter-spacing:0.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${p}</span>
-                                <span style="font-size:1rem; font-weight:800; color:#ff9f0a">${items.length}</span>
+                                <span style="font-size:1rem; font-weight:800; color:var(--accent-color);">${items.length}</span>
                             </div>
                         </div>
                     `;
@@ -319,22 +323,22 @@ async function renderDashboard() {
 
             <!-- v124: Charts & Analytics Section -->
             <div style="margin-top:25px; background:rgba(255,255,255,0.03); padding:24px; border-radius:20px; border:1px solid rgba(255,255,255,0.05); box-sizing:border-box;">
-                <h3 style="margin-bottom:20px; font-size:1rem; color:#ffc978; font-weight:800;">📊 Analytics & Estatísticas</h3>
+                <h3 style="margin-bottom:20px; font-size:1rem; color:var(--text-muted); font-weight:800;">📊 Analytics & Estatísticas</h3>
                 <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:20px; box-sizing:border-box;">
                     <div>
-                        <p style="font-size:0.7rem; color:#ff9f0a; font-weight:700; margin-bottom:8px;">Por Consola</p>
+                        <p style="font-size:0.7rem; color:var(--accent-color); font-weight:700; margin-bottom:8px;">Por Consola</p>
                         <div style="height:160px;"><canvas id="chart-platform"></canvas></div>
                     </div>
                     <div>
-                        <p style="font-size:0.7rem; color:#ff9f0a; font-weight:700; margin-bottom:8px;">Validados</p>
+                        <p style="font-size:0.7rem; color:var(--accent-color); font-weight:700; margin-bottom:8px;">Validados</p>
                         <div style="height:160px;"><canvas id="chart-validation"></canvas></div>
                     </div>
                     <div>
-                        <p style="font-size:0.7rem; color:#ff9f0a; font-weight:700; margin-bottom:8px;">Top Géneros</p>
+                        <p style="font-size:0.7rem; color:var(--accent-color); font-weight:700; margin-bottom:8px;">Top Géneros</p>
                         <div style="height:160px;"><canvas id="chart-genres"></canvas></div>
                     </div>
                     <div>
-                        <p style="font-size:0.7rem; color:#ff9f0a; font-weight:700; margin-bottom:8px;">Aquisições por Ano</p>
+                        <p style="font-size:0.7rem; color:var(--accent-color); font-weight:700; margin-bottom:8px;">Aquisições por Ano</p>
                         <div style="height:160px;"><canvas id="chart-timeline"></canvas></div>
                     </div>
                 </div>
@@ -386,30 +390,30 @@ async function renderGenericGrid(viewTitle, itemsFilter) {
 
         titleEl.innerHTML = `<h2>${viewTitle}</h2>`;
         filterEl.innerHTML = `
-            <div style="display:flex; flex-direction:column; gap:8px; background:rgba(255,159,10,0.05); padding:10px; border-radius:14px; border:1px solid rgba(255,159,10,0.15); width:100%; box-sizing:border-box;">
+            <div style="display:flex; flex-direction:column; gap:8px; background:var(--accent-subtle, rgba(255,159,10,0.05)); padding:10px; border-radius:14px; border:1px solid var(--border-color, rgba(255,159,10,0.15)); width:100%; box-sizing:border-box;">
                 <div class="filter-controls-row">
-                    <select id="f-type" style="background:#1e1e24; border:1px solid #444; color:white; padding:10px; border-radius:10px; font-size:0.85rem;">
+                    <select id="f-type" style="background:var(--bg-surface, #1e1e24); border:1px solid #444; color:white; padding:10px; border-radius:10px; font-size:0.85rem;">
                         <option value="all" ${state.filterType === 'all' ? 'selected' : ''}>Tudo</option>
                         <option value="games" ${state.filterType === 'games' ? 'selected' : ''}>Jogos</option>
                         <option value="consoles" ${state.filterType === 'consoles' ? 'selected' : ''}>Hardware</option>
                     </select>
-                    <select id="f-plat" style="background:#1e1e24; border:1px solid #444; color:white; padding:10px; border-radius:10px; font-size:0.85rem;">
+                    <select id="f-plat" style="background:var(--bg-surface, #1e1e24); border:1px solid #444; color:white; padding:10px; border-radius:10px; font-size:0.85rem;">
                         <option value="all" ${state.filterPlatform === 'all' ? 'selected' : ''}>Plataformas</option>
                         <option value="(Sem Consola)" ${state.filterPlatform === '(Sem Consola)' ? 'selected' : ''}>(Sem Consola)</option>
                         ${platformOptions}
                     </select>
-                    <select id="f-validation" style="background:#1e1e24; border:1px solid #444; color:white; padding:10px; border-radius:10px; font-size:0.85rem;">
+                    <select id="f-validation" style="background:var(--bg-surface, #1e1e24); border:1px solid #444; color:white; padding:10px; border-radius:10px; font-size:0.85rem;">
                         <option value="all" ${state.filterValidation === 'all' ? 'selected' : ''}>Todos</option>
                         <option value="validated" ${state.filterValidation === 'validated' ? 'selected' : ''}>&#x2705; Validados</option>
                         <option value="not-validated" ${state.filterValidation === 'not-validated' ? 'selected' : ''}>&#x274c; Não Validados</option>
                     </select>
                 </div>
                 <div class="search-controls-row">
-                    <input id="f-search" type="text" placeholder="&#x1F50D; Procurar..." value="${state.filterSearch}" style="background:#1e1e24; border:1px solid #444; color:white; padding:10px; border-radius:10px; font-size:0.85rem;">
+                    <input id="f-search" type="text" placeholder="&#x1F50D; Procurar..." value="${state.filterSearch}" style="background:var(--bg-surface, #1e1e24); border:1px solid #444; color:white; padding:10px; border-radius:10px; font-size:0.85rem;">
                     <button onclick="toggleViewMode('grid')" id="btn-view-grid" class="view-toggle-btn ${state.viewMode !== 'shelf' ? 'active' : ''}" title="Vista Grelha">⊞</button>
                     <button onclick="toggleViewMode('shelf')" id="btn-view-shelf" class="view-toggle-btn ${state.viewMode === 'shelf' ? 'active' : ''}" title="Prateleira 3D">📚</button>
                 </div>
-                <button onclick="window.clearFilters()" style="width:100%; background:rgba(255,159,10,0.1); border:1px dashed rgba(255,159,10,0.3); color:#ff9f0a; padding:8px; border-radius:10px; font-size:0.75rem; font-weight:700; cursor:pointer;">Limpar Filtros 🧹</button>
+                <button onclick="window.clearFilters()" style="width:100%; background:var(--accent-subtle, rgba(255,159,10,0.1)); border:1px dashed var(--border-color, rgba(255,159,10,0.3)); color:var(--accent-color); padding:8px; border-radius:10px; font-size:0.75rem; font-weight:700; cursor:pointer;">Limpar Filtros 🧹</button>
             </div>
         `;
 
@@ -483,7 +487,7 @@ async function renderGenericGrid(viewTitle, itemsFilter) {
                             </div>`;
                         });
                         shelfHtml += `<div style="margin-bottom:35px;">
-                            <p style="font-size:0.7rem;color:#ff9f0a;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;padding-left:10px;">${platform}</p>
+                            <p style="font-size:0.7rem;color:var(--accent-color);font-weight:800;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;padding-left:10px;">${platform}</p>
                             <div class="shelf-container"><div class="shelf-row">${rowHtml}</div></div>
                         </div>`;
                     });
@@ -517,7 +521,7 @@ async function renderGenericGrid(viewTitle, itemsFilter) {
                                         ${item.year ? `<div style="font-size:0.6rem; opacity:0.5; margin-bottom:4px;">${item.year}</div>` : ''}
                                     </div>
                                     <div style="display:flex; align-items:center;">
-                                        <span style="font-size:0.65rem; color:#ffc978; font-weight:800; text-transform:uppercase;">${item.platform || 'Geral'}</span>
+                                        <span style="font-size:0.65rem; color:var(--text-muted); font-weight:800; text-transform:uppercase;">${item.platform || 'Geral'}</span>
                                         ${validationIcon}
                                     </div>
                                 </div>
@@ -1174,11 +1178,11 @@ async function renderSyncView() {
             </div>
 
             <!-- Cloud Sync Section -->
-            <div style="background:linear-gradient(135deg, rgba(255,159,10,0.1) 0%, rgba(255,121,80,0.1) 100%); padding:28px; border-radius:24px; border:1px solid rgba(255,159,10,0.3); box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
+            <div style="background:var(--accent-subtle, rgba(255,159,10,0.1)); padding:28px; border-radius:24px; border:1px solid var(--border-color, rgba(255,159,10,0.3)); box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
                  <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px;">
                     <div style="display:flex; align-items:center; gap:12px;">
                         <span style="font-size:1.8rem;">☁️</span>
-                        <h3 style="margin:0; font-size:1.2rem; color:#ff9f0a;">Sincronização Cloud</h3>
+                        <h3 style="margin:0; font-size:1.2rem; color:var(--accent-color);">Sincronização Cloud</h3>
                     </div>
                     ${hasToken ? '<span style="background:#22c55e; color:white; padding:4px 10px; border-radius:20px; font-size:0.65rem; font-weight:800;">🔐 PROTEGIDO</span>' : '<span style="background:#ef4444; color:white; padding:4px 10px; border-radius:20px; font-size:0.65rem; font-weight:800;">⚠️ SEM TOKEN</span>'}
                  </div>
@@ -1186,34 +1190,34 @@ async function renderSyncView() {
                  <div style="background:rgba(0,0,0,0.2); padding:12px; border-radius:12px; margin-bottom:20px; font-size:0.8rem; display:flex; flex-direction:column; gap:4px;">
                     <div style="display:flex; justify-content:space-between;">
                         <span style="opacity:0.6;">Última Puxada:</span>
-                        <span style="color:#ff9f0a; font-weight:700;">${lastSync}</span>
+                        <span style="color:var(--accent-color); font-weight:700;">${lastSync}</span>
                     </div>
                  </div>
 
                  <p style="margin-bottom:20px; font-size:0.9rem; opacity:0.8; line-height:1.5;">A sincronização é **automática** em background. Usa estes botões apenas para verificação manual.</p>
                  
                  <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:20px;">
-                    <label style="font-size:0.75rem; color:#ff9f0a; font-weight:700; margin-left:5px;">Link do Gist (Secret)</label>
-                    <input type="text" id="cloud-url-input" placeholder="https://gist.github.com/..." value="${cloudUrl}" style="background:#1a1a20; border:1px solid #444; color:white; padding:15px; border-radius:12px; font-size:0.9rem;">
+                    <label style="font-size:0.75rem; color:var(--accent-color); font-weight:700; margin-left:5px;">Link do Gist (Secret)</label>
+                    <input type="text" id="cloud-url-input" placeholder="https://gist.github.com/..." value="${cloudUrl}" style="background:var(--bg-surface, #1a1a20); border:1px solid #444; color:white; padding:15px; border-radius:12px; font-size:0.9rem;">
                  </div>
 
                  <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:20px;">
-                    <label style="font-size:0.75rem; color:#ff9f0a; font-weight:700; margin-left:5px;">GitHub Token (Escrita)</label>
-                    <input type="password" id="github-token-input" placeholder="ghp_..." value="${githubToken}" style="background:#1a1a20; border:1px solid #444; color:white; padding:15px; border-radius:12px; font-size:0.9rem;">
+                    <label style="font-size:0.75rem; color:var(--accent-color); font-weight:700; margin-left:5px;">GitHub Token (Escrita)</label>
+                    <input type="password" id="github-token-input" placeholder="ghp_..." value="${githubToken}" style="background:var(--bg-surface, #1a1a20); border:1px solid #444; color:white; padding:15px; border-radius:12px; font-size:0.9rem;">
                     <p style="font-size:0.65rem; opacity:0.4; margin-top:2px;">Invisível por segurança. Necessário para enviar dados para a nuvem.</p>
                  </div>
 
                  <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:24px;">
-                    <label style="font-size:0.75rem; color:#ff9f0a; font-weight:700; margin-left:5px;">TheGamesDB.net API Key (Opcional - Capas Físicas)</label>
-                    <input type="password" id="tgdb-key-input" placeholder="Chave de API do TheGamesDB.net..." value="${tgdbKey}" style="background:#1a1a20; border:1px solid #444; color:white; padding:15px; border-radius:12px; font-size:0.9rem;">
+                    <label style="font-size:0.75rem; color:var(--accent-color); font-weight:700; margin-left:5px;">TheGamesDB.net API Key (Opcional - Capas Físicas)</label>
+                    <input type="password" id="tgdb-key-input" placeholder="Chave de API do TheGamesDB.net..." value="${tgdbKey}" style="background:var(--bg-surface, #1a1a20); border:1px solid #444; color:white; padding:15px; border-radius:12px; font-size:0.9rem;">
                     <p style="font-size:0.65rem; opacity:0.4; margin-top:2px;">Se preenchido, a pesquisa de capas priorizará os scans oficiais do TheGamesDB.net.</p>
                  </div>
 
                  <div style="display:flex; flex-direction:column; gap:12px;">
                     <button onclick="saveCloudLink()" style="width:100%; height:50px; background:#444; border:none; color:white; border-radius:14px; font-weight:700; cursor:pointer;">Gravar Chaves 💾</button>
                     
-                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-top:10px;">
-                        <button onclick="pullFromCloud()" style="border:none; padding:18px; border-radius:16px; background:#ff9f0a; color:white; font-weight:800; cursor:pointer; font-size:0.9rem; box-shadow: 0 4px 15px rgba(255,159,10,0.3); display:flex; flex-direction:column; align-items:center; gap:8px;">
+                    <div style="grid-template-columns: 1fr 1fr; gap:12px; margin-top:10px; display:grid;">
+                        <button onclick="pullFromCloud()" style="border:none; padding:18px; border-radius:16px; background:var(--accent-color); color:white; font-weight:800; cursor:pointer; font-size:0.9rem; box-shadow: 0 4px 15px var(--accent-subtle); display:flex; flex-direction:column; align-items:center; gap:8px;">
                             <span style="font-size:1.5rem;">📥</span> Puxar Agora
                         </button>
                         <button onclick="pushToCloud()" style="border:none; padding:18px; border-radius:16px; background:#22c55e; color:white; font-weight:800; cursor:pointer; font-size:0.9rem; box-shadow: 0 4px 15px rgba(34,197,94,0.3); display:flex; flex-direction:column; align-items:center; gap:8px;">
@@ -1222,7 +1226,7 @@ async function renderSyncView() {
                     </div>
                  </div>
                  
-                <p style="margin-top:15px; font-size:0.75rem; color:#22c55e; font-weight:700; text-align:center;">🤖 Sentinela de Sync Ativo (v125)</p>
+                <p style="margin-top:15px; font-size:0.75rem; color:#22c55e; font-weight:700; text-align:center;">🤖 Sentinela de Sync Ativo (v127)</p>
             </div>
 
             <!-- v123: Enhanced Export Section -->
@@ -1339,14 +1343,13 @@ async function pushToCloud(silent = false) {
         return;
     }
 
-    if (!silent) logger("A preparar envio...");
     try {
         const games = await dbService.getAll('games');
         const consoles = await dbService.getAll('consoles');
         const platforms = await dbService.getAll('platforms');
 
         const data = {
-            version: "v125",
+            version: "v127",
             timestamp: new Date().toISOString(),
             games,
             consoles,
@@ -1419,7 +1422,7 @@ async function exportCollection() {
         const platforms = await dbService.getAll('platforms');
 
         const data = {
-            version: "v125",
+            version: "v127",
             timestamp: new Date().toISOString(),
             games,
             consoles,
@@ -1493,20 +1496,24 @@ async function importCollection() {
 
 /** INITIALIZATION **/
 async function init() {
-    logger("Iniciando RetroCollection v125...");
+    logger("Iniciando RetroCollection v127...");
     try {
         themeService.init();
         window.addEventListener('themeChanged', () => {
             if (state.view === 'nav-dashboard') renderDashboard();
+            else if (state.view === 'nav-sync') renderSyncView();
+            else if (state.view === 'nav-collection') renderCollection();
+            else if (state.view === 'nav-wishlist') renderWishlist();
+            else if (state.view === 'nav-platforms') renderPlatformManager();
         });
 
         await dbService.open();
         logger("DB Conectado.");
 
-        // Auto-Sync Logos logic for v125
-        if (!localStorage.getItem('logos_synced_v125')) {
+        // Auto-Sync Logos logic for v127
+        if (!localStorage.getItem('logos_synced_v127')) {
             await autoSyncLogos();
-            localStorage.setItem('logos_synced_v125', 'true');
+            localStorage.setItem('logos_synced_v127', 'true');
         }
 
         // v98 Resilient Startup

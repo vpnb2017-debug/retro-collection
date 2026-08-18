@@ -1,165 +1,260 @@
-/* themes.css — Sistema de Temas Retro Customizáveis — RetroCollection v125 */
+/* themes.css — Sistema de Temas Retro Customizáveis — RetroCollection v127 */
 
-/* ── 1. Default: Retro Amber ── */
-:root, [data-theme="amber"] {
+/* ── Transição suave global ao mudar de tema ── */
+html, body, #app, .main-header, .bottom-nav, #main-content, .v29-title-zone, .v29-filter-zone, .v29-scroll-zone {
+    transition: background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease;
+}
+
+/* ── 1. Default: Retro Amber (Arcade & CRT) ── */
+:root,
+html[data-theme="amber"],
+body[data-theme="amber"] {
     --bg-app: #1e1e24;
     --bg-surface: #2b2b36;
     --bg-surface-subtle: rgba(255, 255, 255, 0.05);
-    --bg-header: #1e1e24;
+    --bg-header: #18181e;
+    --bg-card: rgba(43, 43, 54, 0.9);
+    --bg-card-hover: rgba(55, 55, 65, 0.95);
     --accent-color: #ff9f0a;
     --accent-hover: #ffb340;
     --accent-secondary: #ff7950;
-    --accent-subtle: rgba(255, 159, 10, 0.15);
+    --accent-subtle: rgba(255, 159, 10, 0.18);
+    --accent-glow: rgba(255, 159, 10, 0.35);
     --accent-gradient: linear-gradient(135deg, #ff9f0a 0%, #ff7950 100%);
+    --gradient-primary: linear-gradient(135deg, #ff9f0a 0%, #ff7950 100%);
     --text-main: #ffffff;
+    --text-primary: #ffffff;
     --text-muted: #ffc978;
+    --text-secondary: #ffc978;
     --text-dim: rgba(255, 255, 255, 0.6);
-    --border-color: rgba(255, 159, 10, 0.2);
+    --border-color: rgba(255, 159, 10, 0.3);
     --border-subtle: rgba(255, 255, 255, 0.1);
     --shelf-wood-1: #5c3a1a;
     --shelf-wood-2: #3d2710;
     --shelf-wood-edge: #2a1a08;
-    --chart-colors: #ff9f0a, #ff7950, #ffc978, #22c55e, #3b82f6, #a78bfa, #f472b6, #34d399, #fb923c, #60a5fa;
 }
 
-/* ── 2. Game Boy DMG (1989 Retro LCD) ── */
-[data-theme="gameboy"] {
-    --bg-app: #1f271b;
-    --bg-surface: #2d3a27;
-    --bg-surface-subtle: rgba(139, 172, 15, 0.08);
-    --bg-header: #171e14;
+/* ── 2. Game Boy DMG (1989 Nintendo Dot Matrix LCD) ── */
+html[data-theme="gameboy"],
+body[data-theme="gameboy"] {
+    --bg-app: #1a2216;
+    --bg-surface: #283420;
+    --bg-surface-subtle: rgba(139, 172, 15, 0.12);
+    --bg-header: #141b11;
+    --bg-card: rgba(40, 52, 32, 0.92);
+    --bg-card-hover: rgba(50, 65, 40, 0.95);
     --accent-color: #8bac0f;
     --accent-hover: #9bbc0f;
     --accent-secondary: #306230;
-    --accent-subtle: rgba(139, 172, 15, 0.18);
+    --accent-subtle: rgba(139, 172, 15, 0.25);
+    --accent-glow: rgba(139, 172, 15, 0.4);
     --accent-gradient: linear-gradient(135deg, #8bac0f 0%, #306230 100%);
+    --gradient-primary: linear-gradient(135deg, #8bac0f 0%, #306230 100%);
     --text-main: #cadc9f;
+    --text-primary: #cadc9f;
     --text-muted: #9bbc0f;
-    --text-dim: rgba(202, 220, 159, 0.6);
-    --border-color: rgba(139, 172, 15, 0.3);
-    --border-subtle: rgba(139, 172, 15, 0.15);
-    --shelf-wood-1: #3a4a2a;
-    --shelf-wood-2: #243018;
-    --shelf-wood-edge: #151d0d;
-    --chart-colors: #8bac0f, #9bbc0f, #306230, #cadc9f, #4a784a, #688c58, #b8d488, #557733;
+    --text-secondary: #9bbc0f;
+    --text-dim: rgba(202, 220, 159, 0.65);
+    --border-color: rgba(139, 172, 15, 0.4);
+    --border-subtle: rgba(139, 172, 15, 0.2);
+    --shelf-wood-1: #384628;
+    --shelf-wood-2: #242e1a;
+    --shelf-wood-edge: #151c0f;
 }
 
-/* ── 3. PlayStation Classic (1994 Sony Industrial) ── */
-[data-theme="ps1"] {
-    --bg-app: #18191f;
-    --bg-surface: #252834;
-    --bg-surface-subtle: rgba(0, 240, 255, 0.05);
-    --bg-header: #14151b;
+/* ── 3. PlayStation Classic (1994 Sony Industrial Grey & Cyan) ── */
+html[data-theme="ps1"],
+body[data-theme="ps1"] {
+    --bg-app: #171821;
+    --bg-surface: #232532;
+    --bg-surface-subtle: rgba(0, 210, 255, 0.08);
+    --bg-header: #111219;
+    --bg-card: rgba(35, 37, 50, 0.92);
+    --bg-card-hover: rgba(45, 48, 65, 0.95);
     --accent-color: #00d2ff;
     --accent-hover: #54e3ff;
     --accent-secondary: #ff3366;
-    --accent-subtle: rgba(0, 210, 255, 0.15);
-    --accent-gradient: linear-gradient(135deg, #00d2ff 0%, #0072ff 100%);
-    --text-main: #f0f2f5;
+    --accent-subtle: rgba(0, 210, 255, 0.2);
+    --accent-glow: rgba(0, 210, 255, 0.35);
+    --accent-gradient: linear-gradient(135deg, #00d2ff 0%, #0066ff 100%);
+    --gradient-primary: linear-gradient(135deg, #00d2ff 0%, #0066ff 100%);
+    --text-main: #f0f3f8;
+    --text-primary: #f0f3f8;
     --text-muted: #8ad8ff;
-    --text-dim: rgba(240, 242, 245, 0.6);
-    --border-color: rgba(0, 210, 255, 0.25);
-    --border-subtle: rgba(255, 255, 255, 0.08);
-    --shelf-wood-1: #2a3342;
-    --shelf-wood-2: #1c222c;
-    --shelf-wood-edge: #10141b;
-    --chart-colors: #00d2ff, #ff3366, #ffd000, #00e676, #7c4dff, #ff9100, #40c4ff, #e040fb;
+    --text-secondary: #8ad8ff;
+    --text-dim: rgba(240, 243, 248, 0.6);
+    --border-color: rgba(0, 210, 255, 0.35);
+    --border-subtle: rgba(255, 255, 255, 0.1);
+    --shelf-wood-1: #283344;
+    --shelf-wood-2: #1a2230;
+    --shelf-wood-edge: #101620;
 }
 
-/* ── 4. Mega Drive 16-Bit (1988 Sega Sonic Cyber) ── */
-[data-theme="megadrive"] {
-    --bg-app: #0c1021;
-    --bg-surface: #17203b;
-    --bg-surface-subtle: rgba(0, 180, 216, 0.06);
-    --bg-header: #080b18;
+/* ── 4. Mega Drive 16-Bit (1988 Sega Sonic Cyber Blue & Gold) ── */
+html[data-theme="megadrive"],
+body[data-theme="megadrive"] {
+    --bg-app: #0a0e1c;
+    --bg-surface: #141c36;
+    --bg-surface-subtle: rgba(0, 180, 216, 0.1);
+    --bg-header: #060914;
+    --bg-card: rgba(20, 28, 54, 0.92);
+    --bg-card-hover: rgba(28, 38, 72, 0.95);
     --accent-color: #00b4d8;
     --accent-hover: #48cae4;
     --accent-secondary: #ffd166;
-    --accent-subtle: rgba(0, 180, 216, 0.16);
-    --accent-gradient: linear-gradient(135deg, #00b4d8 0%, #03045e 100%);
-    --text-main: #edf2f4;
+    --accent-subtle: rgba(0, 180, 216, 0.22);
+    --accent-glow: rgba(0, 180, 216, 0.4);
+    --accent-gradient: linear-gradient(135deg, #00b4d8 0%, #0077b6 100%);
+    --gradient-primary: linear-gradient(135deg, #00b4d8 0%, #0077b6 100%);
+    --text-main: #edf2f7;
+    --text-primary: #edf2f7;
     --text-muted: #ffd166;
-    --text-dim: rgba(237, 242, 244, 0.6);
-    --border-color: rgba(0, 180, 216, 0.28);
-    --border-subtle: rgba(255, 255, 255, 0.08);
-    --shelf-wood-1: #1e2d4d;
-    --shelf-wood-2: #121c32;
-    --shelf-wood-edge: #090e1b;
-    --chart-colors: #00b4d8, #ffd166, #ef476f, #06d6a0, #118ab2, #90e0ef, #f77f00, #e63946;
+    --text-secondary: #ffd166;
+    --text-dim: rgba(237, 242, 247, 0.6);
+    --border-color: rgba(0, 180, 216, 0.35);
+    --border-subtle: rgba(0, 180, 216, 0.15);
+    --shelf-wood-1: #1a2846;
+    --shelf-wood-2: #101a30;
+    --shelf-wood-edge: #080e1c;
 }
 
-/* ── 5. Super Nintendo (1990 SNES Purple & Grey) ── */
-[data-theme="snes"] {
-    --bg-app: #1a1824;
-    --bg-surface: #2a2538;
-    --bg-surface-subtle: rgba(167, 139, 250, 0.06);
-    --bg-header: #14121d;
+/* ── 5. Super Nintendo (1990 SNES Purple & Lilac) ── */
+html[data-theme="snes"],
+body[data-theme="snes"] {
+    --bg-app: #181622;
+    --bg-surface: #262234;
+    --bg-surface-subtle: rgba(167, 139, 250, 0.08);
+    --bg-header: #12101b;
+    --bg-card: rgba(38, 34, 52, 0.92);
+    --bg-card-hover: rgba(50, 45, 68, 0.95);
     --accent-color: #a78bfa;
     --accent-hover: #c4b5fd;
     --accent-secondary: #f472b6;
-    --accent-subtle: rgba(167, 139, 250, 0.16);
-    --accent-gradient: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
+    --accent-subtle: rgba(167, 139, 250, 0.22);
+    --accent-glow: rgba(167, 139, 250, 0.35);
+    --accent-gradient: linear-gradient(135deg, #8b5cf6 0%, #c084fc 100%);
+    --gradient-primary: linear-gradient(135deg, #8b5cf6 0%, #c084fc 100%);
     --text-main: #f5f3ff;
+    --text-primary: #f5f3ff;
     --text-muted: #c4b5fd;
+    --text-secondary: #c4b5fd;
     --text-dim: rgba(245, 243, 255, 0.6);
-    --border-color: rgba(167, 139, 250, 0.25);
-    --border-subtle: rgba(255, 255, 255, 0.08);
-    --shelf-wood-1: #38304a;
-    --shelf-wood-2: #241e30;
-    --shelf-wood-edge: #15111c;
-    --chart-colors: #8b5cf6, #ec4899, #60a5fa, #34d399, #fbbf24, #a78bfa, #f472b6, #818cf8;
+    --border-color: rgba(167, 139, 250, 0.35);
+    --border-subtle: rgba(167, 139, 250, 0.15);
+    --shelf-wood-1: #342c44;
+    --shelf-wood-2: #201a2c;
+    --shelf-wood-edge: #120e1a;
 }
 
 /* ── 6. OLED Pure Dark (Deep Black & Neon Gold) ── */
-[data-theme="oled"] {
+html[data-theme="oled"],
+body[data-theme="oled"] {
     --bg-app: #000000;
-    --bg-surface: #101014;
-    --bg-surface-subtle: rgba(255, 255, 255, 0.04);
+    --bg-surface: #121214;
+    --bg-surface-subtle: rgba(255, 255, 255, 0.05);
     --bg-header: #000000;
+    --bg-card: rgba(18, 18, 20, 0.95);
+    --bg-card-hover: rgba(28, 28, 32, 0.98);
     --accent-color: #ffaa00;
     --accent-hover: #ffc44d;
     --accent-secondary: #ff5500;
-    --accent-subtle: rgba(255, 170, 0, 0.12);
-    --accent-gradient: linear-gradient(135deg, #ffaa00 0%, #ff5500 100%);
+    --accent-subtle: rgba(255, 170, 0, 0.18);
+    --accent-glow: rgba(255, 170, 0, 0.4);
+    --accent-gradient: linear-gradient(135deg, #ffaa00 0%, #ff6600 100%);
+    --gradient-primary: linear-gradient(135deg, #ffaa00 0%, #ff6600 100%);
     --text-main: #ffffff;
+    --text-primary: #ffffff;
     --text-muted: #ffaa00;
-    --text-dim: rgba(255, 255, 255, 0.5);
-    --border-color: rgba(255, 170, 0, 0.3);
-    --border-subtle: rgba(255, 255, 255, 0.08);
+    --text-secondary: #ffaa00;
+    --text-dim: rgba(255, 255, 255, 0.55);
+    --border-color: rgba(255, 170, 0, 0.35);
+    --border-subtle: rgba(255, 255, 255, 0.1);
     --shelf-wood-1: #222222;
     --shelf-wood-2: #141414;
     --shelf-wood-edge: #080808;
-    --chart-colors: #ffaa00, #ff5500, #22c55e, #3b82f6, #a855f7, #ec4899, #06b6d4, #f97316;
 }
 
 /* ── 7. Synthwave 80s (Outrun Neon Pink & Cyan) ── */
-[data-theme="synthwave"] {
-    --bg-app: #150921;
-    --bg-surface: #241138;
-    --bg-surface-subtle: rgba(255, 42, 133, 0.08);
-    --bg-header: #0e0517;
+html[data-theme="synthwave"],
+body[data-theme="synthwave"] {
+    --bg-app: #13071d;
+    --bg-surface: #220e32;
+    --bg-surface-subtle: rgba(255, 42, 133, 0.12);
+    --bg-header: #0c0413;
+    --bg-card: rgba(34, 14, 50, 0.92);
+    --bg-card-hover: rgba(48, 20, 70, 0.95);
     --accent-color: #ff2a85;
     --accent-hover: #ff5da3;
     --accent-secondary: #05d9e8;
-    --accent-subtle: rgba(255, 42, 133, 0.18);
+    --accent-subtle: rgba(255, 42, 133, 0.25);
+    --accent-glow: rgba(255, 42, 133, 0.45);
     --accent-gradient: linear-gradient(135deg, #ff2a85 0%, #05d9e8 100%);
+    --gradient-primary: linear-gradient(135deg, #ff2a85 0%, #05d9e8 100%);
     --text-main: #fff0f7;
+    --text-primary: #fff0f7;
     --text-muted: #05d9e8;
-    --text-dim: rgba(255, 240, 247, 0.6);
-    --border-color: rgba(255, 42, 133, 0.3);
-    --border-subtle: rgba(5, 217, 232, 0.15);
-    --shelf-wood-1: #381a4d;
-    --shelf-wood-2: #220e30;
-    --shelf-wood-edge: #13061c;
-    --chart-colors: #ff2a85, #05d9e8, #ffe700, #d300c5, #7700a6, #00f0ff, #ff71ce, #01cdfe;
+    --text-secondary: #05d9e8;
+    --text-dim: rgba(255, 240, 247, 0.65);
+    --border-color: rgba(255, 42, 133, 0.4);
+    --border-subtle: rgba(5, 217, 232, 0.2);
+    --shelf-wood-1: #341646;
+    --shelf-wood-2: #200c2c;
+    --shelf-wood-edge: #110518;
 }
 
-/* ── Global Transitions for Smooth Theme Switching ── */
-body, #app, .main-header, #main-content, .v29-title-zone, .v29-filter-zone, .v29-scroll-zone, .bottom-nav {
-    transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+/* ── Global Theme Binding to Core Elements ── */
+html, body, #app {
+    background-color: var(--bg-app) !important;
+    color: var(--text-main) !important;
 }
 
-/* ── Shelf Dynamic Theming ── */
+.main-header {
+    background-color: var(--bg-header) !important;
+    border-bottom: 2px solid var(--accent-color) !important;
+}
+
+.bottom-nav {
+    background-color: var(--bg-header) !important;
+    border-top: 1px solid var(--border-color) !important;
+}
+
+.logo h1 {
+    color: var(--accent-color) !important;
+}
+
+.desktop-nav button {
+    color: var(--text-muted) !important;
+}
+
+.desktop-nav button.active {
+    color: var(--text-main) !important;
+    border-bottom: 2px solid var(--accent-color) !important;
+}
+
+.btn-new, .fab-mobile {
+    background: var(--accent-gradient) !important;
+    color: #ffffff !important;
+}
+
+#main-content, .v29-title-zone, .v29-filter-zone, .v29-scroll-zone {
+    background-color: var(--bg-app) !important;
+    color: var(--text-main) !important;
+}
+
+/* Form Controls Theme Styling */
+select, input[type="text"], input[type="number"], input[type="password"], textarea {
+    background-color: var(--bg-surface) !important;
+    color: var(--text-main) !important;
+    border-color: var(--border-subtle) !important;
+}
+
+select:focus, input:focus, textarea:focus {
+    border-color: var(--accent-color) !important;
+    outline: none;
+    box-shadow: 0 0 10px var(--accent-subtle) !important;
+}
+
+/* Shelf Styling with Theme Wood */
 .shelf-row {
     border-bottom-color: var(--shelf-wood-edge) !important;
     border-left-color: var(--shelf-wood-1) !important;
@@ -170,7 +265,7 @@ body, #app, .main-header, #main-content, .v29-title-zone, .v29-filter-zone, .v29
     background: linear-gradient(180deg, var(--shelf-wood-1) 0%, var(--shelf-wood-2) 60%, var(--shelf-wood-edge) 100%) !important;
 }
 
-/* ── Theme Picker Cards UI ── */
+/* Theme Picker Cards */
 .theme-picker-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
@@ -188,30 +283,38 @@ body, #app, .main-header, #main-content, .v29-title-zone, .v29-filter-zone, .v29
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
-    transition: all 0.2s ease;
+    gap: 6px;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
     user-select: none;
+    box-sizing: border-box;
 }
 
 .theme-card:hover {
-    transform: translateY(-3px);
+    transform: translateY(-3px) scale(1.02);
     border-color: var(--accent-color);
-    background: rgba(255, 255, 255, 0.06);
+    background: rgba(255, 255, 255, 0.07);
+    box-shadow: 0 4px 15px var(--accent-subtle);
 }
 
 .theme-card.active {
-    border-color: var(--accent-color);
-    background: var(--accent-subtle);
-    box-shadow: 0 0 15px var(--accent-subtle);
+    border-color: var(--accent-color) !important;
+    background: var(--accent-subtle) !important;
+    box-shadow: 0 0 18px var(--accent-glow) !important;
+    transform: translateY(-2px);
 }
 
 .theme-card-icon {
     font-size: 1.6rem;
+    transition: transform 0.2s ease;
+}
+
+.theme-card:hover .theme-card-icon {
+    transform: scale(1.15);
 }
 
 .theme-card-name {
-    font-size: 0.75rem;
+    font-size: 0.78rem;
     font-weight: 700;
     text-align: center;
     color: var(--text-main);
@@ -220,30 +323,70 @@ body, #app, .main-header, #main-content, .v29-title-zone, .v29-filter-zone, .v29
 
 .theme-card-palette {
     display: flex;
-    gap: 4px;
-    margin-top: 2px;
+    gap: 5px;
+    margin-top: 4px;
 }
 
 .theme-swatch {
-    width: 12px;
-    height: 12px;
+    width: 14px;
+    height: 14px;
     border-radius: 50%;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    display: inline-block;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.4);
 }
 
 .theme-card-badge {
     position: absolute;
     top: 6px;
     right: 6px;
-    font-size: 0.6rem;
+    font-size: 0.55rem;
     background: var(--accent-color);
     color: #000;
     font-weight: 800;
-    padding: 2px 5px;
+    padding: 2px 6px;
     border-radius: 6px;
     display: none;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
 }
 
 .theme-card.active .theme-card-badge {
-    display: block;
+    display: block !important;
+}
+
+/* Floating Theme Toast Notification */
+#theme-toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: var(--bg-surface);
+    color: var(--text-main);
+    border: 2px solid var(--accent-color);
+    padding: 12px 24px;
+    border-radius: 30px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 20px var(--accent-subtle);
+    z-index: 99999;
+    opacity: 0;
+    pointer-events: none;
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+#theme-toast.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+}
+
+/* Scrollbar Styling per theme */
+::-webkit-scrollbar-thumb {
+    background: var(--border-color) !important;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--accent-color) !important;
 }

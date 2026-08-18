@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport"
         content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>RetroCollection v125 ✅❌🔍🎮</title>
+    <title>RetroCollection v127 ✅❌🔍🎮</title>
 
     <script>
         // Instant Theme Engine — zero flicker
@@ -20,8 +20,8 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
-    <!-- v125: Themes CSS -->
-    <link rel="stylesheet" href="css/themes.css">
+    <!-- v127: Themes CSS -->
+    <link rel="stylesheet" href="css/themes.css?v=127">
 
     <!-- Critical Styles Inlined -->
     <style>
@@ -30,6 +30,9 @@
             --h-bottom: 60px;
             --accent-color: #ff9f0a;
             --bg-app: #1e1e24;
+            --bg-header: #18181e;
+            --text-main: #ffffff;
+            --text-muted: #ffc978;
         }
 
         * {
@@ -45,7 +48,7 @@
             width: 100%;
             max-width: 100vw;
             background: var(--bg-app);
-            color: white;
+            color: var(--text-main);
             overflow: hidden;
             -webkit-text-size-adjust: 100%;
         }
@@ -60,7 +63,7 @@
         }
 
         .main-header {
-            background: #1e1e24;
+            background: var(--bg-header);
             border-bottom: 2px solid var(--accent-color);
             display: flex;
             align-items: center;
@@ -166,8 +169,8 @@
                 left: 0;
                 right: 0;
                 height: var(--h-bottom);
-                background: #1e1e24;
-                border-top: 1px solid rgba(255, 159, 10, 0.2);
+                background: var(--bg-header);
+                border-top: 1px solid var(--border-color, rgba(255, 159, 10, 0.2));
                 align-items: center;
                 justify-content: space-around;
                 z-index: 2000;
@@ -204,23 +207,33 @@
         .desktop-nav button {
             background: none;
             border: none;
-            color: #ffc978;
+            color: var(--text-muted);
             font-weight: 600;
             margin-left: 20px;
             cursor: pointer;
             font-size: 0.9rem;
+            transition: color 0.2s ease;
         }
 
         .desktop-nav button.active {
-            color: white;
+            color: var(--text-main);
             border-bottom: 2px solid var(--accent-color);
         }
 
         .btn-new {
-            background: linear-gradient(135deg, #ff9f0a 0%, #ff7950 100%);
+            background: var(--accent-gradient, linear-gradient(135deg, #ff9f0a 0%, #ff7950 100%));
             color: white !important;
             padding: 8px 18px !important;
             border-radius: 20px !important;
+            font-weight: 700;
+            border: none;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .btn-new:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px var(--accent-subtle, rgba(255, 159, 10, 0.4));
         }
 
         /* Error Overlay */
@@ -264,16 +277,16 @@
             right: 20px;
             width: 60px;
             height: 60px;
-            background: linear-gradient(135deg, #ff9f0a 0%, #ff7950 100%);
+            background: var(--accent-gradient, linear-gradient(135deg, #ff9f0a 0%, #ff7950 100%));
             color: white;
             border-radius: 30px;
             align-items: center;
             justify-content: center;
             font-size: 2rem;
             font-weight: 800;
-            box-shadow: 0 4px 15px rgba(255, 159, 10, 0.4);
+            box-shadow: 0 4px 15px var(--accent-subtle, rgba(255, 159, 10, 0.4));
             z-index: 3000;
-            border: 2px solid #1e1e24;
+            border: 2px solid var(--bg-header);
             cursor: pointer;
             text-decoration: none;
         }
@@ -314,8 +327,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
-    <!-- v123: Shelf 3D styles -->
-    <link rel="stylesheet" href="css/shelf.css">
+    <!-- v127: Shelf 3D styles -->
+    <link rel="stylesheet" href="css/shelf.css?v=127">
 </head>
 
 <body>
@@ -332,17 +345,17 @@
         }
 
         ::-webkit-scrollbar-thumb {
-            background: rgba(255, 159, 10, 0.3) !important;
+            background: var(--border-color, rgba(255, 159, 10, 0.3)) !important;
             border-radius: 10px !important;
         }
 
         ::-webkit-scrollbar-thumb:hover {
-            background: rgba(255, 159, 10, 0.6) !important;
+            background: var(--accent-color, rgba(255, 159, 10, 0.6)) !important;
         }
 
         * {
             scrollbar-width: thin !important;
-            scrollbar-color: rgba(255, 159, 10, 0.3) rgba(30, 30, 36, 0.5) !important;
+            scrollbar-color: var(--border-color, rgba(255, 159, 10, 0.3)) rgba(30, 30, 36, 0.5) !important;
         }
     </style>
     <div id="error-display">
@@ -351,7 +364,7 @@
             style="font-family: monospace; background: #000; padding: 1rem; border-radius: 8px; width: 100%; max-width: 600px; overflow: auto; margin-bottom: 1rem; text-align: left; font-size: 0.8rem;">
         </div>
         <button onclick="location.reload()"
-            style="padding: 10px 20px; border-radius: 8px; border: none; background: #ff9f0a; color: white; font-weight: bold; cursor: pointer;">Tentar
+            style="padding: 10px 20px; border-radius: 8px; border: none; background: var(--accent-color, #ff9f0a); color: white; font-weight: bold; cursor: pointer;">Tentar
             Novamente</button>
     </div>
 
@@ -427,28 +440,31 @@
             return false;
         };
 
-        log("Arranque v125 iniciado...");
+        log("Arranque v127 iniciado...");
 
-        // v102 AGGRESSIVE SETUP & UPDATE
+        // v127 AGGRESSIVE SETUP & UPDATE
         const urlParams = new URLSearchParams(window.location.search);
+        const currentV = urlParams.get('v');
         const forceUpdate = urlParams.get('update');
 
-        if (localStorage.getItem('app_v') !== '125' || forceUpdate === '125') {
-            log("Actualização Crítica v125...");
-            localStorage.setItem('app_v', '125');
+        if (localStorage.getItem('app_v') !== '127' || forceUpdate === '127' || (currentV && currentV !== '127')) {
+            log("Actualização Crítica v127...");
+            localStorage.setItem('app_v', '127');
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.getRegistrations().then(rs => {
                     Promise.all(rs.map(r => r.unregister())).then(() => {
-                        log("Cache renovado. A reiniciar...");
-                        location.href = location.href.split('?')[0] + '?v=125';
+                        caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k)))).then(() => {
+                            log("Cache renovado. A reiniciar...");
+                            location.href = location.href.split('?')[0] + '?v=127';
+                        });
                     });
                 });
             } else {
-                location.href = location.href.split('?')[0] + '?v=101';
+                location.href = location.href.split('?')[0] + '?v=127';
             }
         }
 
-        // Hanging check v125 + Emergency Button
+        // Hanging check v127 + Emergency Button
         setTimeout(() => {
             const title = document.querySelector('.v29-title-zone h2');
             if (title && title.innerText.includes('A carregar')) {
@@ -462,49 +478,29 @@
         document.getElementById('emergency-btn').onclick = async () => {
             if (confirm("Isto irá limpar o cache e desinstalar a App para tentar resolver o problema. Continuar?")) {
                 localStorage.removeItem('app_v');
+                localStorage.removeItem('logos_synced_v127');
+                localStorage.removeItem('logos_synced_v126');
                 localStorage.removeItem('logos_synced_v125');
                 localStorage.removeItem('logos_synced_v124');
                 localStorage.removeItem('logos_synced_v123');
-                localStorage.removeItem('logos_synced_v122');
-                localStorage.removeItem('logos_synced_v121');
-                localStorage.removeItem('logos_synced_v120');
-                localStorage.removeItem('logos_synced_v119');
-                localStorage.removeItem('logos_synced_v118');
-                localStorage.removeItem('logos_synced_v117');
-                localStorage.removeItem('logos_synced_v116');
-                localStorage.removeItem('logos_synced_v115');
-                localStorage.removeItem('logos_synced_v114');
-                localStorage.removeItem('logos_synced_v112');
-                localStorage.removeItem('logos_synced_v111');
-                localStorage.removeItem('logos_synced_v110');
-                localStorage.removeItem('logos_synced_v109');
-                localStorage.removeItem('logos_synced_v108');
-                localStorage.removeItem('logos_synced_v107');
-                localStorage.removeItem('logos_synced_v106');
-                localStorage.removeItem('logos_synced_v105');
-                localStorage.removeItem('logos_synced_v104');
-                localStorage.removeItem('logos_synced_v103');
-                localStorage.removeItem('logos_synced_v102');
-                localStorage.removeItem('logos_synced_v101');
-                localStorage.removeItem('logos_synced_v100');
                 if ('serviceWorker' in navigator) {
                     const rs = await navigator.serviceWorker.getRegistrations();
                     for (let r of rs) await r.unregister();
                 }
                 const keys = await caches.keys();
                 for (let k of keys) await caches.delete(k);
-                location.href = location.href.split('?')[0] + '?update=125';
+                location.href = location.href.split('?')[0] + '?update=127';
             }
         };
     </script>
 
-    <script type="module" src="js/app.js?v=125"></script>
+    <script type="module" src="js/app.js?v=127"></script>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js')
+                navigator.serviceWorker.register('sw.js?v=127')
                     .then((registration) => {
-                        log("v125 Pronta.");
+                        log("v127 Pronta.");
                         console.log('SW registered:', registration);
                     })
                     .catch(e => {

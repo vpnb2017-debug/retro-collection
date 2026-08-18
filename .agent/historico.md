@@ -4,6 +4,24 @@ Registo completo de todas as alterações efetuadas em cada versão da aplicaç�
 
 ---
 
+## v127 — 2026-08-18
+### 🔧 Correções e Melhorias no Motor de Temas
+- **Correção da Seleção de Temas**: Corrigido o evento de clique nos cartões de tema para alternar instantaneamente e atualizar todas as vistas ativas.
+- **Feedback Visual Imediato (Toast)**: Adicionado alerta flutuante de confirmação instantânea ao selecionar qualquer um dos 7 temas (`✨ Tema [Nome] Ativado!`).
+- **Conversão Completa para Variáveis CSS**: Eliminadas cores hexadecimais estáticas hardcoded no Dashboard, Grelha de Jogos, Prateleiras 3D, Formulário e Nuvem, permitindo que toda a interface (cabeçalho, fundos, texto secundário, acentos, botões, gráficos e molduras) mude dinamicamente de acordo com a paleta da consola selecionada.
+- **Invalidação de Cache e Service Worker**: Atualizado o `sw.js` com estratégia Network-First para ficheiros de código (HTML/JS/CSS), inclusão de todos os novos serviços e ficheiros de estilo na pré-cache e renovação automática de cache na versão `v127`.
+
+### 🔧 Ficheiros Modificados
+- `index.html` → versão v127, utilização de variáveis CSS nos estilos críticos e renovação de cache
+- `css/themes.css` → versão v127, mapeamento robusto de variáveis CSS, estilos do toast e transições suaves
+- `js/services/themeService.js` → versão v127, método `showToast()`, atualização de meta tags e propagação de eventos
+- `js/services/chartService.js` → versão v127, sincronização dinâmica com o novo themeService
+- `js/app.js` → versão v127, integração de variáveis CSS em todas as vistas e handlers de temas
+- `sw.js` → versão v127, estratégia Network-First e lista completa de assets
+- `.agent/historico.md` → registo da versão v127
+
+---
+
 ## v125 — 2026-08-18
 ### ✨ Novas Funcionalidades
 - **🎨 Sistema de Temas Visuais Retro**: Motor completo de personalização visual com 7 temas inspirados na história das consolas e estética retro:
