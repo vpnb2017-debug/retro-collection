@@ -4,6 +4,32 @@ Registo completo de todas as alterações efetuadas em cada versão da aplicaç�
 
 ---
 
+## v125 — 2026-08-18
+### ✨ Novas Funcionalidades
+- **🎨 Sistema de Temas Visuais Retro**: Motor completo de personalização visual com 7 temas inspirados na história das consolas e estética retro:
+  1. 🕹️ **Retro Amber** *(Padrão Arcade / CRT — Fundo grafite & Acento âmbar)*
+  2. 🟢 **Game Boy DMG** *(Nintendo 1989 — Tons de verde LCD monocromático)*
+  3. ⚪ **PlayStation 1** *(Sony 1994 — Cinza industrial & Azul Teal dos anos 90)*
+  4. 🔵 **Mega Drive 16-Bit** *(Sega 1988 — Sonic Cyber Blue & Dourado)*
+  5. 🟣 **Super Nintendo** *(SNES 1990 — Cinza neutro com lilás e roxo)*
+  6. 🖤 **OLED Pure Dark** *(Preto 100% absoluto com acento dourado néon)*
+  7. 💖 **Synthwave 80s** *(Rosa choque néon & Ciano retro wave)*
+- **Seletor Visual de Temas**: Novo painel interativo em "Nuvem & Definições ☁️" com cartões visuais, amostras de paleta e badge de tema ativo.
+- **Gráficos Dinâmicos com Chart.js**: Os 4 gráficos do Dashboard recalculam e adaptam automaticamente a paleta de cores ao tema selecionado sem necessidade de recarregar.
+- **Carregamento Instantâneo sem Flicker**: Aplicação de CSS variables e tema direto no `<head>` do HTML antes da renderização.
+
+### 🗂️ Ficheiros Criados
+- `css/themes.css`
+- `js/services/themeService.js`
+
+### 🔧 Ficheiros Modificados
+- `index.html` → versão v125, import de `themes.css`, carregador de tema no `<head>`
+- `js/app.js` → versão v125, integração do `themeService`, seletor de temas nas definições
+- `js/services/chartService.js` → integração com paletas dinâmicas por tema
+- `.agent/historico.md` → registo da versão v125
+
+---
+
 ## v124 — 2026-08-18
 ### 🔧 Correções e Otimizações Mobile
 - **Responsividade Mobile da Coleção**: Correção de transbordo horizontal (página cortada nas laterais em ecrãs de telemóvel).

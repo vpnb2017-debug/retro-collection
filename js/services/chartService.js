@@ -1,7 +1,8 @@
 /**
- * Chart Service — RetroCollection v123
- * Renders interactive charts in the Dashboard using Chart.js (CDN)
+ * Chart Service — RetroCollection v125
+ * Renders interactive charts in the Dashboard with dynamic retro theme palettes
  */
+import { themeService } from './themeService.js?v=125';
 
 export const chartService = {
     instances: {},
@@ -29,22 +30,29 @@ export const chartService = {
         const ctx = document.getElementById(canvasId);
         if (!ctx) return;
         if (this.instances[canvasId]) { try { this.instances[canvasId].destroy(); } catch(e){} }
-        const colors = [
-            '#ff9f0a','#ff7950','#ffc978','#22c55e','#3b82f6','#a78bfa',
-            '#f472b6','#34d399','#fb923c','#60a5fa','#c084fc','#f87171'
-        ];
+        
+        const colors = themeService.getThemeColors();
         const labels = Object.keys(data);
         const values = Object.values(data);
+        
+        // Generate enough colors if labels exceed array length
+        const bgColors = labels.map((_, i) => colors[i % colors.length]);
+
         this.instances[canvasId] = new Chart(ctx, {
             type: 'doughnut',
             data: {
                 labels,
-                datasets: [{ data: values, backgroundColor: colors.slice(0, labels.length), borderWidth: 2, borderColor: '#1e1e24' }]
+                datasets: [{ 
+                    data: values, 
+                    backgroundColor: bgColors, 
+                    borderWidth: 2, 
+                    borderColor: getComputedStyle(document.documentElement).getPropertyValue('--bg-app').trim() || '#1e1e24'
+                }]
             },
             options: {
                 responsive: true, maintainAspectRatio: false,
                 plugins: {
-                    legend: { position: 'right', labels: { color: '#fff', font: { size: 11 }, padding: 10 } },
+                    legend: { position: 'right', labels: { color: getComputedStyle(document.documentElement).getPropertyValue('--text-main').trim() || '#fff', font: { size: 11 }, padding: 8 } },
                     tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.raw} itens` } }
                 }
             }
@@ -58,15 +66,18 @@ export const chartService = {
         const ctx = document.getElementById(canvasId);
         if (!ctx) return;
         if (this.instances[canvasId]) { try { this.instances[canvasId].destroy(); } catch(e){} }
+        
+        const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent-color').trim() || '#ff9f0a';
         const sorted = Object.entries(data).sort((a,b) => b[1]-a[1]).slice(0, 8);
+        
         this.instances[canvasId] = new Chart(ctx, {
             type: 'bar',
             data: {
                 labels: sorted.map(([g]) => g),
                 datasets: [{
                     data: sorted.map(([,v]) => v),
-                    backgroundColor: 'rgba(255,159,10,0.7)',
-                    borderColor: '#ff9f0a',
+                    backgroundColor: accent + 'aa',
+                    borderColor: accent,
                     borderWidth: 1,
                     borderRadius: 6
                 }]
@@ -89,19 +100,22 @@ export const chartService = {
         const ctx = document.getElementById(canvasId);
         if (!ctx) return;
         if (this.instances[canvasId]) { try { this.instances[canvasId].destroy(); } catch(e){} }
+        
+        const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent-color').trim() || '#ff9f0a';
         const sorted = Object.entries(data).sort((a,b) => a[0]-b[0]);
+        
         this.instances[canvasId] = new Chart(ctx, {
             type: 'line',
             data: {
                 labels: sorted.map(([y]) => y),
                 datasets: [{
-                    label: 'Aquisicoes',
+                    label: 'Aquisições',
                     data: sorted.map(([,v]) => v),
-                    borderColor: '#ff9f0a',
-                    backgroundColor: 'rgba(255,159,10,0.1)',
+                    borderColor: accent,
+                    backgroundColor: accent + '22',
                     fill: true,
                     tension: 0.4,
-                    pointBackgroundColor: '#ff9f0a',
+                    pointBackgroundColor: accent,
                     pointRadius: 4
                 }]
             },
@@ -123,12 +137,15 @@ export const chartService = {
         const ctx = document.getElementById(canvasId);
         if (!ctx) return;
         if (this.instances[canvasId]) { try { this.instances[canvasId].destroy(); } catch(e){} }
+        
+        const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent-color').trim() || '#ff9f0a';
         const pct = total > 0 ? Math.round((validated / total) * 100) : 0;
         const notValidated = total - validated;
+        
         this.instances[canvasId] = new Chart(ctx, {
             type: 'doughnut',
             data: {
-                labels: ['Validados', 'Nao Validados'],
+                labels: ['Validados', 'Não Validados'],
                 datasets: [{
                     data: [validated, notValidated],
                     backgroundColor: ['#22c55e', 'rgba(255,255,255,0.1)'],
@@ -149,7 +166,7 @@ export const chartService = {
                     const { width, height, ctx: c } = chart;
                     c.restore();
                     c.font = `bold ${Math.round(height / 4)}px Outfit, sans-serif`;
-                    c.fillStyle = '#ff9f0a';
+                    c.fillStyle = accent;
                     c.textAlign = 'center';
                     c.textBaseline = 'middle';
                     c.fillText(`${pct}%`, width / 2, height / 2);

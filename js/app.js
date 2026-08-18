@@ -1,14 +1,15 @@
-import { dbService } from './services/db.js?v=124';
-import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js?v=124';
-import { coverSearchService } from './services/coverSearch.js?v=124';
-import WebuyService from './services/webuyService.js?v=124';
-import { localFileSync } from './services/localFileSync.js?v=124';
-import { metadataService } from './services/metadataService.js?v=124';
-import { cloudSyncService } from './services/cloudSyncService.js?v=124';
-import { theGamesDBService } from './services/theGamesDBService.js?v=124';
-import { barcodeScannerService } from './services/barcodeScannerService.js?v=124';
-import { chartService } from './services/chartService.js?v=124';
-import { exportService } from './services/exportService.js?v=124';
+import { dbService } from './services/db.js?v=125';
+import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js?v=125';
+import { coverSearchService } from './services/coverSearch.js?v=125';
+import WebuyService from './services/webuyService.js?v=125';
+import { localFileSync } from './services/localFileSync.js?v=125';
+import { metadataService } from './services/metadataService.js?v=125';
+import { cloudSyncService } from './services/cloudSyncService.js?v=125';
+import { theGamesDBService } from './services/theGamesDBService.js?v=125';
+import { barcodeScannerService } from './services/barcodeScannerService.js?v=125';
+import { chartService } from './services/chartService.js?v=125';
+import { exportService } from './services/exportService.js?v=125';
+import { themeService } from './services/themeService.js?v=125';
 
 // Global Exposure
 window.navigate = navigate;
@@ -33,6 +34,12 @@ window.pushToCloud = pushToCloud;
 window.saveCloudLink = saveCloudLink;
 window.openBarcodeScanner = openBarcodeScanner;
 window.toggleViewMode = toggleViewMode;
+window.setTheme = (themeId) => themeService.setTheme(themeId);
+window.selectTheme = (themeId) => {
+    themeService.setTheme(themeId);
+    if (state.view === 'nav-sync') renderSyncView();
+};
+window.themeService = themeService;
 // window.state moved down to avoid TDZ error
 
 // Utility for logging 
@@ -185,7 +192,7 @@ async function renderDashboard() {
         const ownedTotal = ownedGames.length + ownedConsoles.length;
         const wishlistTotal = games.filter(g => g.isWishlist).length + consoles.filter(c => c.isWishlist).length;
 
-        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:#ff9f0a; border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v124</span></h2>`;
+        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:var(--accent-color); border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v125</span></h2>`;
 
         const platData = await getPlatformOptions();
 
@@ -1138,8 +1145,34 @@ async function renderSyncView() {
 
     titleEl.innerHTML = `<h2>Nuvem & Definições</h2>`;
     scrollEl.innerHTML = `
-        <div style="display:flex; flex-direction:column; gap:18px; max-width:600px; margin:0 auto;">
+        <div style="display:flex; flex-direction:column; gap:18px; max-width:600px; margin:0 auto; box-sizing:border-box;">
             
+            <!-- v125: Retro Visual Themes Section -->
+            <div style="background:rgba(255,255,255,0.03); padding:24px; border-radius:24px; border:1px solid rgba(255,255,255,0.08); box-sizing:border-box;">
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px;">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <span style="font-size:1.6rem;">🎨</span>
+                        <div>
+                            <h3 style="margin:0; font-size:1.1rem; color:var(--text-main);">Temas Visuais Retro</h3>
+                            <p style="margin:2px 0 0 0; font-size:0.75rem; opacity:0.6;">Personaliza a estética da tua consola favorita</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="theme-picker-grid">
+                    ${themeService.getThemes().map(t => `
+                        <div class="theme-card ${themeService.getCurrentTheme() === t.id ? 'active' : ''}" onclick="window.selectTheme('${t.id}')">
+                            <span class="theme-card-badge">ATIVO</span>
+                            <span class="theme-card-icon">${t.icon}</span>
+                            <span class="theme-card-name">${t.name}</span>
+                            <span style="font-size:0.6rem; opacity:0.5; text-align:center;">${t.subtitle}</span>
+                            <div class="theme-card-palette">
+                                ${t.swatches.map(c => `<span class="theme-swatch" style="background:${c};"></span>`).join('')}
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+
             <!-- Cloud Sync Section -->
             <div style="background:linear-gradient(135deg, rgba(255,159,10,0.1) 0%, rgba(255,121,80,0.1) 100%); padding:28px; border-radius:24px; border:1px solid rgba(255,159,10,0.3); box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
                  <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px;">
@@ -1189,7 +1222,7 @@ async function renderSyncView() {
                     </div>
                  </div>
                  
-                <p style="margin-top:15px; font-size:0.75rem; color:#22c55e; font-weight:700; text-align:center;">🤖 Sentinela de Sync Ativo (v124)</p>
+                <p style="margin-top:15px; font-size:0.75rem; color:#22c55e; font-weight:700; text-align:center;">🤖 Sentinela de Sync Ativo (v125)</p>
             </div>
 
             <!-- v123: Enhanced Export Section -->
@@ -1313,7 +1346,7 @@ async function pushToCloud(silent = false) {
         const platforms = await dbService.getAll('platforms');
 
         const data = {
-            version: "v124",
+            version: "v125",
             timestamp: new Date().toISOString(),
             games,
             consoles,
@@ -1386,7 +1419,7 @@ async function exportCollection() {
         const platforms = await dbService.getAll('platforms');
 
         const data = {
-            version: "v124",
+            version: "v125",
             timestamp: new Date().toISOString(),
             games,
             consoles,
@@ -1460,15 +1493,20 @@ async function importCollection() {
 
 /** INITIALIZATION **/
 async function init() {
-    logger("Iniciando RetroCollection v124...");
+    logger("Iniciando RetroCollection v125...");
     try {
+        themeService.init();
+        window.addEventListener('themeChanged', () => {
+            if (state.view === 'nav-dashboard') renderDashboard();
+        });
+
         await dbService.open();
         logger("DB Conectado.");
 
-        // Auto-Sync Logos logic for v124
-        if (!localStorage.getItem('logos_synced_v124')) {
+        // Auto-Sync Logos logic for v125
+        if (!localStorage.getItem('logos_synced_v125')) {
             await autoSyncLogos();
-            localStorage.setItem('logos_synced_v124', 'true');
+            localStorage.setItem('logos_synced_v125', 'true');
         }
 
         // v98 Resilient Startup
