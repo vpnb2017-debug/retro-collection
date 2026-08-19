@@ -457,3 +457,23 @@ select:focus, input:focus, textarea:focus {
     }
 }
 
+/* Highlight glow animation when fields are auto-filled */
+@keyframes fieldHighlightGlow {
+    0% {
+        box-shadow: 0 0 0px var(--accent-color);
+        border-color: var(--accent-color);
+    }
+    40% {
+        box-shadow: 0 0 14px var(--accent-glow, rgba(255, 159, 10, 0.4));
+        border-color: var(--accent-color);
+    }
+    100% {
+        box-shadow: none;
+        border-color: var(--border-subtle, #444);
+    }
+}
+
+.field-glow {
+    animation: fieldHighlightGlow 1.8s ease forwards;
+}
+

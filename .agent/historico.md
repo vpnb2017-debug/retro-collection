@@ -4,6 +4,26 @@ Registo completo de todas as alterações efetuadas em cada versão da aplicaç�
 
 ---
 
+## v133 — 2026-08-19
+### ✨ Feedback Visual Instantâneo ao Selecionar Capa & Efeito Glow
+- **Indicadores de Progresso em Tempo Real ao Clicar na Capa**:
+  - Ao clicar numa capa no modal do TheGamesDB, a caixa de pré-visualização (`#cover-preview`) exibe de imediato um spinner e a mensagem `⏳ A descarregar e processar imagem...`.
+  - A barra dinâmica `#search-feedback-zone` atualiza instantaneamente para `⏳ A descarregar capa em alta resolução e a preencher dados...`.
+  - Concluído o download (conversão Base64 HD), o feedback exibe `✅ Capa e informações aplicadas com sucesso! (+N campos preenchidos)`.
+- **Efeito Visual Glow nos Campos Auto-Preenchidos**:
+  - Os campos que recebem novos metadados (Ano, Género, Desenvolvedora, Notas, Plataforma) recebem uma animação de pulso luminoso sincronizada com a cor do tema (`.field-glow`) para o utilizador identificar instantaneamente os dados preenchidos.
+- **Invalidação de Cache e Service Worker**:
+  - `sw.js`, `index.html`, `css/themes.css` e `js/app.js` atualizados para a versão `v133`.
+
+### 🔧 Ficheiros Modificados
+- `js/app.js` → feedback instantâneo na seleção de capas, preview com spinner e destaque luminoso de campos
+- `css/themes.css` → animação `@keyframes fieldHighlightGlow` e classe `.field-glow`
+- `index.html` → versão v133 e scripts de cache control
+- `sw.js` → versão v133
+- `.agent/historico.md` → registo da versão v133
+
+---
+
 ## v132 — 2026-08-19
 ### 🔍 Correção da Pesquisa de Capas no TheGamesDB (Ex: Speedball / Master System)
 - **Desacoplamento do Título e Plataforma na Pesquisa da API**:

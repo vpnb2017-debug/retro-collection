@@ -1,15 +1,15 @@
-import { dbService } from './services/db.js?v=132';
-import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js?v=132';
-import { coverSearchService } from './services/coverSearch.js?v=132';
-import WebuyService from './services/webuyService.js?v=132';
-import { localFileSync } from './services/localFileSync.js?v=132';
-import { metadataService } from './services/metadataService.js?v=132';
-import { cloudSyncService } from './services/cloudSyncService.js?v=132';
-import { theGamesDBService } from './services/theGamesDBService.js?v=132';
-import { barcodeScannerService } from './services/barcodeScannerService.js?v=132';
-import { chartService } from './services/chartService.js?v=132';
-import { exportService } from './services/exportService.js?v=132';
-import { themeService } from './services/themeService.js?v=132';
+import { dbService } from './services/db.js?v=133';
+import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js?v=133';
+import { coverSearchService } from './services/coverSearch.js?v=133';
+import WebuyService from './services/webuyService.js?v=133';
+import { localFileSync } from './services/localFileSync.js?v=133';
+import { metadataService } from './services/metadataService.js?v=133';
+import { cloudSyncService } from './services/cloudSyncService.js?v=133';
+import { theGamesDBService } from './services/theGamesDBService.js?v=133';
+import { barcodeScannerService } from './services/barcodeScannerService.js?v=133';
+import { chartService } from './services/chartService.js?v=133';
+import { exportService } from './services/exportService.js?v=133';
+import { themeService } from './services/themeService.js?v=133';
 
 // Global Exposure
 window.navigate = navigate;
@@ -196,7 +196,7 @@ async function renderDashboard() {
         const ownedTotal = ownedGames.length + ownedConsoles.length;
         const wishlistTotal = games.filter(g => g.isWishlist).length + consoles.filter(c => c.isWishlist).length;
 
-        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:var(--accent-color); border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v132</span></h2>`;
+        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:var(--accent-color); border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v133</span></h2>`;
 
         const platData = await getPlatformOptions();
 
@@ -716,8 +716,9 @@ async function renderAddForm(item) {
 window.updatePreview = (url) => {
     const preview = document.getElementById('cover-preview');
     if (preview) {
+        preview.innerHTML = '';
         preview.style.display = url ? 'block' : 'none';
-        preview.style.backgroundImage = `url(${url})`;
+        preview.style.backgroundImage = url ? `url(${url})` : 'none';
     }
 };
 
@@ -865,34 +866,107 @@ async function openBarcodeScanner() {
 
 async function selectCover(url, metaId) {
     document.getElementById('search-results-modal').style.display = 'none';
-    logger("A converter imagem...");
-    try {
-        const base64 = await coverSearchService.convertUrlToBase64(url);
-        document.getElementById('add-image').value = base64;
-        window.updatePreview(base64);
-        logger("Pronto.");
-    } catch (e) {
-        document.getElementById('add-image').value = url;
-        window.updatePreview(url);
-        logger("Guardado link (Base64 falhou)");
+
+    const feedbackZone = document.getElementById('search-feedback-zone');
+    const preview = document.getElementById('cover-preview');
+
+    // 1. Immediate visual feedback
+    if (feedbackZone) {
+        feedbackZone.style.display = 'block';
+        feedbackZone.innerHTML = `
+            <div class="search-status-bar">
+                <span class="spinner-icon" style="width:14px; height:14px; border-width:2px; border-top-color:var(--accent-color);"></span>
+                <span>A descarregar capa em alta resolução e a preencher dados... ⏳</span>
+            </div>
+        `;
     }
 
-    // v123: Auto-fill metadata from TheGamesDB cover search result
+    if (preview) {
+        preview.style.display = 'flex';
+        preview.style.alignItems = 'center';
+        preview.style.justifyContent = 'center';
+        preview.style.backgroundImage = 'none';
+        preview.innerHTML = `
+            <div style="display:flex; flex-direction:column; align-items:center; gap:8px; color:var(--accent-color);">
+                <span class="spinner-icon" style="width:28px; height:28px; border-width:3px; border-top-color:var(--accent-color);"></span>
+                <span style="font-size:0.75rem; font-weight:700;">A descarregar e processar imagem...</span>
+            </div>
+        `;
+    }
+
+    logger("A descarregar e converter imagem...");
+    let finalImageUrl = url;
+    try {
+        const base64 = await coverSearchService.convertUrlToBase64(url);
+        finalImageUrl = base64;
+        logger("Conversão de imagem concluída com sucesso.");
+    } catch (e) {
+        console.warn("Base64 conversion failed, using direct URL fallback:", e);
+        finalImageUrl = url;
+        logger("Guardado link direto.");
+    }
+
+    // Set input and preview
+    const imageInput = document.getElementById('add-image');
+    if (imageInput) imageInput.value = finalImageUrl;
+    if (preview) {
+        preview.innerHTML = '';
+        preview.style.backgroundImage = `url(${finalImageUrl})`;
+    }
+
+    // Auto-fill metadata from TheGamesDB and highlight modified fields
+    const filledFields = [];
     if (metaId && window._coverMeta && window._coverMeta[metaId]) {
         const meta = window._coverMeta[metaId];
         const yearEl = document.getElementById('add-year');
         const genreEl = document.getElementById('add-genre');
         const devEl = document.getElementById('add-developer');
         const notesEl = document.getElementById('add-notes');
+        const platEl = document.getElementById('add-platform');
 
-        if (meta.year && yearEl && !yearEl.value) yearEl.value = meta.year;
-        if (meta.genre && genreEl && !genreEl.value) genreEl.value = meta.genre;
-        if (meta.developer && devEl && !devEl.value) devEl.value = meta.developer;
-        if (meta.description && notesEl && !notesEl.value) notesEl.value = meta.description;
-
-        if (meta.year || meta.genre || meta.developer) {
-            logger('Metadados auto-preenchidos via TheGamesDB!');
+        if (meta.year && yearEl) {
+            yearEl.value = meta.year;
+            filledFields.push(yearEl);
         }
+        if (meta.genre && genreEl) {
+            genreEl.value = meta.genre;
+            filledFields.push(genreEl);
+        }
+        if (meta.developer && devEl) {
+            devEl.value = meta.developer;
+            filledFields.push(devEl);
+        }
+        if (meta.description && notesEl && !notesEl.value) {
+            notesEl.value = meta.description;
+            filledFields.push(notesEl);
+        }
+        if (meta.platform && platEl && !platEl.value) {
+            const opt = Array.from(platEl.options).find(o => o.text.toLowerCase().includes(meta.platform.toLowerCase()) || meta.platform.toLowerCase().includes(o.text.toLowerCase()));
+            if (opt) {
+                platEl.value = opt.value;
+                filledFields.push(platEl);
+            }
+        }
+
+        // Apply glowing highlight to fields that were auto-populated
+        filledFields.forEach(el => {
+            el.classList.remove('field-glow');
+            void el.offsetWidth; // trigger CSS reflow
+            el.classList.add('field-glow');
+        });
+    }
+
+    // Final Success Status Bar
+    if (feedbackZone) {
+        const fieldCountMsg = filledFields.length > 0 ? ` (+${filledFields.length} campos preenchidos)` : '';
+        feedbackZone.innerHTML = `
+            <div class="search-status-bar" style="background:rgba(34,197,94,0.15); border-color:#22c55e; color:#86efac;">
+                <span>✅ Capa e informações aplicadas com sucesso!${fieldCountMsg}</span>
+            </div>
+        `;
+        setTimeout(() => {
+            if (feedbackZone) feedbackZone.style.display = 'none';
+        }, 3500);
     }
 }
 
@@ -1363,7 +1437,7 @@ async function renderSyncView() {
                     </div>
                  </div>
                  
-                <p style="margin-top:15px; font-size:0.75rem; color:#22c55e; font-weight:700; text-align:center;">🤖 Sentinela de Sync Ativo (v132)</p>
+                <p style="margin-top:15px; font-size:0.75rem; color:#22c55e; font-weight:700; text-align:center;">🤖 Sentinela de Sync Ativo (v133)</p>
             </div>
 
             <!-- v123: Enhanced Export Section -->
@@ -1486,7 +1560,7 @@ async function pushToCloud(silent = false) {
         const platforms = await dbService.getAll('platforms');
 
         const data = {
-            version: "v132",
+            version: "v133",
             timestamp: new Date().toISOString(),
             games,
             consoles,
@@ -1559,7 +1633,7 @@ async function exportCollection() {
         const platforms = await dbService.getAll('platforms');
 
         const data = {
-            version: "v132",
+            version: "v133",
             timestamp: new Date().toISOString(),
             games,
             consoles,
@@ -1633,7 +1707,7 @@ async function importCollection() {
 
 /** INITIALIZATION **/
 async function init() {
-    logger("Iniciando RetroCollection v132...");
+    logger("Iniciando RetroCollection v133...");
     try {
         themeService.init();
         window.addEventListener('themeChanged', () => {
@@ -1647,10 +1721,10 @@ async function init() {
         await dbService.open();
         logger("DB Conectado.");
 
-        // Auto-Sync Logos logic for v132
-        if (!localStorage.getItem('logos_synced_v132')) {
+        // Auto-Sync Logos logic for v133
+        if (!localStorage.getItem('logos_synced_v133')) {
             await autoSyncLogos();
-            localStorage.setItem('logos_synced_v132', 'true');
+            localStorage.setItem('logos_synced_v133', 'true');
         }
 
         // v98 Resilient Startup
