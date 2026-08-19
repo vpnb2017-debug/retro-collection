@@ -6,7 +6,7 @@
     max-width: 100%;
     overflow-x: auto;
     overflow-y: hidden;
-    padding: 10px 0 15px 0;
+    padding: 0 0 15px 0;
     -webkit-overflow-scrolling: touch;
     scroll-behavior: smooth;
     box-sizing: border-box;
@@ -15,15 +15,15 @@
 /* ── Shelf Row (the wooden plank) ── */
 .shelf-row {
     display: flex;
-    gap: 4px;
+    gap: 6px;
     align-items: flex-end;
-    padding: 30px 15px 20px 15px;
+    padding: 85px 20px 20px 20px;
     background: linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.4) 100%);
     border-bottom: 10px solid #3b220a;
     border-left: 3px solid #5c3a1a;
     border-right: 3px solid #5c3a1a;
     border-radius: 4px 4px 0 0;
-    min-height: 200px;
+    min-height: 240px;
     width: max-content;
     min-width: 100%;
     perspective: 800px;
@@ -68,16 +68,16 @@
     width: 72px;
     cursor: pointer;
     transform-style: preserve-3d;
-    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), z-index 0s;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), z-index 0s;
     transform-origin: bottom center;
     filter: drop-shadow(-2px 2px 4px rgba(0,0,0,0.5));
 }
 
 /* ── Hover: tilt forward and scale up ── */
 .shelf-item:hover {
-    transform: translateY(-28px) rotateY(-20deg) scale(1.25);
-    z-index: 100;
-    filter: drop-shadow(-6px 12px 16px rgba(0,0,0,0.7));
+    transform: translateY(-24px) rotateY(-18deg) scale(1.2);
+    z-index: 999;
+    filter: drop-shadow(-6px 12px 18px rgba(0,0,0,0.8));
 }
 
 /* ── Cover face ── */
@@ -116,28 +116,29 @@
     background: linear-gradient(to left, rgba(255,255,255,0.12) 0%, transparent 100%);
 }
 
-/* ── Tooltip (appears on hover above the item) ── */
+/* ── Tooltip (appears on hover above the item with ample top clearance) ── */
 .shelf-item-tooltip {
     position: absolute;
-    bottom: calc(100% + 12px);
+    bottom: calc(100% + 10px);
     left: 50%;
-    transform: translateX(-50%);
-    background: rgba(18, 18, 28, 0.97);
-    border: 1px solid rgba(255, 159, 10, 0.5);
-    color: white;
-    padding: 8px 12px;
-    border-radius: 10px;
+    transform: translateX(-50%) translateY(4px);
+    background: var(--bg-surface, #181822);
+    border: 1.5px solid var(--accent-color, #ff9f0a);
+    color: var(--text-main, #ffffff);
+    padding: 7px 11px;
+    border-radius: 9px;
     font-size: 0.72rem;
     font-weight: 700;
-    white-space: nowrap;
-    max-width: 200px;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    line-height: 1.25;
+    white-space: normal;
+    width: max-content;
+    max-width: 175px;
+    text-align: center;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.2s ease 0.05s;
-    z-index: 200;
-    box-shadow: 0 8px 25px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,159,10,0.15);
+    transition: opacity 0.2s ease, transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 9999;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.7), 0 0 12px var(--accent-subtle, rgba(255,159,10,0.25));
     backdrop-filter: blur(8px);
 }
 
@@ -149,21 +150,22 @@
     left: 50%;
     transform: translateX(-50%);
     border: 6px solid transparent;
-    border-top-color: rgba(255,159,10,0.5);
+    border-top-color: var(--accent-color, #ff9f0a);
 }
 
 .shelf-item-tooltip span {
     display: block;
-    font-size: 0.6rem;
-    color: #ff9f0a;
+    font-size: 0.62rem;
+    color: var(--accent-color, #ff9f0a);
     font-weight: 600;
     margin-top: 3px;
-    opacity: 0.9;
+    opacity: 0.95;
 }
 
 /* Show tooltip on parent hover */
 .shelf-item:hover .shelf-item-tooltip {
     opacity: 1;
+    transform: translateX(-50%) translateY(0);
 }
 
 /* ── No cover placeholder ── */

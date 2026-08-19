@@ -4,6 +4,24 @@ Registo completo de todas as alterações efetuadas em cada versão da aplicaç�
 
 ---
 
+## v131 — 2026-08-19
+### 📚 Correção de Visibilidade dos Nomes na Prateleira Virtual 3D
+- **Eliminação do Corte (Clipping) dos Nomes/Tooltips em Hover**:
+  - Ajustado o espaçamento superior (`padding-top: 85px`) da prateleira 3D (`.shelf-row`) e altura mínima (`min-height: 240px`) para acomodar com folga a elevação da capa em hover (`translateY(-24px)`) e a caixa com o nome/título do jogo.
+  - A caixa de título flutuante (`.shelf-item-tooltip`) agora utiliza posicionamento calibrado, `z-index: 9999`, cores dinâmicas do tema ativo (`var(--accent-color)`, `var(--bg-surface)`, `var(--text-main)`) e quebra de texto elegante sem transbordar.
+  - Corrigido o carregamento de `css/shelf.css` no `<head>` com cache-busting `?v=131` para garantir atualização imediata em todos os dispositivos.
+- **Invalidação de Cache e Service Worker**:
+  - `sw.js`, `index.html` e `js/app.js` atualizados para a versão `v131`.
+
+### 🔧 Ficheiros Modificados
+- `css/shelf.css` → ampliação de `padding-top` e calibração de `.shelf-item-tooltip` e `.shelf-item:hover`
+- `index.html` → inclusão de `shelf.css?v=131` no `<head>` e versão v131
+- `js/app.js` → importações e registo da versão v131
+- `sw.js` → versão v131
+- `.agent/historico.md` → registo da versão v131
+
+---
+
 ## v130 — 2026-08-18
 ### 🔍 Modo Ultra-Grande Angular (Zoom 0.5x) no Leitor de Código de Barras
 - **Suporte a Zoom 0.5x & Alternância de Lentes**:

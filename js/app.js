@@ -1,15 +1,15 @@
-import { dbService } from './services/db.js?v=130';
-import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js?v=130';
-import { coverSearchService } from './services/coverSearch.js?v=130';
-import WebuyService from './services/webuyService.js?v=130';
-import { localFileSync } from './services/localFileSync.js?v=130';
-import { metadataService } from './services/metadataService.js?v=130';
-import { cloudSyncService } from './services/cloudSyncService.js?v=130';
-import { theGamesDBService } from './services/theGamesDBService.js?v=130';
-import { barcodeScannerService } from './services/barcodeScannerService.js?v=130';
-import { chartService } from './services/chartService.js?v=130';
-import { exportService } from './services/exportService.js?v=130';
-import { themeService } from './services/themeService.js?v=130';
+import { dbService } from './services/db.js?v=131';
+import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js?v=131';
+import { coverSearchService } from './services/coverSearch.js?v=131';
+import WebuyService from './services/webuyService.js?v=131';
+import { localFileSync } from './services/localFileSync.js?v=131';
+import { metadataService } from './services/metadataService.js?v=131';
+import { cloudSyncService } from './services/cloudSyncService.js?v=131';
+import { theGamesDBService } from './services/theGamesDBService.js?v=131';
+import { barcodeScannerService } from './services/barcodeScannerService.js?v=131';
+import { chartService } from './services/chartService.js?v=131';
+import { exportService } from './services/exportService.js?v=131';
+import { themeService } from './services/themeService.js?v=131';
 
 // Global Exposure
 window.navigate = navigate;
@@ -196,7 +196,7 @@ async function renderDashboard() {
         const ownedTotal = ownedGames.length + ownedConsoles.length;
         const wishlistTotal = games.filter(g => g.isWishlist).length + consoles.filter(c => c.isWishlist).length;
 
-        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:var(--accent-color); border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v130</span></h2>`;
+        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:var(--accent-color); border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v131</span></h2>`;
 
         const platData = await getPlatformOptions();
 
@@ -1361,7 +1361,7 @@ async function renderSyncView() {
                     </div>
                  </div>
                  
-                <p style="margin-top:15px; font-size:0.75rem; color:#22c55e; font-weight:700; text-align:center;">🤖 Sentinela de Sync Ativo (v130)</p>
+                <p style="margin-top:15px; font-size:0.75rem; color:#22c55e; font-weight:700; text-align:center;">🤖 Sentinela de Sync Ativo (v131)</p>
             </div>
 
             <!-- v123: Enhanced Export Section -->
@@ -1484,7 +1484,7 @@ async function pushToCloud(silent = false) {
         const platforms = await dbService.getAll('platforms');
 
         const data = {
-            version: "v130",
+            version: "v131",
             timestamp: new Date().toISOString(),
             games,
             consoles,
@@ -1557,7 +1557,7 @@ async function exportCollection() {
         const platforms = await dbService.getAll('platforms');
 
         const data = {
-            version: "v130",
+            version: "v131",
             timestamp: new Date().toISOString(),
             games,
             consoles,
@@ -1631,7 +1631,7 @@ async function importCollection() {
 
 /** INITIALIZATION **/
 async function init() {
-    logger("Iniciando RetroCollection v130...");
+    logger("Iniciando RetroCollection v131...");
     try {
         themeService.init();
         window.addEventListener('themeChanged', () => {
@@ -1645,10 +1645,10 @@ async function init() {
         await dbService.open();
         logger("DB Conectado.");
 
-        // Auto-Sync Logos logic for v130
-        if (!localStorage.getItem('logos_synced_v130')) {
+        // Auto-Sync Logos logic for v131
+        if (!localStorage.getItem('logos_synced_v131')) {
             await autoSyncLogos();
-            localStorage.setItem('logos_synced_v130', 'true');
+            localStorage.setItem('logos_synced_v131', 'true');
         }
 
         // v98 Resilient Startup
