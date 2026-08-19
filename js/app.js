@@ -1,15 +1,15 @@
-import { dbService } from './services/db.js?v=131';
-import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js?v=131';
-import { coverSearchService } from './services/coverSearch.js?v=131';
-import WebuyService from './services/webuyService.js?v=131';
-import { localFileSync } from './services/localFileSync.js?v=131';
-import { metadataService } from './services/metadataService.js?v=131';
-import { cloudSyncService } from './services/cloudSyncService.js?v=131';
-import { theGamesDBService } from './services/theGamesDBService.js?v=131';
-import { barcodeScannerService } from './services/barcodeScannerService.js?v=131';
-import { chartService } from './services/chartService.js?v=131';
-import { exportService } from './services/exportService.js?v=131';
-import { themeService } from './services/themeService.js?v=131';
+import { dbService } from './services/db.js?v=132';
+import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js?v=132';
+import { coverSearchService } from './services/coverSearch.js?v=132';
+import WebuyService from './services/webuyService.js?v=132';
+import { localFileSync } from './services/localFileSync.js?v=132';
+import { metadataService } from './services/metadataService.js?v=132';
+import { cloudSyncService } from './services/cloudSyncService.js?v=132';
+import { theGamesDBService } from './services/theGamesDBService.js?v=132';
+import { barcodeScannerService } from './services/barcodeScannerService.js?v=132';
+import { chartService } from './services/chartService.js?v=132';
+import { exportService } from './services/exportService.js?v=132';
+import { themeService } from './services/themeService.js?v=132';
 
 // Global Exposure
 window.navigate = navigate;
@@ -196,7 +196,7 @@ async function renderDashboard() {
         const ownedTotal = ownedGames.length + ownedConsoles.length;
         const wishlistTotal = games.filter(g => g.isWishlist).length + consoles.filter(c => c.isWishlist).length;
 
-        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:var(--accent-color); border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v131</span></h2>`;
+        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:var(--accent-color); border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v132</span></h2>`;
 
         const platData = await getPlatformOptions();
 
@@ -765,8 +765,8 @@ async function searchCover() {
 
     logger("A pesquisar capas no TheGamesDB.net... 📦");
     try {
-        // v123: Use searchWithDetails to get metadata along with images
-        const results = await theGamesDBService.searchWithDetails(`${title} ${plat}`, tgdbKey);
+        // v132: Pass clean title and platform separately for intelligent ranking & match
+        const results = await theGamesDBService.searchWithDetails(title, plat, tgdbKey);
         const grid = document.getElementById('search-grid');
         const modal = document.getElementById('search-results-modal');
 
@@ -796,9 +796,11 @@ async function searchCover() {
         grid.innerHTML = results.map((r, i) => {
             const metaId = `cover_${i}`;
             window._coverMeta[metaId] = r.meta || {};
+            const platBadge = r.platformName ? `<span style="position:absolute; top:4px; right:4px; background:rgba(0,0,0,0.85); color:var(--accent-color); font-size:0.55rem; font-weight:800; padding:2px 5px; border-radius:4px; border:1px solid var(--accent-subtle, rgba(255,159,10,0.3)); max-width:85%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${r.platformName}</span>` : '';
             return `
-                <div onclick="selectCover('${r.image}', '${metaId}')" style="aspect-ratio:3/4; background:#000 url(${r.image}) center/contain no-repeat; border-radius:8px; cursor:pointer; border:1px solid #333; position:relative; transition:transform 0.2s, border-color 0.2s;" onmouseover="this.style.borderColor='var(--accent-color)'; this.style.transform='scale(1.03)'" onmouseout="this.style.borderColor='#333'; this.style.transform='none'" title="${r.title}">
-                    <span style="position:absolute; bottom:2px; left:2px; right:2px; background:rgba(0,0,0,0.75); color:var(--text-muted); font-size:0.55rem; padding:2px 4px; border-radius:4px; text-overflow:ellipsis; overflow:hidden; white-space:nowrap; text-align:center;">${r.title}</span>
+                <div onclick="selectCover('${r.image}', '${metaId}')" style="aspect-ratio:3/4; background:#000 url(${r.image}) center/contain no-repeat; border-radius:8px; cursor:pointer; border:1px solid #333; position:relative; transition:transform 0.2s, border-color 0.2s;" onmouseover="this.style.borderColor='var(--accent-color)'; this.style.transform='scale(1.03)'" onmouseout="this.style.borderColor='#333'; this.style.transform='none'" title="${r.title} ${r.platformName ? '(' + r.platformName + ')' : ''}">
+                    ${platBadge}
+                    <span style="position:absolute; bottom:2px; left:2px; right:2px; background:rgba(0,0,0,0.85); color:var(--text-muted); font-size:0.55rem; padding:2px 4px; border-radius:4px; text-overflow:ellipsis; overflow:hidden; white-space:nowrap; text-align:center;">${r.title}</span>
                 </div>
             `;
         }).join('');
@@ -1361,7 +1363,7 @@ async function renderSyncView() {
                     </div>
                  </div>
                  
-                <p style="margin-top:15px; font-size:0.75rem; color:#22c55e; font-weight:700; text-align:center;">🤖 Sentinela de Sync Ativo (v131)</p>
+                <p style="margin-top:15px; font-size:0.75rem; color:#22c55e; font-weight:700; text-align:center;">🤖 Sentinela de Sync Ativo (v132)</p>
             </div>
 
             <!-- v123: Enhanced Export Section -->
@@ -1484,7 +1486,7 @@ async function pushToCloud(silent = false) {
         const platforms = await dbService.getAll('platforms');
 
         const data = {
-            version: "v131",
+            version: "v132",
             timestamp: new Date().toISOString(),
             games,
             consoles,
@@ -1557,7 +1559,7 @@ async function exportCollection() {
         const platforms = await dbService.getAll('platforms');
 
         const data = {
-            version: "v131",
+            version: "v132",
             timestamp: new Date().toISOString(),
             games,
             consoles,
@@ -1631,7 +1633,7 @@ async function importCollection() {
 
 /** INITIALIZATION **/
 async function init() {
-    logger("Iniciando RetroCollection v131...");
+    logger("Iniciando RetroCollection v132...");
     try {
         themeService.init();
         window.addEventListener('themeChanged', () => {
@@ -1645,10 +1647,10 @@ async function init() {
         await dbService.open();
         logger("DB Conectado.");
 
-        // Auto-Sync Logos logic for v131
-        if (!localStorage.getItem('logos_synced_v131')) {
+        // Auto-Sync Logos logic for v132
+        if (!localStorage.getItem('logos_synced_v132')) {
             await autoSyncLogos();
-            localStorage.setItem('logos_synced_v131', 'true');
+            localStorage.setItem('logos_synced_v132', 'true');
         }
 
         // v98 Resilient Startup

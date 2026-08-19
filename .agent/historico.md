@@ -4,6 +4,28 @@ Registo completo de todas as alterações efetuadas em cada versão da aplicaç�
 
 ---
 
+## v132 — 2026-08-19
+### 🔍 Correção da Pesquisa de Capas no TheGamesDB (Ex: Speedball / Master System)
+- **Desacoplamento do Título e Plataforma na Pesquisa da API**:
+  - Corrigido o envio concatenado do título com o nome da plataforma (ex: `Speedball MASTERSYSTEM`), que gerava zero resultados porque a base de dados do TheGamesDB indexa apenas o título puro (`Speedball`).
+  - Implementada limpeza e extração inteligente do título base (removendo sufixos ou plataformas anexadas).
+  - O parâmetro de plataforma é agora utilizado para **classificação e priorização inteligente** de resultados.
+- **Identificação e Distinção de Plataforma nas Capas**:
+  - Deteção e mapeamento de IDs de plataformas da TheGamesDB (ex: Master System = 35, Mega Drive = 18/36, SNES = 6, PS1 = 10, etc.).
+  - Os resultados correspondentes à plataforma selecionada pelo utilizador são colocados no topo com a máxima pontuação de relevância.
+  - Adicionado badge visual com o nome da plataforma no canto superior de cada capa no modal de escolha.
+- **Invalidação de Cache e Service Worker**:
+  - `sw.js`, `index.html` e `js/app.js` atualizados para a versão `v132`.
+
+### 🔧 Ficheiros Modificados
+- `js/services/theGamesDBService.js` → pesquisa desacoplada, limpeza de título, mapeamento de plataformas e ranking por relevância
+- `js/app.js` → chamada separada de título e plataforma em `searchCover` e badges visuais de plataforma no modal
+- `index.html` → versão v132 e scripts de cache control
+- `sw.js` → versão v132
+- `.agent/historico.md` → registo da versão v132
+
+---
+
 ## v131 — 2026-08-19
 ### 📚 Correção de Visibilidade dos Nomes na Prateleira Virtual 3D
 - **Eliminação do Corte (Clipping) dos Nomes/Tooltips em Hover**:
