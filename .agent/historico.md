@@ -4,6 +4,24 @@ Registo completo de todas as alterações efetuadas em cada versão da aplicaç�
 
 ---
 
+## v134 — 2026-08-19
+### 📊 Novo Gráfico de Estatísticas: "Lançamentos por Ano"
+- **Gráfico Cronológico de Lançamentos de Jogos na Página Principal**:
+  - Adicionado o gráfico interativo **Lançamentos por Ano** (`#chart-release-year`) na secção *Analytics & Estatísticas* do Dashboard.
+  - Ordenação cronológica por ano de lançamento (`item.year`), com barras temáticas e tooltips informativos (`X jogo(s) lançado(s)`).
+  - Adaptação dinâmica à paleta de cores do tema retro ativo na aplicação.
+- **Invalidação de Cache e Service Worker**:
+  - `sw.js`, `index.html`, `js/services/chartService.js` e `js/app.js` atualizados para a versão `v134`.
+
+### 🔧 Ficheiros Modificados
+- `js/services/chartService.js` → implementação da função `renderReleaseYearChart`
+- `js/app.js` → agregação de dados por ano de lançamento e integração do canvas na grelha de analytics
+- `index.html` → versão v134 e scripts de cache control
+- `sw.js` → versão v134
+- `.agent/historico.md` → registo da versão v134
+
+---
+
 ## v133 — 2026-08-19
 ### ✨ Feedback Visual Instantâneo ao Selecionar Capa & Efeito Glow
 - **Indicadores de Progresso em Tempo Real ao Clicar na Capa**:

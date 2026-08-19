@@ -1,8 +1,8 @@
 /**
- * Chart Service — RetroCollection v127
+ * Chart Service — RetroCollection v134
  * Renders interactive charts in the Dashboard with dynamic retro theme palettes
  */
-import { themeService } from './themeService.js?v=127';
+import { themeService } from './themeService.js?v=134';
 
 export const chartService = {
     instances: {},
@@ -173,6 +173,45 @@ export const chartService = {
                     c.save();
                 }
             }]
+        });
+    },
+
+    /**
+     * Render bar chart: games by release year
+     */
+    renderReleaseYearChart(canvasId, data) {
+        const ctx = document.getElementById(canvasId);
+        if (!ctx) return;
+        if (this.instances[canvasId]) { try { this.instances[canvasId].destroy(); } catch(e){} }
+        
+        const accent = getComputedStyle(document.documentElement).getPropertyValue('--accent-color').trim() || '#ff9f0a';
+        const sorted = Object.entries(data).sort((a,b) => parseInt(a[0]) - parseInt(b[0]));
+        
+        this.instances[canvasId] = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: sorted.map(([y]) => y),
+                datasets: [{
+                    label: 'Jogos Lançados',
+                    data: sorted.map(([,v]) => v),
+                    backgroundColor: accent + 'bb',
+                    borderColor: accent,
+                    borderWidth: 1,
+                    borderRadius: 4,
+                    hoverBackgroundColor: accent
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { callbacks: { label: ctx => ` ${ctx.raw} jogo(s) lançado(s)` } }
+                },
+                scales: {
+                    x: { ticks: { color: '#aaa', font: { size: 10 } }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                    y: { ticks: { color: '#aaa', precision: 0 }, grid: { color: 'rgba(255,255,255,0.05)' }, beginAtZero: true }
+                }
+            }
         });
     }
 };
