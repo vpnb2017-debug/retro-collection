@@ -4,6 +4,22 @@ Registo completo de todas as alterações efetuadas em cada versão da aplicaç�
 
 ---
 
+## v137 — 2026-09-26
+### 🐛 Correção Crítica de Sintaxe em searchCover
+- **Resolução de SyntaxError no Arranque**:
+  - Corrigido o emparelhamento dos blocos `try...catch...finally` na função `searchCover` em `js/app.js` (erro `Unexpected token 'catch'` na linha 864 que impedia o arranque da aplicação).
+- **Invalidação de Cache e Service Worker**:
+  - `sw.js`, `index.html`, `js/services/chartService.js` e `js/app.js` atualizados para a versão `v137`.
+
+### 🔧 Ficheiros Modificados
+- `js/app.js` → correção do bloco try exterior em `searchCover` e versão v137
+- `index.html` → versão v137 e scripts de controlo de cache
+- `sw.js` → cache v137
+- `js/services/chartService.js` → importações e anotações atualizadas para v137
+- `.agent/historico.md` → registo da versão v137
+
+---
+
 ## v136 — 2026-09-26
 ### 🛡️ Resiliência na Pesquisa de Capas: Fallback Automático Wikipedia & Suporte de Rede
 - **Fallback Automático para Capas da Wikipedia**:
