@@ -4,6 +4,26 @@ Registo completo de todas as alterações efetuadas em cada versão da aplicaç�
 
 ---
 
+## v144 — 2026-09-26
+### 🔧 Integração de Proxy de Alta Velocidade (Azure CORS Anywhere) e Payload Mínimo
+
+- **Causa Raiz**:
+  - O proxy `allorigins.win` estava a sofrer lentidão generalizada/timeouts na sua infraestrutura, causando falhas de ligação intermitentes em pesquisas de capas a partir do browser/GitHub Pages.
+- **Correções Aplicadas**:
+  - **Novo Proxy Principal Ultrarrápido**: Integrado o `cors-anywhere.azurewebsites.net` com cabeçalho `X-Requested-With: XMLHttpRequest` como proxy de primeira linha (~1s de latência com suporte completo a CORS).
+  - **AllOrigins como Fallback**: O `allorigins.win` foi mantido como camada de redundância secundária.
+  - **Query de Pesquisa Mínima**: A pesquisa `ByGameName` passa a consultar apenas os dados estritamente necessários (`apikey` e `name`), minimizando o tráfego e acelerando a resposta da API do TheGamesDB.
+
+### 🔧 Ficheiros Modificados
+- `js/services/theGamesDBService.js` → Azure CORS Anywhere, query minimalista, v144
+- `index.html` → versão v144
+- `sw.js` → cache v144
+- `js/app.js` → imports e strings de versão v144
+- `js/services/chartService.js` → versão v144
+- `.agent/historico.md` → registo v144
+
+---
+
 ## v143 — 2026-09-26
 ### 🔧 Otimização de Consultas ("Mashed"), Evitar Throttling de Proxy e Desambiguação Xbox
 

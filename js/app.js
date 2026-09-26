@@ -1,15 +1,15 @@
-import { dbService } from './services/db.js?v=143';
-import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js?v=143';
-import { coverSearchService } from './services/coverSearch.js?v=143';
-import WebuyService from './services/webuyService.js?v=143';
-import { localFileSync } from './services/localFileSync.js?v=143';
-import { metadataService } from './services/metadataService.js?v=143';
-import { cloudSyncService } from './services/cloudSyncService.js?v=143';
-import { theGamesDBService } from './services/theGamesDBService.js?v=143';
-import { barcodeScannerService } from './services/barcodeScannerService.js?v=143';
-import { chartService } from './services/chartService.js?v=143';
-import { exportService } from './services/exportService.js?v=143';
-import { themeService } from './services/themeService.js?v=143';
+import { dbService } from './services/db.js?v=144';
+import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js?v=144';
+import { coverSearchService } from './services/coverSearch.js?v=144';
+import WebuyService from './services/webuyService.js?v=144';
+import { localFileSync } from './services/localFileSync.js?v=144';
+import { metadataService } from './services/metadataService.js?v=144';
+import { cloudSyncService } from './services/cloudSyncService.js?v=144';
+import { theGamesDBService } from './services/theGamesDBService.js?v=144';
+import { barcodeScannerService } from './services/barcodeScannerService.js?v=144';
+import { chartService } from './services/chartService.js?v=144';
+import { exportService } from './services/exportService.js?v=144';
+import { themeService } from './services/themeService.js?v=144';
 
 // Global Exposure
 window.navigate = navigate;
@@ -207,7 +207,7 @@ async function renderDashboard() {
         const ownedTotal = ownedGames.length + ownedConsoles.length;
         const wishlistTotal = games.filter(g => g.isWishlist).length + consoles.filter(c => c.isWishlist).length;
 
-        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:var(--accent-color); border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v143</span></h2>`;
+        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:var(--accent-color); border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v144</span></h2>`;
 
         const platData = await getPlatformOptions();
 
@@ -795,7 +795,7 @@ async function searchCover() {
         logger("A pesquisar capas... 📦");
         let results = [];
 
-        // TheGamesDB é a única fonte de capas (v143+)
+        // TheGamesDB é a única fonte de capas (v144+)
         try {
             results = await theGamesDBService.searchWithDetails(title, plat, tgdbKey);
         } catch (err) {
@@ -1479,7 +1479,7 @@ async function renderSyncView() {
                     </div>
                  </div>
                  
-                <p style="margin-top:15px; font-size:0.75rem; color:#22c55e; font-weight:700; text-align:center;">🤖 Sentinela de Sync Ativo (v143)</p>
+                <p style="margin-top:15px; font-size:0.75rem; color:#22c55e; font-weight:700; text-align:center;">🤖 Sentinela de Sync Ativo (v144)</p>
             </div>
 
             <!-- v123: Enhanced Export Section -->
@@ -1606,7 +1606,7 @@ async function pushToCloud(silent = false) {
         const platforms = await dbService.getAll('platforms');
 
         const data = {
-            version: "v143",
+            version: "v144",
             timestamp: new Date().toISOString(),
             games,
             consoles,
@@ -1679,7 +1679,7 @@ async function exportCollection() {
         const platforms = await dbService.getAll('platforms');
 
         const data = {
-            version: "v143",
+            version: "v144",
             timestamp: new Date().toISOString(),
             games,
             consoles,
@@ -1753,7 +1753,7 @@ async function importCollection() {
 
 /** INITIALIZATION **/
 async function init() {
-    logger("Iniciando RetroCollection v143...");
+    logger("Iniciando RetroCollection v144...");
     try {
         themeService.init();
         window.addEventListener('themeChanged', () => {
