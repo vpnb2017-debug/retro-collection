@@ -1,5 +1,5 @@
 /**
- * TheGamesDB.net API Service — RetroCollection v142
+ * TheGamesDB.net API Service — RetroCollection v143
  * Handles searching and fetching official retail box art covers from TheGamesDB API v1.
  * Supports platform-aware search ranking, subtitle fallback, and resilient proxying.
  */
@@ -79,18 +79,21 @@ async function fetchJsonWithFallback(targetUrl) {
         console.warn("[TheGamesDB] Direct fetch failed or CORS blocked:", e.message);
     }
 
-    // 3. Fallback for mobile and GitHub Pages (AllOrigins GET with cache-bust & parallel race)
-    const makeAllOriginsAttempt = async (cacheBust) => {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 12000);
+    // 3. Fallback via AllOrigins GET with retry (sequential to avoid triggering rate-limiting)
+    const attempts = [
+        `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`,
+        `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}&cb=${Date.now()}`
+    ];
+
+    for (const proxyUrl of attempts) {
         try {
-            const cbParam = cacheBust ? `&cb=${cacheBust}` : '';
-            const url = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}${cbParam}`;
-            const res = await fetch(url, { signal: controller.signal });
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 15000);
+            const res = await fetch(proxyUrl, { signal: controller.signal });
             clearTimeout(timeoutId);
-            if (!res.ok) throw new Error(`AllOrigins status ${res.status}`);
+            if (!res.ok) throw new Error(`Proxy status ${res.status}`);
             const data = await res.json();
-            if (!data?.contents) throw new Error("AllOrigins conteúdo vazio");
+            if (!data?.contents) throw new Error("Proxy conteúdo vazio");
             
             const parsed = JSON.parse(data.contents);
             if (parsed.code === 401 || parsed.code === 403 || (parsed.status && parsed.status.toLowerCase().includes("api key"))) {
@@ -99,31 +102,13 @@ async function fetchJsonWithFallback(targetUrl) {
                 throw err;
             }
             return parsed;
-        } catch (e) {
-            clearTimeout(timeoutId);
-            throw e;
+        } catch (err) {
+            if (err.isApiKeyError) throw err;
+            console.warn("[TheGamesDB] Proxy attempt failed, trying fallback:", err.message);
         }
-    };
-
-    const now = Date.now();
-    try {
-        // Race 3 parallel requests with different cache-busting so if one hangs or fails, the others resolve
-        const result = await Promise.any([
-            makeAllOriginsAttempt(now),
-            makeAllOriginsAttempt(now + 1),
-            makeAllOriginsAttempt(null)
-        ]);
-        return result;
-    } catch (aggErr) {
-        // Only rethrow if an authentic TheGamesDB API key error occurred
-        const errors = aggErr.errors || [];
-        for (const e of errors) {
-            if (e.isApiKeyError) throw e;
-        }
-        console.warn("[TheGamesDB] All proxy attempts failed:", errors.map(e => e.message));
     }
 
-    throw new Error("Não foi possível ligar à API do TheGamesDB.net. Verifica a tua ligação à internet.");
+    throw new Error("Não foi possível ligar à API do TheGamesDB.net. Verifica a tua ligação à internet ou tenta novamente.");
 }
 
 
@@ -137,18 +122,40 @@ function isPlatformMatch(userPlat, dbPlatName) {
     const u = normalizePlatform(userPlat);
     const d = normalizePlatform(dbPlatName);
     if (!u || !d) return false;
-    if (u === d || d.includes(u) || u.includes(d)) return true;
+    if (u === d) return true;
 
-    // Special aliases
+    // Xbox family disambiguation
+    if (u === 'xbox' || u === 'microsoftxbox' || u === 'originalxbox' || u === 'xboxclassic') {
+        return d.includes('xbox') && !d.includes('360') && !d.includes('one') && !d.includes('series');
+    }
+    if (u.includes('xbox360') || u === '360') {
+        return d.includes('360');
+    }
+    if (u.includes('xboxone')) {
+        return d.includes('xbox') && d.includes('one');
+    }
+    if (u.includes('xboxseries')) {
+        return d.includes('series');
+    }
+
+    // PlayStation family disambiguation
+    if ((u === 'ps1' || u === 'psx' || u.includes('playstation1')) && (d.includes('playstation') && !d.includes('2') && !d.includes('3') && !d.includes('4') && !d.includes('5') && !d.includes('vita') && !d.includes('portable'))) return true;
+    if ((u === 'ps2' || u.includes('playstation2')) && d.includes('playstation 2')) return true;
+    if ((u === 'ps3' || u.includes('playstation3')) && d.includes('playstation 3')) return true;
+    if ((u === 'ps4' || u.includes('playstation4')) && d.includes('playstation 4')) return true;
+    if ((u === 'ps5' || u.includes('playstation5')) && d.includes('playstation 5')) return true;
+
+    // Sega / Nintendo / Handheld aliases
     if (u.includes('mastersystem') && (d.includes('mastersystem') || d.includes('sms'))) return true;
     if (u.includes('megadrive') && (d.includes('megadrive') || d.includes('genesis'))) return true;
     if (u.includes('genesis') && (d.includes('megadrive') || d.includes('genesis'))) return true;
-    if ((u === 'ps1' || u === 'psx' || u.includes('playstation1')) && (d.includes('playstation') && !d.includes('2') && !d.includes('3') && !d.includes('4') && !d.includes('5') && !d.includes('vita') && !d.includes('portable'))) return true;
     if (u.includes('snes') && (d.includes('snes') || d.includes('supernintendo'))) return true;
     if (u.includes('nes') && (d.includes('nes') || d.includes('nintendoentertainment'))) return true;
     if (u.includes('gameboyadvance') || u === 'gba') return d.includes('advance') || d.includes('gba');
     if (u.includes('gameboycolor') || u === 'gbc') return d.includes('color') || d.includes('gbc');
     if (u === 'gameboy' || u === 'gb') return d.includes('gameboy') && !d.includes('color') && !d.includes('advance');
+
+    if (d.includes(u) || u.includes(d)) return true;
     return false;
 }
 
@@ -259,7 +266,7 @@ export const theGamesDBService = {
         for (const term of searchTerms) {
             try {
                 console.log(`[TheGamesDB] Querying API for: "${term}" (Platform context: "${userPlatform}")`);
-                const searchUrl = `https://api.thegamesdb.net/v1/Games/ByGameName?apikey=${encodeURIComponent(apiKey)}&name=${encodeURIComponent(term)}&fields=overview,genres,developers,release_date,platform&include=platform,genres,developers`;
+                const searchUrl = `https://api.thegamesdb.net/v1/Games/ByGameName?apikey=${encodeURIComponent(apiKey)}&name=${encodeURIComponent(term)}&fields=overview,genres,developers,release_date,platform`;
                 const data = await fetchJsonWithFallback(searchUrl);
 
                 if (data?.data?.games?.length > 0) {

@@ -4,6 +4,27 @@ Registo completo de todas as alterações efetuadas em cada versão da aplicaç�
 
 ---
 
+## v143 — 2026-09-26
+### 🔧 Otimização de Consultas ("Mashed"), Evitar Throttling de Proxy e Desambiguação Xbox
+
+- **Causa Raiz do Timeout em "Mashed" e Títulos Populares**:
+  - A query `ByGameName` incluía `&include=platform,genres,developers` e múltiplos campos que geravam payloads pesados e lentos no TheGamesDB, levando os proxies públicos a atingir o timeout de resposta.
+  - O disparo simultâneo de múltiplos pedidos paralelos para o mesmo IP de proxy ativava mecanismos de rate-limiting (throttling).
+- **Correções Aplicadas**:
+  - **Otimização do Payload**: Removidos os parâmetros `include` pesados da pesquisa inicial; o TheGamesDB devolve a resposta em milissegundos e os nomes de plataformas são mapeados diretamente via dicionário interno `TGDB_PLATFORMS`.
+  - **Retry Sequencial Limpo**: As tentativas de proxy são agora feitas de forma sequencial com fallback inteligente, sem sobrecarregar o proxy com pedidos concorrentes.
+  - **Desambiguação da Família Xbox e PlayStation**: Aperfeiçoado o algoritmo `isPlatformMatch` para distinguir rigorosamente a Xbox original da Xbox 360, Xbox One e Xbox Series X/S, assim como PS1 a PS5.
+
+### 🔧 Ficheiros Modificados
+- `js/services/theGamesDBService.js` → query leve, retry sequencial sem throttling, desambiguação de plataformas Xbox/PS, v143
+- `index.html` → versão v143
+- `sw.js` → cache v143
+- `js/app.js` → imports e strings de versão v143
+- `js/services/chartService.js` → versão v143
+- `.agent/historico.md` → registo v143
+
+---
+
 ## v142 — 2026-09-26
 ### 🔧 Correção: Eliminação de Falso Positivo 403 e Remoção de Proxies Incompatíveis
 
