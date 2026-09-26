@@ -4,6 +4,30 @@ Registo completo de todas as alterações efetuadas em cada versão da aplicaç�
 
 ---
 
+## v138 — 2026-09-26
+### 🎨 Resolução Definitiva da Pesquisa de Capas: Box Arts com pilicense=any & Timeouts Rápidos
+- **Resolução da Falha de Zero Capas Encontradas**:
+  - **Parâmetro Crítico `pilicense=any`**: A API da MediaWiki/Wikipedia apenas retornava imagens com licença livre (`pilicense=free` por omissão), descartando e bloqueando 100% das capas e *box arts* comerciais de jogos retro (que estão catalogadas sob *fair use* / copyright). Com a introdução de `pilicense=any`, todas as capas oficiais de retalho em alta resolução passam a ser entregues diretamente ao browser com suporte nativo de CORS (`origin=*`).
+  - **Estratégia Multi-Query Inteligente**: A pesquisa foi aprimorada com busca em cascata (Título limpo, Título + "video game", Subtítulo sem pontuação), garantindo que clássicos como *Sonic the Hedgehog*, *Super Mario World*, *Speedball 2*, *Alex Kidd*, *Zelda*, *Streets of Rage*, entre muitos outros, encontram de imediato as suas capas oficiais.
+  - **Filtro de Logótipos e Ícones**: Exclusão automática de imagens vetoriais `.svg` e ícones da interface da Wikipedia, priorizando exclusivamente as capas frontais de caixas (*Box Art*).
+  - **Extração de Metadados Automáticos**: Leitura e auto-preenchimento de ano de lançamento e descrição/sinopse a partir do extrato da enciclopédia para os campos do formulário.
+- **Timeouts Rápidos com `AbortController` no TheGamesDB**:
+  - Implementado cancelamento ativo (2.5s na conexão direta, 2s no proxy) para evitar esperas prolongadas quando proxies públicos estão inacessíveis.
+  - Fallback instantâneo e transparente para a base de capas oficiais da Wikipedia se o TheGamesDB não estiver disponível via CORS ou não devolver resultados.
+- **Invalidação de Cache e Service Worker**:
+  - `sw.js`, `index.html`, `js/services/chartService.js`, `js/services/theGamesDBService.js`, `js/services/webuyService.js` e `js/app.js` atualizados para a versão `v138`.
+
+### 🔧 Ficheiros Modificados
+- `js/services/webuyService.js` → implementação da pesquisa de capas com `pilicense=any`, queries em cascata e extração de metadados
+- `js/services/theGamesDBService.js` → `AbortController` com timeouts rápidos e versão v138
+- `js/app.js` → fallback transparente para Wikipedia quando TheGamesDB falha ou não tem capas, suporte a badges de fonte e versão v138
+- `index.html` → versão v138 e scripts de controlo de cache
+- `sw.js` → cache v138
+- `js/services/chartService.js` → importações e anotações atualizadas para v138
+- `.agent/historico.md` → registo da versão v138
+
+---
+
 ## v137 — 2026-09-26
 ### 🐛 Correção Crítica de Sintaxe em searchCover
 - **Resolução de SyntaxError no Arranque**:

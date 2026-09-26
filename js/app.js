@@ -1,15 +1,15 @@
-import { dbService } from './services/db.js?v=137';
-import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js?v=137';
-import { coverSearchService } from './services/coverSearch.js?v=137';
-import WebuyService from './services/webuyService.js?v=137';
-import { localFileSync } from './services/localFileSync.js?v=137';
-import { metadataService } from './services/metadataService.js?v=137';
-import { cloudSyncService } from './services/cloudSyncService.js?v=137';
-import { theGamesDBService } from './services/theGamesDBService.js?v=137';
-import { barcodeScannerService } from './services/barcodeScannerService.js?v=137';
-import { chartService } from './services/chartService.js?v=137';
-import { exportService } from './services/exportService.js?v=137';
-import { themeService } from './services/themeService.js?v=137';
+import { dbService } from './services/db.js?v=138';
+import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js?v=138';
+import { coverSearchService } from './services/coverSearch.js?v=138';
+import WebuyService from './services/webuyService.js?v=138';
+import { localFileSync } from './services/localFileSync.js?v=138';
+import { metadataService } from './services/metadataService.js?v=138';
+import { cloudSyncService } from './services/cloudSyncService.js?v=138';
+import { theGamesDBService } from './services/theGamesDBService.js?v=138';
+import { barcodeScannerService } from './services/barcodeScannerService.js?v=138';
+import { chartService } from './services/chartService.js?v=138';
+import { exportService } from './services/exportService.js?v=138';
+import { themeService } from './services/themeService.js?v=138';
 
 // Global Exposure
 window.navigate = navigate;
@@ -207,7 +207,7 @@ async function renderDashboard() {
         const ownedTotal = ownedGames.length + ownedConsoles.length;
         const wishlistTotal = games.filter(g => g.isWishlist).length + consoles.filter(c => c.isWishlist).length;
 
-        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:var(--accent-color); border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v137</span></h2>`;
+        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:var(--accent-color); border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v138</span></h2>`;
 
         const platData = await getPlatformOptions();
 
@@ -792,62 +792,69 @@ async function searchCover() {
     }
 
     try {
-        logger("A pesquisar capas no TheGamesDB.net... 📦");
+        logger("A pesquisar capas... 📦");
         let results = [];
         let sourceUsed = 'TheGamesDB';
 
-    try {
-        // v132: Pass clean title and platform separately for intelligent ranking & match
-        results = await theGamesDBService.searchWithDetails(title, plat, tgdbKey);
-    } catch (err) {
-        console.warn("[CoverSearch] TheGamesDB inacessível, a recorrer à Wikipedia:", err.message);
-        logger("TheGamesDB falhou, a tentar Wikipedia...");
-        sourceUsed = 'Wikipedia';
+        // 1. Try TheGamesDB if API key is configured
+        if (tgdbKey) {
+            try {
+                results = await theGamesDBService.searchWithDetails(title, plat, tgdbKey);
+            } catch (err) {
+                console.warn("[CoverSearch] TheGamesDB indisponível ou CORS bloqueado:", err.message);
+                results = [];
+            }
+        }
+
+        // 2. Seamless fallback to Wikipedia / Wikimedia (Native CORS, pilicense=any, official retail box art)
+        if (!results || results.length === 0) {
+            logger("A pesquisar capas oficiais na Wikipedia... 🔍");
+            sourceUsed = 'Wikipedia';
+
+            if (feedbackZone) {
+                feedbackZone.innerHTML = `
+                    <div class="search-status-bar" style="background:rgba(255,159,10,0.15); border-color:#ff9f0a; color:#ffc978;">
+                        <span class="spinner-icon" style="width:14px; height:14px; border-width:2px; border-top-color:#ff9f0a;"></span>
+                        <span>A procurar capas oficiais na Wikipedia...</span>
+                    </div>
+                `;
+            }
+
+            try {
+                results = await WebuyService.search(title, plat);
+            } catch (wikiErr) {
+                console.error("[CoverSearch] Fallback Wikipedia também falhou:", wikiErr);
+                results = [];
+            }
+        }
+
+        const grid = document.getElementById('search-grid');
+        const modal = document.getElementById('search-results-modal');
+
+        if (!results || results.length === 0) {
+            if (feedbackZone) {
+                feedbackZone.innerHTML = `
+                    <div class="search-status-bar" style="background:rgba(239,68,68,0.15); border-color:#ef4444; color:#fca5a5;">
+                        <span>⚠️ Nenhuma capa encontrada para "${title}".</span>
+                    </div>
+                `;
+                setTimeout(() => { if (feedbackZone) feedbackZone.style.display = 'none'; }, 4000);
+            }
+            return uiService.alert(`Nenhuma capa encontrada para "${title}".`);
+        }
 
         if (feedbackZone) {
+            const badgeText = sourceUsed === 'TheGamesDB' ? 'TheGamesDB' : 'Wikipedia (Oficial)';
             feedbackZone.innerHTML = `
-                <div class="search-status-bar" style="background:rgba(255,159,10,0.15); border-color:#ff9f0a; color:#ffc978;">
-                    <span class="spinner-icon" style="width:14px; height:14px; border-width:2px; border-top-color:#ff9f0a;"></span>
-                    <span>TheGamesDB indisponível (CORS/rede). A carregar via Wikipedia...</span>
+                <div class="search-status-bar" style="background:rgba(34,197,94,0.15); border-color:#22c55e; color:#86efac;">
+                    <span>✅ ${results.length} capa(s) encontrada(s) via ${badgeText}!</span>
                 </div>
             `;
+            setTimeout(() => { if (feedbackZone) feedbackZone.style.display = 'none'; }, 3000);
         }
 
-        try {
-            results = await WebuyService.search(`${title} ${plat}`);
-        } catch (wikiErr) {
-            console.error("[CoverSearch] Fallback Wikipedia também falhou:", wikiErr);
-            results = [];
-        }
-    }
-
-    const grid = document.getElementById('search-grid');
-    const modal = document.getElementById('search-results-modal');
-
-    if (!results || results.length === 0) {
-        if (feedbackZone) {
-            feedbackZone.innerHTML = `
-                <div class="search-status-bar" style="background:rgba(239,68,68,0.15); border-color:#ef4444; color:#fca5a5;">
-                    <span>⚠️ Nenhuma capa encontrada para "${title}".</span>
-                </div>
-            `;
-            setTimeout(() => { if (feedbackZone) feedbackZone.style.display = 'none'; }, 4000);
-        }
-        return uiService.alert(`Nenhuma capa encontrada para "${title}".`);
-    }
-
-    if (feedbackZone) {
-        const badgeText = sourceUsed === 'TheGamesDB' ? 'TheGamesDB' : 'Wikipedia (Alternativo)';
-        feedbackZone.innerHTML = `
-            <div class="search-status-bar" style="background:rgba(34,197,94,0.15); border-color:#22c55e; color:#86efac;">
-                <span>✅ ${results.length} capa(s) encontrada(s) via ${badgeText}!</span>
-            </div>
-        `;
-        setTimeout(() => { if (feedbackZone) feedbackZone.style.display = 'none'; }, 3000);
-    }
-
-    // Store meta in a data attribute via JSON encoded in a hidden map
-    window._coverMeta = {};
+        // Store meta in a data attribute via JSON encoded in a hidden map
+        window._coverMeta = {};
     grid.innerHTML = results.map((r, i) => {
         const metaId = `cover_${i}`;
         window._coverMeta[metaId] = r.meta || {};
@@ -1490,7 +1497,7 @@ async function renderSyncView() {
                     </div>
                  </div>
                  
-                <p style="margin-top:15px; font-size:0.75rem; color:#22c55e; font-weight:700; text-align:center;">🤖 Sentinela de Sync Ativo (v137)</p>
+                <p style="margin-top:15px; font-size:0.75rem; color:#22c55e; font-weight:700; text-align:center;">🤖 Sentinela de Sync Ativo (v138)</p>
             </div>
 
             <!-- v123: Enhanced Export Section -->
@@ -1617,7 +1624,7 @@ async function pushToCloud(silent = false) {
         const platforms = await dbService.getAll('platforms');
 
         const data = {
-            version: "v137",
+            version: "v138",
             timestamp: new Date().toISOString(),
             games,
             consoles,
@@ -1690,7 +1697,7 @@ async function exportCollection() {
         const platforms = await dbService.getAll('platforms');
 
         const data = {
-            version: "v137",
+            version: "v138",
             timestamp: new Date().toISOString(),
             games,
             consoles,
@@ -1764,7 +1771,7 @@ async function importCollection() {
 
 /** INITIALIZATION **/
 async function init() {
-    logger("Iniciando RetroCollection v137...");
+    logger("Iniciando RetroCollection v138...");
     try {
         themeService.init();
         window.addEventListener('themeChanged', () => {
@@ -1778,10 +1785,10 @@ async function init() {
         await dbService.open();
         logger("DB Conectado.");
 
-        // Auto-Sync Logos logic for v135
-        if (!localStorage.getItem('logos_synced_v137')) {
+        // Auto-Sync Logos logic for v138
+        if (!localStorage.getItem('logos_synced_v138')) {
             await autoSyncLogos();
-            localStorage.setItem('logos_synced_v137', 'true');
+            localStorage.setItem('logos_synced_v138', 'true');
         }
 
         // v98 Resilient Startup
