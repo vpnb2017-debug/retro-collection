@@ -1,7 +1,7 @@
 /**
- * TheGamesDB.net API Service — RetroCollection v138
+ * TheGamesDB.net API Service — RetroCollection v139
  * Handles searching and fetching official retail box art covers from TheGamesDB API v1.
- * Supports platform-aware search ranking, subtitle fallback, and fast timeouts.
+ * Supports platform-aware search ranking, subtitle fallback, and resilient proxying.
  */
 
 const TGDB_PLATFORMS = {
@@ -50,24 +50,25 @@ async function fetchJsonWithFallback(targetUrl) {
                     window.location.hostname === '127.0.0.1' || 
                     window.location.port === '8080' ||
                     window.location.hostname.startsWith('192.168.') ||
-                    window.location.hostname.startsWith('10.');
+                    window.location.hostname.startsWith('10.') ||
+                    window.location.hostname.startsWith('172.');
 
     if (isLocal) {
         try {
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 4000);
+            const timeoutId = setTimeout(() => controller.abort(), 6000);
             const res = await fetch(`/proxy?url=${encodeURIComponent(targetUrl)}`, { signal: controller.signal });
             clearTimeout(timeoutId);
             if (res.ok) return await res.json();
         } catch (e) {
-            console.warn("[TheGamesDB] Local proxy failed, trying direct fetch...", e);
+            console.warn("[TheGamesDB] Local proxy failed, trying next method...", e);
         }
     }
 
     // 2. Try direct fetch (works if backend/proxy or browser environment allows)
     try {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 2500);
+        const timeoutId = setTimeout(() => controller.abort(), 3000);
         const res = await fetch(targetUrl, { signal: controller.signal });
         clearTimeout(timeoutId);
         if (res.ok) return await res.json();
@@ -78,17 +79,40 @@ async function fetchJsonWithFallback(targetUrl) {
         console.warn("[TheGamesDB] Direct fetch failed or CORS blocked:", e.message);
     }
 
-    // 3. Fallback for GitHub Pages CORS restrictions (fast 2s timeout)
+    // 3. Fallback for mobile and GitHub Pages CORS restrictions (AllOrigins GET with cache-bust & 12s timeout)
     const proxyTesters = [
         async () => {
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 2000);
+            const timeoutId = setTimeout(() => controller.abort(), 12000);
+            const url = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}&cb=${Date.now()}`;
+            const res = await fetch(url, { signal: controller.signal });
+            clearTimeout(timeoutId);
+            if (!res.ok) throw new Error("Status " + res.status);
+            const data = await res.json();
+            if (data && data.contents) {
+                const parsed = JSON.parse(data.contents);
+                if (parsed.code === 401 || parsed.code === 403) {
+                    throw new Error(`Chave API do TheGamesDB inválida (${parsed.code}): ${parsed.status || 'Verifica a tua chave nas Definições.'}`);
+                }
+                return parsed;
+            }
+            throw new Error("Conteúdo vazio");
+        },
+        async () => {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 12000);
             const url = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
             const res = await fetch(url, { signal: controller.signal });
             clearTimeout(timeoutId);
             if (!res.ok) throw new Error("Status " + res.status);
             const data = await res.json();
-            if (data && data.contents) return JSON.parse(data.contents);
+            if (data && data.contents) {
+                const parsed = JSON.parse(data.contents);
+                if (parsed.code === 401 || parsed.code === 403) {
+                    throw new Error(`Chave API do TheGamesDB inválida (${parsed.code}): ${parsed.status || 'Verifica a tua chave nas Definições.'}`);
+                }
+                return parsed;
+            }
             throw new Error("Conteúdo vazio");
         }
     ];
@@ -98,11 +122,12 @@ async function fetchJsonWithFallback(targetUrl) {
             const data = await testFn();
             if (data) return data;
         } catch (e) {
+            if (e.message && (e.message.includes("401") || e.message.includes("403"))) throw e;
             console.warn("[TheGamesDB] CORS proxy failed:", e.message);
         }
     }
 
-    throw new Error("TheGamesDB inacessível via CORS no navegador.");
+    throw new Error("Não foi possível ligar à API do TheGamesDB.net. Verifica a ligação ou a tua API Key.");
 }
 
 function normalizePlatform(str) {

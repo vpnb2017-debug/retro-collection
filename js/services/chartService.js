@@ -1,8 +1,8 @@
 /**
- * Chart Service — RetroCollection v138
+ * Chart Service — RetroCollection v139
  * Renders interactive charts in the Dashboard with dynamic retro theme palettes
  */
-import { themeService } from './themeService.js?v=138';
+import { themeService } from './themeService.js?v=139';
 
 export const chartService = {
     instances: {},

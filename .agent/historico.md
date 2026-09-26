@@ -4,6 +4,32 @@ Registo completo de todas as alterações efetuadas em cada versão da aplicaç�
 
 ---
 
+## v139 — 2026-09-26
+### 🔧 Restauro do Motor de Capas TheGamesDB — Correção do Timeout do Proxy CORS
+
+- **Causa Raiz Identificada e Corrigida**:
+  - Em v136 foi introduzido um `AbortController` com timeout de **2 segundos** no proxy `allorigins.win`. O `allorigins.win` demora tipicamente **2–5 segundos** a responder, pelo que o pedido era sempre cancelado antes de receber a resposta. O browser ficava convencido que o TheGamesDB estava inacessível, quando na realidade era apenas lento.
+  - **Correção**: O timeout do proxy `allorigins.win/get` foi aumentado para **12 segundos**, permitindo que a resposta chegue sempre.
+- **Eliminação do Fallback para a Wikipedia**:
+  - Removida a lógica de fallback automático para a Wikipedia/Wikimedia quando o TheGamesDB não devolvia resultados. O utilizador quer exclusivamente capas do TheGamesDB.net.
+  - Agora, se o TheGamesDB não encontrar resultados ou falhar, é apresentada uma mensagem de erro clara ao utilizador.
+- **Melhorias no `theGamesDBService.js`**:
+  - Cache-busting adicionado ao URL do proxy (`&cb=${Date.now()}`) para evitar respostas em cache do Cloudflare.
+  - Detecção de chave API inválida (HTTP 401/403) com mensagem de erro clara.
+  - Deteção expandida da rede local: inclui `172.x.x.x` e porta `8080` além de `localhost` e `192.168.x.x`.
+  - Proxy local `server.ps1 /proxy` mantido para localhost/LAN com timeout de 6 segundos.
+- **Bump de versão v138 → v139** em todos os ficheiros versionados.
+
+### 🔧 Ficheiros Modificados
+- `js/services/theGamesDBService.js` → correção de timeout (12s), cache-busting, deteção de erro 401/403, deteção de rede local expandida
+- `js/app.js` → remoção do fallback Wikipedia, pesquisa exclusiva via TheGamesDB, versão v139
+- `index.html` → versão v139 e scripts de controlo de cache
+- `sw.js` → cache v139
+- `js/services/chartService.js` → importações atualizadas para v139
+- `.agent/historico.md` → registo da versão v139
+
+---
+
 ## v138 — 2026-09-26
 ### 🎨 Resolução Definitiva da Pesquisa de Capas: Box Arts com pilicense=any & Timeouts Rápidos
 - **Resolução da Falha de Zero Capas Encontradas**:
