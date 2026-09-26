@@ -1,5 +1,5 @@
 /**
- * TheGamesDB.net API Service — RetroCollection v140
+ * TheGamesDB.net API Service — RetroCollection v141
  * Handles searching and fetching official retail box art covers from TheGamesDB API v1.
  * Supports platform-aware search ranking, subtitle fallback, and resilient proxying.
  */
@@ -79,56 +79,121 @@ async function fetchJsonWithFallback(targetUrl) {
         console.warn("[TheGamesDB] Direct fetch failed or CORS blocked:", e.message);
     }
 
-    // 3. Fallback for mobile and GitHub Pages CORS restrictions (AllOrigins GET with cache-bust & 12s timeout)
-    const proxyTesters = [
+    // 3. Parallel proxy strategy — race multiple independent public CORS proxies via Promise.any()
+    //    Guarantees fast response and total resilience against individual proxy timeouts/500s
+    const fetchers = [
+        // AllOrigins JSON wrapper (Instance 1)
         async () => {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 12000);
-            const url = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}&cb=${Date.now()}`;
-            const res = await fetch(url, { signal: controller.signal });
-            clearTimeout(timeoutId);
-            if (!res.ok) throw new Error("Status " + res.status);
-            const data = await res.json();
-            if (data && data.contents) {
+            const c = new AbortController();
+            const tid = setTimeout(() => c.abort(), 12000);
+            try {
+                const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}&cb=${Date.now()}`, { signal: c.signal });
+                clearTimeout(tid);
+                if (!res.ok) throw new Error(`AllOrigins (1) status ${res.status}`);
+                const data = await res.json();
+                if (!data?.contents) throw new Error("AllOrigins conteúdo vazio");
                 const parsed = JSON.parse(data.contents);
                 if (parsed.code === 401 || parsed.code === 403) {
                     throw new Error(`Chave API do TheGamesDB inválida (${parsed.code}): ${parsed.status || 'Verifica a tua chave nas Definições.'}`);
                 }
                 return parsed;
+            } catch (e) {
+                clearTimeout(tid);
+                throw e;
             }
-            throw new Error("Conteúdo vazio");
         },
+        // AllOrigins JSON wrapper (Instance 2)
         async () => {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 12000);
-            const url = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
-            const res = await fetch(url, { signal: controller.signal });
-            clearTimeout(timeoutId);
-            if (!res.ok) throw new Error("Status " + res.status);
-            const data = await res.json();
-            if (data && data.contents) {
+            const c = new AbortController();
+            const tid = setTimeout(() => c.abort(), 12000);
+            try {
+                const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}&cb=${Date.now() + 1}`, { signal: c.signal });
+                clearTimeout(tid);
+                if (!res.ok) throw new Error(`AllOrigins (2) status ${res.status}`);
+                const data = await res.json();
+                if (!data?.contents) throw new Error("AllOrigins conteúdo vazio");
                 const parsed = JSON.parse(data.contents);
                 if (parsed.code === 401 || parsed.code === 403) {
                     throw new Error(`Chave API do TheGamesDB inválida (${parsed.code}): ${parsed.status || 'Verifica a tua chave nas Definições.'}`);
                 }
                 return parsed;
+            } catch (e) {
+                clearTimeout(tid);
+                throw e;
             }
-            throw new Error("Conteúdo vazio");
+        },
+        // AllOrigins Raw JSON
+        async () => {
+            const c = new AbortController();
+            const tid = setTimeout(() => c.abort(), 12000);
+            try {
+                const res = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`, { signal: c.signal });
+                clearTimeout(tid);
+                if (!res.ok) throw new Error(`AllOrigins raw status ${res.status}`);
+                const data = await res.json();
+                if (data.code === 401 || data.code === 403) {
+                    throw new Error(`Chave API do TheGamesDB inválida (${data.code}): ${data.status || 'Verifica a tua chave nas Definições.'}`);
+                }
+                return data;
+            } catch (e) {
+                clearTimeout(tid);
+                throw e;
+            }
+        },
+        // CodeTabs Proxy
+        async () => {
+            const c = new AbortController();
+            const tid = setTimeout(() => c.abort(), 12000);
+            try {
+                const res = await fetch(`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(targetUrl)}`, { signal: c.signal });
+                clearTimeout(tid);
+                if (!res.ok) throw new Error(`CodeTabs status ${res.status}`);
+                const data = await res.json();
+                if (data.code === 401 || data.code === 403) {
+                    throw new Error(`Chave API do TheGamesDB inválida (${data.code}): ${data.status || 'Verifica a tua chave nas Definições.'}`);
+                }
+                return data;
+            } catch (e) {
+                clearTimeout(tid);
+                throw e;
+            }
+        },
+        // CorsProxy.io
+        async () => {
+            const c = new AbortController();
+            const tid = setTimeout(() => c.abort(), 12000);
+            try {
+                const res = await fetch(`https://corsproxy.io/?${encodeURIComponent(targetUrl)}`, { signal: c.signal });
+                clearTimeout(tid);
+                if (!res.ok) throw new Error(`CorsProxy status ${res.status}`);
+                const data = await res.json();
+                if (data.code === 401 || data.code === 403) {
+                    throw new Error(`Chave API do TheGamesDB inválida (${data.code}): ${data.status || 'Verifica a tua chave nas Definições.'}`);
+                }
+                return data;
+            } catch (e) {
+                clearTimeout(tid);
+                throw e;
+            }
         }
     ];
 
-    for (const testFn of proxyTesters) {
-        try {
-            const data = await testFn();
-            if (data) return data;
-        } catch (e) {
+    try {
+        // Promise.any — fastest responding proxy wins immediately
+        const result = await Promise.any(fetchers.map(fn => fn()));
+        return result;
+    } catch (aggErr) {
+        // AggregateError means all failed — check if any threw an explicit API key error
+        const errors = aggErr.errors || [];
+        for (const e of errors) {
             if (e.message && (e.message.includes("401") || e.message.includes("403"))) throw e;
-            console.warn("[TheGamesDB] CORS proxy failed:", e.message);
         }
+        console.warn("[TheGamesDB] All parallel proxy attempts failed:", errors.map(e => e.message));
     }
 
-    throw new Error("Não foi possível ligar à API do TheGamesDB.net. Verifica a ligação ou a tua API Key.");
+    throw new Error("Não foi possível ligar à API do TheGamesDB.net. Verifica a ligação à internet.");
 }
+
 
 function normalizePlatform(str) {
     if (!str) return '';
@@ -234,7 +299,20 @@ export const theGamesDBService = {
         // Build search terms list
         const searchTerms = [];
         if (cleanTitle) searchTerms.push(cleanTitle);
-        if (rawTitle.trim() && rawTitle.trim().toLowerCase() !== cleanTitle.toLowerCase()) {
+
+        // Word concatenation variant: "Little Big Planet 2" -> "LittleBigPlanet 2"
+        const condensedAlpha = cleanTitle.replace(/([a-zA-Z])\s+(?=[a-zA-Z])/g, '$1');
+        if (condensedAlpha && condensedAlpha !== cleanTitle && !searchTerms.includes(condensedAlpha)) {
+            searchTerms.push(condensedAlpha);
+        }
+
+        // Space-stripped variant: "Little Big Planet" -> "LittleBigPlanet"
+        const noSpaces = cleanTitle.replace(/\s+/g, '');
+        if (noSpaces && !searchTerms.includes(noSpaces) && noSpaces !== condensedAlpha && noSpaces !== cleanTitle) {
+            searchTerms.push(noSpaces);
+        }
+
+        if (rawTitle.trim() && rawTitle.trim().toLowerCase() !== cleanTitle.toLowerCase() && !searchTerms.includes(rawTitle.trim())) {
             searchTerms.push(rawTitle.trim());
         }
 

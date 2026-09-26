@@ -49,8 +49,10 @@ try {
 
                     Write-Host "Proxying: $targetUrl"
                     
-                    # Fetch remote image
-                    $remoteReq = [System.Net.WebRequest]::Create($targetUrl)
+                    # Fetch remote image / API (with UserAgent to bypass Cloudflare/API 403 blocks)
+                    $remoteReq = [System.Net.HttpWebRequest][System.Net.WebRequest]::Create($targetUrl)
+                    $remoteReq.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+                    $remoteReq.Timeout = 15000
                     $remoteResp = $remoteReq.GetResponse()
                     $stream = $remoteResp.GetResponseStream()
 

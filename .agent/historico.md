@@ -4,6 +4,31 @@ Registo completo de todas as alterações efetuadas em cada versão da aplicaç�
 
 ---
 
+## v141 — 2026-09-26
+### 🔧 Resiliência Multi-Proxy e Melhoria de Pesquisa de Títulos ("Little Big Planet 2")
+
+- **Resiliência Multi-Proxy com `Promise.any()`**:
+  - Em vez de depender exclusivamente de um único proxy sequencial, foi implementada uma estratégia concorrente via `Promise.any()` competindo com múltiplos endpoints independentes (`allorigins.win/get` em instâncias com cache-busting diferente, `allorigins.win/raw`, `codetabs.com`, e `corsproxy.io`).
+  - O primeiro proxy que responder com sucesso satisfaz o pedido de imediato, eliminando falhas esporádicas ou timeouts de proxies individuais.
+- **Geração Inteligente de Variantes de Títulos**:
+  - Adicionado algoritmo que gera variações de títulos com concatenação de palavras (ex: `"Little Big Planet 2"` gera automaticamente busca por `"LittleBigPlanet 2"` e `"LittleBigPlanet"`).
+  - Garante que jogos cujos nomes são indexados com ou sem espaços na base de dados do TheGamesDB sejam sempre localizados.
+- **Correção no Servidor Local (`server.ps1`)**:
+  - Adicionado `User-Agent` de navegador ao WebRequest do proxy do servidor PowerShell local para contornar bloqueios HTTP 403 do Cloudflare / TheGamesDB em ambiente de desenvolvimento local.
+- **Limpeza de Cache e Versionamento**:
+  - Removidos artefactos de scripts anteriores nos handlers de emergência de `index.html`.
+
+### 🔧 Ficheiros Modificados
+- `js/services/theGamesDBService.js` → multi-proxy Promise.any(), variantes de títulos com e sem espaços, v141
+- `server.ps1` → UserAgent no WebRequest do proxy local
+- `index.html` → versão v141 e limpeza de rotas de emergência
+- `sw.js` → cache v141
+- `js/app.js` → imports v141 e constantes de versão
+- `js/services/chartService.js` → versão v141
+- `.agent/historico.md` → registo v141
+
+---
+
 ## v140 — 2026-09-26
 ### 🔧 Correção: Pesquisa de Capas para Títulos Genéricos (ex: "Getaway")
 

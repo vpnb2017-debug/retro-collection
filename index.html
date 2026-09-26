@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport"
         content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>RetroCollection v140 📚🔍🎨🎮</title>
+    <title>RetroCollection v141 📚🔍🎨🎮</title>
 
     <script>
         // Instant Theme Engine — zero flicker
@@ -20,9 +20,9 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
-    <!-- v140: Themes CSS and 3D Shelf CSS -->
-    <link rel="stylesheet" href="css/themes.css?v=140">
-    <link rel="stylesheet" href="css/shelf.css?v=140">
+    <!-- v141: Themes CSS and 3D Shelf CSS -->
+    <link rel="stylesheet" href="css/themes.css?v=141">
+    <link rel="stylesheet" href="css/shelf.css?v=141">
 
     <!-- Critical Styles Inlined -->
     <style>
@@ -446,24 +446,24 @@
         const currentV = urlParams.get('v');
         const forceUpdate = urlParams.get('update');
 
-        if (localStorage.getItem('app_v') !== '140' || forceUpdate === '140' || (currentV && currentV !== '140')) {
-            log("Actualização Crítica v140...");
-            localStorage.setItem('app_v', '140');
+        if (localStorage.getItem('app_v') !== '141' || forceUpdate === '141' || (currentV && currentV !== '141')) {
+            log("Actualização Crítica v141...");
+            localStorage.setItem('app_v', '141');
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.getRegistrations().then(rs => {
                     Promise.all(rs.map(r => r.unregister())).then(() => {
                         caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k)))).then(() => {
                             log("Cache renovado. A reiniciar...");
-                            location.href = location.href.split('?')[0] + '?v=140';
+                            location.href = location.href.split('?')[0] + '?v=141';
                         });
                     });
                 });
             } else {
-                location.href = location.href.split('?')[0] + '?v=140';
+                location.href = location.href.split('?')[0] + '?v=141';
             }
         }
 
-        // Hanging check v140 + Emergency Button
+        // Hanging check v141 + Emergency Button
         setTimeout(() => {
             const title = document.querySelector('.v29-title-zone h2');
             if (title && title.innerText.includes('A carregar')) {
@@ -477,8 +477,9 @@
         document.getElementById('emergency-btn').onclick = async () => {
             if (confirm("Isto irá limpar o cache e desinstalar a App para tentar resolver o problema. Continuar?")) {
                 localStorage.removeItem('app_v');
-                localStorage.removeItem('logos_synced_v param() if (.Value -eq '139') {'140'} else {.Value} ');
-                localStorage.removeItem('logos_synced_v param() if (.Value -eq '139') {'140'} else {.Value} ');
+                localStorage.removeItem('logos_synced_v140');
+                localStorage.removeItem('logos_synced_v139');
+                localStorage.removeItem('logos_synced_v138');
                 localStorage.removeItem('logos_synced_v137');
                 localStorage.removeItem('logos_synced_v136');
                 localStorage.removeItem('logos_synced_v135');
@@ -500,18 +501,18 @@
                 }
                 const keys = await caches.keys();
                 for (let k of keys) await caches.delete(k);
-                location.href = location.href.split('?')[0] + '?update=140';
+                location.href = location.href.split('?')[0] + '?update=141';
             }
         };
     </script>
 
-    <script type="module" src="js/app.js?v=140"></script>
+    <script type="module" src="js/app.js?v=141"></script>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js?v=140')
+                navigator.serviceWorker.register('sw.js?v=141')
                     .then((registration) => {
-                        log("v140 Pronta.");
+                        log("v141 Pronta.");
                         console.log('SW registered:', registration);
                     })
                     .catch(e => {
