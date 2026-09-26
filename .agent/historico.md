@@ -4,6 +4,25 @@ Registo completo de todas as alterações efetuadas em cada versão da aplicaç�
 
 ---
 
+## v142 — 2026-09-26
+### 🔧 Correção: Eliminação de Falso Positivo 403 e Remoção de Proxies Incompatíveis
+
+- **Causa Raiz do Erro "CorsProxy status 403"**:
+  - O serviço `corsproxy.io` bloqueava chamadas com status 403 do lado do próprio proxy, e o handler de erros interpretava erradamente a string "403" da mensagem de erro de rede como sendo uma chave de API inválida do TheGamesDB.
+- **Correções Aplicadas**:
+  - **Remoção de Proxies Incompatíveis**: Removidos `corsproxy.io` e outros proxies não suportados; o sistema utiliza instâncias paralelas e com cache-busting do `allorigins.win/get` que devolve as respostas JSON de forma fidedigna.
+  - **Detecção Precisa de Erros de Chave API**: O erro de API Key inválida agora só é disparado se a resposta JSON devolvida pelo TheGamesDB contiver explicitamente o código de erro ou menção a `api key` (`isApiKeyError = true`), evitando falsos positivos originados por erros de rede ou de proxies intermediários.
+
+### 🔧 Ficheiros Modificados
+- `js/services/theGamesDBService.js` → remoção do corsproxy.io, detecção rigorosa de isApiKeyError, versão v142
+- `index.html` → versão v142
+- `sw.js` → cache v142
+- `js/app.js` → imports e strings de versão v142
+- `js/services/chartService.js` → versão v142
+- `.agent/historico.md` → registo v142
+
+---
+
 ## v141 — 2026-09-26
 ### 🔧 Resiliência Multi-Proxy e Melhoria de Pesquisa de Títulos ("Little Big Planet 2")
 

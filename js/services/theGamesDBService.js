@@ -1,5 +1,5 @@
 /**
- * TheGamesDB.net API Service — RetroCollection v141
+ * TheGamesDB.net API Service — RetroCollection v142
  * Handles searching and fetching official retail box art covers from TheGamesDB API v1.
  * Supports platform-aware search ranking, subtitle fallback, and resilient proxying.
  */
@@ -79,119 +79,51 @@ async function fetchJsonWithFallback(targetUrl) {
         console.warn("[TheGamesDB] Direct fetch failed or CORS blocked:", e.message);
     }
 
-    // 3. Parallel proxy strategy — race multiple independent public CORS proxies via Promise.any()
-    //    Guarantees fast response and total resilience against individual proxy timeouts/500s
-    const fetchers = [
-        // AllOrigins JSON wrapper (Instance 1)
-        async () => {
-            const c = new AbortController();
-            const tid = setTimeout(() => c.abort(), 12000);
-            try {
-                const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}&cb=${Date.now()}`, { signal: c.signal });
-                clearTimeout(tid);
-                if (!res.ok) throw new Error(`AllOrigins (1) status ${res.status}`);
-                const data = await res.json();
-                if (!data?.contents) throw new Error("AllOrigins conteúdo vazio");
-                const parsed = JSON.parse(data.contents);
-                if (parsed.code === 401 || parsed.code === 403) {
-                    throw new Error(`Chave API do TheGamesDB inválida (${parsed.code}): ${parsed.status || 'Verifica a tua chave nas Definições.'}`);
-                }
-                return parsed;
-            } catch (e) {
-                clearTimeout(tid);
-                throw e;
+    // 3. Fallback for mobile and GitHub Pages (AllOrigins GET with cache-bust & parallel race)
+    const makeAllOriginsAttempt = async (cacheBust) => {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 12000);
+        try {
+            const cbParam = cacheBust ? `&cb=${cacheBust}` : '';
+            const url = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}${cbParam}`;
+            const res = await fetch(url, { signal: controller.signal });
+            clearTimeout(timeoutId);
+            if (!res.ok) throw new Error(`AllOrigins status ${res.status}`);
+            const data = await res.json();
+            if (!data?.contents) throw new Error("AllOrigins conteúdo vazio");
+            
+            const parsed = JSON.parse(data.contents);
+            if (parsed.code === 401 || parsed.code === 403 || (parsed.status && parsed.status.toLowerCase().includes("api key"))) {
+                const err = new Error(`Chave API do TheGamesDB inválida: ${parsed.status || 'Verifica a tua chave nas Definições.'}`);
+                err.isApiKeyError = true;
+                throw err;
             }
-        },
-        // AllOrigins JSON wrapper (Instance 2)
-        async () => {
-            const c = new AbortController();
-            const tid = setTimeout(() => c.abort(), 12000);
-            try {
-                const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}&cb=${Date.now() + 1}`, { signal: c.signal });
-                clearTimeout(tid);
-                if (!res.ok) throw new Error(`AllOrigins (2) status ${res.status}`);
-                const data = await res.json();
-                if (!data?.contents) throw new Error("AllOrigins conteúdo vazio");
-                const parsed = JSON.parse(data.contents);
-                if (parsed.code === 401 || parsed.code === 403) {
-                    throw new Error(`Chave API do TheGamesDB inválida (${parsed.code}): ${parsed.status || 'Verifica a tua chave nas Definições.'}`);
-                }
-                return parsed;
-            } catch (e) {
-                clearTimeout(tid);
-                throw e;
-            }
-        },
-        // AllOrigins Raw JSON
-        async () => {
-            const c = new AbortController();
-            const tid = setTimeout(() => c.abort(), 12000);
-            try {
-                const res = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`, { signal: c.signal });
-                clearTimeout(tid);
-                if (!res.ok) throw new Error(`AllOrigins raw status ${res.status}`);
-                const data = await res.json();
-                if (data.code === 401 || data.code === 403) {
-                    throw new Error(`Chave API do TheGamesDB inválida (${data.code}): ${data.status || 'Verifica a tua chave nas Definições.'}`);
-                }
-                return data;
-            } catch (e) {
-                clearTimeout(tid);
-                throw e;
-            }
-        },
-        // CodeTabs Proxy
-        async () => {
-            const c = new AbortController();
-            const tid = setTimeout(() => c.abort(), 12000);
-            try {
-                const res = await fetch(`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(targetUrl)}`, { signal: c.signal });
-                clearTimeout(tid);
-                if (!res.ok) throw new Error(`CodeTabs status ${res.status}`);
-                const data = await res.json();
-                if (data.code === 401 || data.code === 403) {
-                    throw new Error(`Chave API do TheGamesDB inválida (${data.code}): ${data.status || 'Verifica a tua chave nas Definições.'}`);
-                }
-                return data;
-            } catch (e) {
-                clearTimeout(tid);
-                throw e;
-            }
-        },
-        // CorsProxy.io
-        async () => {
-            const c = new AbortController();
-            const tid = setTimeout(() => c.abort(), 12000);
-            try {
-                const res = await fetch(`https://corsproxy.io/?${encodeURIComponent(targetUrl)}`, { signal: c.signal });
-                clearTimeout(tid);
-                if (!res.ok) throw new Error(`CorsProxy status ${res.status}`);
-                const data = await res.json();
-                if (data.code === 401 || data.code === 403) {
-                    throw new Error(`Chave API do TheGamesDB inválida (${data.code}): ${data.status || 'Verifica a tua chave nas Definições.'}`);
-                }
-                return data;
-            } catch (e) {
-                clearTimeout(tid);
-                throw e;
-            }
+            return parsed;
+        } catch (e) {
+            clearTimeout(timeoutId);
+            throw e;
         }
-    ];
+    };
 
+    const now = Date.now();
     try {
-        // Promise.any — fastest responding proxy wins immediately
-        const result = await Promise.any(fetchers.map(fn => fn()));
+        // Race 3 parallel requests with different cache-busting so if one hangs or fails, the others resolve
+        const result = await Promise.any([
+            makeAllOriginsAttempt(now),
+            makeAllOriginsAttempt(now + 1),
+            makeAllOriginsAttempt(null)
+        ]);
         return result;
     } catch (aggErr) {
-        // AggregateError means all failed — check if any threw an explicit API key error
+        // Only rethrow if an authentic TheGamesDB API key error occurred
         const errors = aggErr.errors || [];
         for (const e of errors) {
-            if (e.message && (e.message.includes("401") || e.message.includes("403"))) throw e;
+            if (e.isApiKeyError) throw e;
         }
-        console.warn("[TheGamesDB] All parallel proxy attempts failed:", errors.map(e => e.message));
+        console.warn("[TheGamesDB] All proxy attempts failed:", errors.map(e => e.message));
     }
 
-    throw new Error("Não foi possível ligar à API do TheGamesDB.net. Verifica a ligação à internet.");
+    throw new Error("Não foi possível ligar à API do TheGamesDB.net. Verifica a tua ligação à internet.");
 }
 
 
