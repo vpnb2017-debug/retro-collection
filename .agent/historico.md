@@ -4,6 +4,23 @@ Registo completo de todas as alterações efetuadas em cada versão da aplicaç�
 
 ---
 
+## v140 — 2026-09-26
+### 🔧 Correção: Pesquisa de Capas para Títulos Genéricos (ex: "Getaway")
+
+- **Causa Raiz**: Para títulos genéricos, o TheGamesDB devolvia até 16 resultados, criando um URL de imagens muito longo que o proxy `allorigins.win` rejeitava com timeout.
+- **Correção 1 — Limite reduzido a 6 jogos**: O slice de resultados passou de 16 para 6, mantendo o URL das imagens curto e dentro dos limites do proxy.
+- **Correção 2 — Imagens com try/catch independente**: A chamada à API de imagens foi envolvida num `try/catch` separado. Se a chamada de imagens falhar, a pesquisa não crasha — continua com lista vazia de imagens em vez de propagar um erro fatal ao utilizador.
+
+### 🔧 Ficheiros Modificados
+- `js/services/theGamesDBService.js` → limite 16→6, try/catch isolado para fetch de imagens, versão v140
+- `index.html` → versão v140
+- `sw.js` → cache v140
+- `js/app.js` → imports v140
+- `js/services/chartService.js` → importações v140
+- `.agent/historico.md` → registo v140
+
+---
+
 ## v139 — 2026-09-26
 ### 🔧 Restauro do Motor de Capas TheGamesDB — Correção do Timeout do Proxy CORS
 

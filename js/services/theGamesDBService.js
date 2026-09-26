@@ -1,5 +1,5 @@
 /**
- * TheGamesDB.net API Service — RetroCollection v139
+ * TheGamesDB.net API Service — RetroCollection v140
  * Handles searching and fetching official retail box art covers from TheGamesDB API v1.
  * Supports platform-aware search ranking, subtitle fallback, and resilient proxying.
  */
@@ -253,13 +253,21 @@ export const theGamesDBService = {
                 const data = await fetchJsonWithFallback(searchUrl);
 
                 if (data?.data?.games?.length > 0) {
-                    const games = data.data.games.slice(0, 16); // Check up to 16 matches
+                    const games = data.data.games.slice(0, 6); // Max 6 — keeps image URL short for allorigins proxy
                     const gameIds = games.map(g => g.id).join(',');
-                    const imagesUrl = `https://api.thegamesdb.net/v1/Games/Images?apikey=${encodeURIComponent(apiKey)}&games_id=${gameIds}`;
-                    const imgData = await fetchJsonWithFallback(imagesUrl);
-                    const baseUrl = imgData.data?.base_url?.original || imgData.data?.base_url?.large || "https://cdn.thegamesdb.net/images/original/";
 
-                    const imagesObj = imgData.data?.images || {};
+                    // Fetch images — wrapped separately so a failure here doesn't kill the whole search
+                    let imagesObj = {};
+                    let baseUrl = "https://cdn.thegamesdb.net/images/original/";
+                    try {
+                        const imagesUrl = `https://api.thegamesdb.net/v1/Games/Images?apikey=${encodeURIComponent(apiKey)}&games_id=${gameIds}`;
+                        const imgData = await fetchJsonWithFallback(imagesUrl);
+                        baseUrl = imgData.data?.base_url?.original || imgData.data?.base_url?.large || baseUrl;
+                        imagesObj = imgData.data?.images || {};
+                    } catch (imgErr) {
+                        console.warn(`[TheGamesDB] Image fetch failed for "${term}", continuing without images:`, imgErr.message);
+                    }
+
                     const platMap = data.include?.platform?.data || data.include?.platforms?.data || {};
                     const genreMap = data.include?.genres?.data || {};
                     const devMap = data.include?.developers?.data || {};
@@ -318,6 +326,7 @@ export const theGamesDBService = {
                 }
             } catch (error) {
                 console.error(`[TheGamesDB] searchWithDetails Error for "${term}":`, error);
+
                 if (term === searchTerms[searchTerms.length - 1]) throw error;
             }
         }
