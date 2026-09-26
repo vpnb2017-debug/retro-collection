@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport"
         content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>RetroCollection v135 📚🔍🎨🎮</title>
+    <title>RetroCollection v136 📚🔍🎨🎮</title>
 
     <script>
         // Instant Theme Engine — zero flicker
@@ -20,9 +20,9 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
-    <!-- v135: Themes CSS and 3D Shelf CSS -->
-    <link rel="stylesheet" href="css/themes.css?v=135">
-    <link rel="stylesheet" href="css/shelf.css?v=135">
+    <!-- v136: Themes CSS and 3D Shelf CSS -->
+    <link rel="stylesheet" href="css/themes.css?v=136">
+    <link rel="stylesheet" href="css/shelf.css?v=136">
 
     <!-- Critical Styles Inlined -->
     <style>
@@ -446,24 +446,24 @@
         const currentV = urlParams.get('v');
         const forceUpdate = urlParams.get('update');
 
-        if (localStorage.getItem('app_v') !== '135' || forceUpdate === '135' || (currentV && currentV !== '135')) {
-            log("Actualização Crítica v135...");
-            localStorage.setItem('app_v', '135');
+        if (localStorage.getItem('app_v') !== '136' || forceUpdate === '136' || (currentV && currentV !== '136')) {
+            log("Actualização Crítica v136...");
+            localStorage.setItem('app_v', '136');
             if ('serviceWorker' in navigator) {
                 navigator.serviceWorker.getRegistrations().then(rs => {
                     Promise.all(rs.map(r => r.unregister())).then(() => {
                         caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k)))).then(() => {
                             log("Cache renovado. A reiniciar...");
-                            location.href = location.href.split('?')[0] + '?v=135';
+                            location.href = location.href.split('?')[0] + '?v=136';
                         });
                     });
                 });
             } else {
-                location.href = location.href.split('?')[0] + '?v=135';
+                location.href = location.href.split('?')[0] + '?v=136';
             }
         }
 
-        // Hanging check v135 + Emergency Button
+        // Hanging check v136 + Emergency Button
         setTimeout(() => {
             const title = document.querySelector('.v29-title-zone h2');
             if (title && title.innerText.includes('A carregar')) {
@@ -477,6 +477,7 @@
         document.getElementById('emergency-btn').onclick = async () => {
             if (confirm("Isto irá limpar o cache e desinstalar a App para tentar resolver o problema. Continuar?")) {
                 localStorage.removeItem('app_v');
+                localStorage.removeItem('logos_synced_v136');
                 localStorage.removeItem('logos_synced_v135');
                 localStorage.removeItem('logos_synced_v134');
                 localStorage.removeItem('logos_synced_v133');
@@ -496,18 +497,18 @@
                 }
                 const keys = await caches.keys();
                 for (let k of keys) await caches.delete(k);
-                location.href = location.href.split('?')[0] + '?update=135';
+                location.href = location.href.split('?')[0] + '?update=136';
             }
         };
     </script>
 
-    <script type="module" src="js/app.js?v=135"></script>
+    <script type="module" src="js/app.js?v=136"></script>
     <script>
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                navigator.serviceWorker.register('sw.js?v=135')
+                navigator.serviceWorker.register('sw.js?v=136')
                     .then((registration) => {
-                        log("v135 Pronta.");
+                        log("v136 Pronta.");
                         console.log('SW registered:', registration);
                     })
                     .catch(e => {

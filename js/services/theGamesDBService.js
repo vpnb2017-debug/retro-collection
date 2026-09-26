@@ -45,8 +45,14 @@ const TGDB_PLATFORMS = {
 };
 
 async function fetchJsonWithFallback(targetUrl) {
-    // 1. Try local PowerShell /proxy if on localhost
-    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    // 1. Try local PowerShell /proxy if on localhost or local network
+    const isLocal = window.location.hostname === 'localhost' || 
+                    window.location.hostname === '127.0.0.1' || 
+                    window.location.port === '8080' ||
+                    window.location.hostname.startsWith('192.168.') ||
+                    window.location.hostname.startsWith('10.');
+
+    if (isLocal) {
         try {
             const res = await fetch(`/proxy?url=${encodeURIComponent(targetUrl)}`);
             if (res.ok) return await res.json();
@@ -67,20 +73,29 @@ async function fetchJsonWithFallback(targetUrl) {
     }
 
     // 3. Fallback for GitHub Pages CORS restrictions
-    const proxies = [
-        `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`,
-        `https://corsproxy.io/?url=${encodeURIComponent(targetUrl)}`
+    const proxyTesters = [
+        async () => {
+            const url = `https://api.allorigins.win/get?url=${encodeURIComponent(targetUrl)}`;
+            const res = await fetch(url);
+            if (!res.ok) throw new Error("Status " + res.status);
+            const data = await res.json();
+            if (data && data.contents) return JSON.parse(data.contents);
+            throw new Error("Conteúdo vazio");
+        },
+        async () => {
+            const url = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
+            const res = await fetch(url);
+            if (!res.ok) throw new Error("Status " + res.status);
+            return await res.json();
+        }
     ];
 
-    for (const pUrl of proxies) {
+    for (const testFn of proxyTesters) {
         try {
-            const res = await fetch(pUrl);
-            if (res.ok) {
-                const data = await res.json();
-                if (data) return data;
-            }
+            const data = await testFn();
+            if (data) return data;
         } catch (e) {
-            console.warn("[TheGamesDB] CORS proxy failed:", pUrl, e);
+            console.warn("[TheGamesDB] CORS proxy failed:", e.message);
         }
     }
 

@@ -4,6 +4,27 @@ Registo completo de todas as alterações efetuadas em cada versão da aplicaç�
 
 ---
 
+## v136 — 2026-09-26
+### 🛡️ Resiliência na Pesquisa de Capas: Fallback Automático Wikipedia & Suporte de Rede
+- **Fallback Automático para Capas da Wikipedia**:
+  - Quando a API do TheGamesDB.net se encontra temporariamente inacessível (devido a restrições de CORS no browser, instabilidade de proxies públicos ou quebras na ligação de rede), o motor de pesquisa não bloqueia o utilizador nem dispara alertas de erro impeditivos.
+  - Recorre de imediato e de forma transparente à pesquisa nativa de capas via Wikipedia (`WebuyService`), exibindo feedback informativo (`✅ Capa(s) encontrada(s) via Wikipedia (Alternativo)`).
+- **Calibração de Redes Locais e Proxies no TheGamesDB**:
+  - `theGamesDBService.js`: Suporte expandido a redes locais privadas (`192.168.x.x`, `10.x.x.x` e porta `8080`) para usar o `/proxy` local de alta velocidade sempre que o servidor de desenvolvimento estiver em execução.
+  - Adicionado processamento de payload JSON via endpoint `/get` do AllOrigins para maior compatibilidade de cabeçalhos.
+- **Invalidação de Cache e Service Worker**:
+  - `sw.js`, `index.html`, `js/services/chartService.js`, `js/services/theGamesDBService.js` e `js/app.js` atualizados para a versão `v136`.
+
+### 🔧 Ficheiros Modificados
+- `js/app.js` → fallback transparente para Wikipedia em `searchCover`, feedback badge e versão v136
+- `js/services/theGamesDBService.js` → deteção de IP local para `/proxy` e suporte a AllOrigins `/get`
+- `index.html` → versão v136 e scripts de controlo de cache
+- `sw.js` → cache v136
+- `js/services/chartService.js` → importações e anotações atualizadas para v136
+- `.agent/historico.md` → registo da versão v136
+
+---
+
 ## v135 — 2026-09-26
 ### 👁️ Visibilidade de Chaves e Tokens nas Definições da Nuvem
 - **Campos de Chaves Visíveis por Omissão**:
