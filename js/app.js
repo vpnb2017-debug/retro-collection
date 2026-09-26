@@ -1,15 +1,15 @@
-import { dbService } from './services/db.js?v=146';
-import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js?v=146';
-import { coverSearchService } from './services/coverSearch.js?v=146';
-import WebuyService from './services/webuyService.js?v=146';
-import { localFileSync } from './services/localFileSync.js?v=146';
-import { metadataService } from './services/metadataService.js?v=146';
-import { cloudSyncService } from './services/cloudSyncService.js?v=146';
-import { theGamesDBService } from './services/theGamesDBService.js?v=146';
-import { barcodeScannerService } from './services/barcodeScannerService.js?v=146';
-import { chartService } from './services/chartService.js?v=146';
-import { exportService } from './services/exportService.js?v=146';
-import { themeService } from './services/themeService.js?v=146';
+import { dbService } from './services/db.js?v=147';
+import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js?v=147';
+import { coverSearchService } from './services/coverSearch.js?v=147';
+import WebuyService from './services/webuyService.js?v=147';
+import { localFileSync } from './services/localFileSync.js?v=147';
+import { metadataService } from './services/metadataService.js?v=147';
+import { cloudSyncService } from './services/cloudSyncService.js?v=147';
+import { theGamesDBService } from './services/theGamesDBService.js?v=147';
+import { barcodeScannerService } from './services/barcodeScannerService.js?v=147';
+import { chartService } from './services/chartService.js?v=147';
+import { exportService } from './services/exportService.js?v=147';
+import { themeService } from './services/themeService.js?v=147';
 
 // Global Exposure
 window.navigate = navigate;
@@ -207,7 +207,7 @@ async function renderDashboard() {
         const ownedTotal = ownedGames.length + ownedConsoles.length;
         const wishlistTotal = games.filter(g => g.isWishlist).length + consoles.filter(c => c.isWishlist).length;
 
-        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:var(--accent-color); border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v146</span></h2>`;
+        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:var(--accent-color); border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v147</span></h2>`;
 
         const platData = await getPlatformOptions();
 
@@ -795,7 +795,7 @@ async function searchCover() {
         logger("A pesquisar capas... 📦");
         let results = [];
 
-        // TheGamesDB é a única fonte de capas (v146+)
+        // TheGamesDB é a única fonte de capas (v147+)
         try {
             results = await theGamesDBService.searchWithDetails(title, plat, tgdbKey);
         } catch (err) {
@@ -944,7 +944,12 @@ async function selectCover(url, metaId) {
 
     // Set input and preview
     const imageInput = document.getElementById('add-image');
-    if (imageInput) imageInput.value = finalImageUrl;
+    if (imageInput) {
+        imageInput.value = finalImageUrl;
+        if (url && url.startsWith('http')) {
+            imageInput.dataset.originalUrl = url;
+        }
+    }
     if (preview) {
         preview.innerHTML = '';
         preview.style.backgroundImage = `url(${finalImageUrl})`;
@@ -1118,6 +1123,7 @@ async function _doSaveItem(id, store, title, platform, acquiredDate, isWishlist)
         title: title,
         platform: platform,
         image: document.getElementById('add-image').value,
+        originalImageUrl: document.getElementById('add-image')?.dataset?.originalUrl || '',
         price: parseFloat(document.getElementById('add-price').value) || 0,
         acquiredDate: acquiredDate,
         year: parseInt(document.getElementById('add-year').value) || null,
@@ -1505,7 +1511,7 @@ async function renderSyncView() {
                     </div>
                  </div>
                  
-                <p style="margin-top:15px; font-size:0.75rem; color:#22c55e; font-weight:700; text-align:center;">🤖 Sentinela de Sync Ativo (v146)</p>
+                <p style="margin-top:15px; font-size:0.75rem; color:#22c55e; font-weight:700; text-align:center;">🤖 Sentinela de Sync Ativo (v147)</p>
             </div>
 
             <!-- v123: Enhanced Export Section -->
@@ -1632,7 +1638,7 @@ async function pushToCloud(silent = false) {
         const platforms = await dbService.getAll('platforms');
 
         const data = {
-            version: "v146",
+            version: "v147",
             timestamp: new Date().toISOString(),
             games,
             consoles,
@@ -1705,7 +1711,7 @@ async function exportCollection() {
         const platforms = await dbService.getAll('platforms');
 
         const data = {
-            version: "v146",
+            version: "v147",
             timestamp: new Date().toISOString(),
             games,
             consoles,
@@ -1779,7 +1785,7 @@ async function importCollection() {
 
 /** INITIALIZATION **/
 async function init() {
-    logger("Iniciando RetroCollection v146...");
+    logger("Iniciando RetroCollection v147...");
     try {
         themeService.init();
         window.addEventListener('themeChanged', () => {

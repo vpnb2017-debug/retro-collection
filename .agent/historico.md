@@ -4,6 +4,29 @@ Registo completo de todas as alterações efetuadas em cada versão da aplicaç�
 
 ---
 
+## v147 — 2026-09-26
+### 🔧 Correção: Limite de Caracteres no Excel (32767 chars) e Preservação de URLs Web
+
+- **Causa Raiz**:
+  - Imagens guardadas em Base64 no IndexedDB têm frequentemente mais de 50.000 a 200.000 caracteres, violando o limite máximo estrito do Microsoft Excel de 32.767 caracteres por célula (`Text length must not exceed 32767 characters`).
+- **Correções Aplicadas**:
+  - **Formatação Segura de Links**:
+    - Se o item possuir um link web (`http://` ou `https://`), exporta o URL direto.
+    - Se o item tiver apenas imagem convertida em Base64, exporta a indicação limpa `[Imagem Base64 / Local]` em vez do dump em bruto de caracteres.
+  - **Preservação do URL Web Original**: Ao descarregar uma capa via TheGamesDB, o URL original da web é guardado em `originalImageUrl` no item para permitir que o link web permaneça acessível para exportação e sincronização.
+  - **Truncagem de Segurança**: O campo de notas e qualquer texto longo são limitados por segurança a 32.000 caracteres para evitar qualquer quebra futura.
+
+### 🔧 Ficheiros Modificados
+- `js/services/exportService.js` → formatação segura de imagem no Excel, limite 32k, v147
+- `js/app.js` → preservação de originalImageUrl no selectCover e _doSaveItem, v147
+- `index.html` → versão v147
+- `sw.js` → cache v147
+- `js/services/chartService.js` → versão v147
+- `js/services/theGamesDBService.js` → versão v147
+- `.agent/historico.md` → registo v147
+
+---
+
 ## v146 — 2026-09-26
 ### 📊 Adição da Coluna "Link da Imagem" na Exportação para Excel
 

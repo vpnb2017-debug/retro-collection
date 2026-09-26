@@ -1,5 +1,5 @@
 /**
- * Export Service — RetroCollection v146
+ * Export Service — RetroCollection v147
  * Exports collection to PDF (jsPDF) and Excel (SheetJS)
  */
 
@@ -96,19 +96,32 @@ export const exportService = {
             ...consoles.map(c => ({...c, _t: 'Hardware'}))
         ].sort((a,b) => a.title.localeCompare(b.title));
 
-        const rows = all.map(item => ({
-            'Titulo': item.title || '',
-            'Tipo': item._t,
-            'Plataforma': item.platform || '',
-            'Ano': item.year || '',
-            'Genero': item.genre || '',
-            'Developer': item.developer || '',
-            'Preco (EUR)': item.price || 0,
-            'Data Aquisicao': item.acquiredDate || '',
-            'Estado': item.isWishlist ? 'Wishlist' : (item.isValidated ? 'Validado' : 'Nao Validado'),
-            'Link da Imagem': item.image || '',
-            'Notas': item.notes || ''
-        }));
+        const rows = all.map(item => {
+            let imgLink = '';
+            if (item.originalImageUrl && (item.originalImageUrl.startsWith('http://') || item.originalImageUrl.startsWith('https://'))) {
+                imgLink = item.originalImageUrl;
+            } else if (item.imageUrl && (item.imageUrl.startsWith('http://') || item.imageUrl.startsWith('https://'))) {
+                imgLink = item.imageUrl;
+            } else if (item.image && (item.image.startsWith('http://') || item.image.startsWith('https://'))) {
+                imgLink = item.image;
+            } else if (item.image && item.image.startsWith('data:image')) {
+                imgLink = '[Imagem Base64 / Local]';
+            }
+
+            return {
+                'Titulo': item.title || '',
+                'Tipo': item._t,
+                'Plataforma': item.platform || '',
+                'Ano': item.year || '',
+                'Genero': item.genre || '',
+                'Developer': item.developer || '',
+                'Preco (EUR)': item.price || 0,
+                'Data Aquisicao': item.acquiredDate || '',
+                'Estado': item.isWishlist ? 'Wishlist' : (item.isValidated ? 'Validado' : 'Nao Validado'),
+                'Link da Imagem': imgLink,
+                'Notas': (item.notes || '').substring(0, 32000)
+            };
+        });
 
         const wb = XLSX.utils.book_new();
         const ws = XLSX.utils.json_to_sheet(rows);
