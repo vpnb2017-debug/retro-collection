@@ -1,5 +1,5 @@
 /**
- * TheGamesDB.net API Service — RetroCollection v144
+ * TheGamesDB.net API Service — RetroCollection v145
  * Handles searching and fetching official retail box art covers from TheGamesDB API v1.
  * Supports platform-aware search ranking, subtitle fallback, and resilient proxying.
  */
@@ -233,7 +233,12 @@ export const theGamesDBService = {
             const data = await fetchJsonWithFallback(url);
             if (!data || !data.data || !data.data.games) return null;
 
-            const game = data.data.games[gameId] || Object.values(data.data.games)[0];
+            let game = null;
+            if (Array.isArray(data.data.games)) {
+                game = data.data.games.find(g => String(g.id) === String(gameId)) || data.data.games[0];
+            } else if (typeof data.data.games === 'object') {
+                game = data.data.games[gameId] || Object.values(data.data.games)[0];
+            }
             if (!game) return null;
 
             const result = { year: null, genre: '', developer: '', description: '', players: '', platform: '' };
@@ -245,18 +250,18 @@ export const theGamesDBService = {
             if (game.overview) result.description = game.overview.substring(0, 400);
             if (game.players) result.players = game.players;
 
-            const genreData = data.include?.genres?.data || {};
-            if (game.genres) {
-                const names = game.genres.map(id => genreData[id]?.name).filter(Boolean);
+            const genreData = data.include?.genres?.data || data.include?.genres || {};
+            if (game.genres && Array.isArray(game.genres)) {
+                const names = game.genres.map(id => genreData[id]?.name || (typeof id === 'string' ? id : '')).filter(Boolean);
                 result.genre = names.slice(0, 2).join(', ');
             }
-            const devData = data.include?.developers?.data || {};
-            if (game.developers) {
-                const names = game.developers.map(id => devData[id]?.name).filter(Boolean);
+            const devData = data.include?.developers?.data || data.include?.developers || {};
+            if (game.developers && Array.isArray(game.developers)) {
+                const names = game.developers.map(id => devData[id]?.name || (typeof id === 'string' ? id : '')).filter(Boolean);
                 result.developer = names[0] || '';
             }
 
-            const platData = data.include?.platform?.data || data.include?.platforms?.data || {};
+            const platData = data.include?.platform?.data || data.include?.platforms?.data || data.include?.platform || {};
             if (game.platform) {
                 result.platform = platData[game.platform]?.name || TGDB_PLATFORMS[game.platform] || '';
             }
@@ -381,6 +386,8 @@ export const theGamesDBService = {
                                 score,
                                 isPlatformMatch: isMatch,
                                 meta: {
+                                    gameId: game.id,
+                                    title: game.game_title,
                                     year,
                                     genre: genres.slice(0, 2).join(', '),
                                     developer: developers[0] || '',

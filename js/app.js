@@ -1,15 +1,15 @@
-import { dbService } from './services/db.js?v=144';
-import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js?v=144';
-import { coverSearchService } from './services/coverSearch.js?v=144';
-import WebuyService from './services/webuyService.js?v=144';
-import { localFileSync } from './services/localFileSync.js?v=144';
-import { metadataService } from './services/metadataService.js?v=144';
-import { cloudSyncService } from './services/cloudSyncService.js?v=144';
-import { theGamesDBService } from './services/theGamesDBService.js?v=144';
-import { barcodeScannerService } from './services/barcodeScannerService.js?v=144';
-import { chartService } from './services/chartService.js?v=144';
-import { exportService } from './services/exportService.js?v=144';
-import { themeService } from './services/themeService.js?v=144';
+import { dbService } from './services/db.js?v=145';
+import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js?v=145';
+import { coverSearchService } from './services/coverSearch.js?v=145';
+import WebuyService from './services/webuyService.js?v=145';
+import { localFileSync } from './services/localFileSync.js?v=145';
+import { metadataService } from './services/metadataService.js?v=145';
+import { cloudSyncService } from './services/cloudSyncService.js?v=145';
+import { theGamesDBService } from './services/theGamesDBService.js?v=145';
+import { barcodeScannerService } from './services/barcodeScannerService.js?v=145';
+import { chartService } from './services/chartService.js?v=145';
+import { exportService } from './services/exportService.js?v=145';
+import { themeService } from './services/themeService.js?v=145';
 
 // Global Exposure
 window.navigate = navigate;
@@ -207,7 +207,7 @@ async function renderDashboard() {
         const ownedTotal = ownedGames.length + ownedConsoles.length;
         const wishlistTotal = games.filter(g => g.isWishlist).length + consoles.filter(c => c.isWishlist).length;
 
-        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:var(--accent-color); border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v144</span></h2>`;
+        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:var(--accent-color); border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v145</span></h2>`;
 
         const platData = await getPlatformOptions();
 
@@ -795,7 +795,7 @@ async function searchCover() {
         logger("A pesquisar capas... 📦");
         let results = [];
 
-        // TheGamesDB é a única fonte de capas (v144+)
+        // TheGamesDB é a única fonte de capas (v145+)
         try {
             results = await theGamesDBService.searchWithDetails(title, plat, tgdbKey);
         } catch (err) {
@@ -953,13 +953,36 @@ async function selectCover(url, metaId) {
     // Auto-fill metadata from TheGamesDB and highlight modified fields
     const filledFields = [];
     if (metaId && window._coverMeta && window._coverMeta[metaId]) {
-        const meta = window._coverMeta[metaId];
+        let meta = { ...window._coverMeta[metaId] };
+        const tgdbKey = localStorage.getItem('thegamesdb_api_key');
+
+        // Fetch rich game details (developer, genres, overview) if gameId is present
+        if (meta.gameId && tgdbKey) {
+            try {
+                const fullDetails = await theGamesDBService.fetchGameDetails(meta.gameId, tgdbKey);
+                if (fullDetails) {
+                    if (fullDetails.year) meta.year = fullDetails.year;
+                    if (fullDetails.genre) meta.genre = fullDetails.genre;
+                    if (fullDetails.developer) meta.developer = fullDetails.developer;
+                    if (fullDetails.description) meta.description = fullDetails.description;
+                    if (fullDetails.platform) meta.platform = fullDetails.platform;
+                }
+            } catch (err) {
+                console.warn("[selectCover] Could not fetch rich details, using basic meta:", err);
+            }
+        }
+
+        const titleEl = document.getElementById('add-title');
         const yearEl = document.getElementById('add-year');
         const genreEl = document.getElementById('add-genre');
         const devEl = document.getElementById('add-developer');
         const notesEl = document.getElementById('add-notes');
         const platEl = document.getElementById('add-platform');
 
+        if (meta.title && titleEl && (!titleEl.value || titleEl.value.trim().length <= 3)) {
+            titleEl.value = meta.title;
+            filledFields.push(titleEl);
+        }
         if (meta.year && yearEl) {
             yearEl.value = meta.year;
             filledFields.push(yearEl);
@@ -977,7 +1000,10 @@ async function selectCover(url, metaId) {
             filledFields.push(notesEl);
         }
         if (meta.platform && platEl && !platEl.value) {
-            const opt = Array.from(platEl.options).find(o => o.text.toLowerCase().includes(meta.platform.toLowerCase()) || meta.platform.toLowerCase().includes(o.text.toLowerCase()));
+            const opt = Array.from(platEl.options).find(o => 
+                o.text.toLowerCase().includes(meta.platform.toLowerCase()) || 
+                meta.platform.toLowerCase().includes(o.text.toLowerCase())
+            );
             if (opt) {
                 platEl.value = opt.value;
                 filledFields.push(platEl);
@@ -1479,7 +1505,7 @@ async function renderSyncView() {
                     </div>
                  </div>
                  
-                <p style="margin-top:15px; font-size:0.75rem; color:#22c55e; font-weight:700; text-align:center;">🤖 Sentinela de Sync Ativo (v144)</p>
+                <p style="margin-top:15px; font-size:0.75rem; color:#22c55e; font-weight:700; text-align:center;">🤖 Sentinela de Sync Ativo (v145)</p>
             </div>
 
             <!-- v123: Enhanced Export Section -->
@@ -1606,7 +1632,7 @@ async function pushToCloud(silent = false) {
         const platforms = await dbService.getAll('platforms');
 
         const data = {
-            version: "v144",
+            version: "v145",
             timestamp: new Date().toISOString(),
             games,
             consoles,
@@ -1679,7 +1705,7 @@ async function exportCollection() {
         const platforms = await dbService.getAll('platforms');
 
         const data = {
-            version: "v144",
+            version: "v145",
             timestamp: new Date().toISOString(),
             games,
             consoles,
@@ -1753,7 +1779,7 @@ async function importCollection() {
 
 /** INITIALIZATION **/
 async function init() {
-    logger("Iniciando RetroCollection v144...");
+    logger("Iniciando RetroCollection v145...");
     try {
         themeService.init();
         window.addEventListener('themeChanged', () => {

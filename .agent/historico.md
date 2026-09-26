@@ -4,6 +4,31 @@ Registo completo de todas as alterações efetuadas em cada versão da aplicaç�
 
 ---
 
+## v145 — 2026-09-26
+### 🔧 Auto-Preenchimento Completo de Metadados ao Selecionar Capa (TheGamesDB)
+
+- **Causa Raiz**:
+  - Para acelerar a pesquisa de capas na v144, os campos pesados foram removidos da consulta `ByGameName`, o que deixou de fornecer os nomes de developers, géneros e sinopses no cartão inicial.
+- **Correções Aplicadas**:
+  - **Carregamento sob Demanda no Clique da Capa (`fetchGameDetails`)**: Ao clicar numa capa na grelha de resultados, a aplicação consulta agora os detalhes completos específicos daquele jogo (`ByGameID`) em segundo plano (~0.2s).
+  - **Preenchimento Automático de Campos**:
+    - Ano de Lançamento (`add-year`)
+    - Géneros (`add-genre`)
+    - Desenvolvedor/Estúdio (`add-developer`)
+    - Sinopse/Descrição (`add-notes`)
+    - Plataforma correspondente (`add-platform`)
+  - **Destaque Visual**: Todos os campos preenchidos recebem o efeito visual de brilho pulsante (`field-glow`) confirmando as informações inseridas.
+
+### 🔧 Ficheiros Modificados
+- `js/services/theGamesDBService.js` → suporte a array/objeto em fetchGameDetails, associação de gameId à meta, v145
+- `js/app.js` → selectCover agora consulta fetchGameDetails e preenche todos os campos do formulário, v145
+- `index.html` → versão v145
+- `sw.js` → cache v145
+- `js/services/chartService.js` → versão v145
+- `.agent/historico.md` → registo v145
+
+---
+
 ## v144 — 2026-09-26
 ### 🔧 Integração de Proxy de Alta Velocidade (Azure CORS Anywhere) e Payload Mínimo
 
