@@ -1,5 +1,5 @@
 /**
- * Export Service — RetroCollection v123
+ * Export Service — RetroCollection v146
  * Exports collection to PDF (jsPDF) and Excel (SheetJS)
  */
 
@@ -106,6 +106,7 @@ export const exportService = {
             'Preco (EUR)': item.price || 0,
             'Data Aquisicao': item.acquiredDate || '',
             'Estado': item.isWishlist ? 'Wishlist' : (item.isValidated ? 'Validado' : 'Nao Validado'),
+            'Link da Imagem': item.image || '',
             'Notas': item.notes || ''
         }));
 
@@ -114,7 +115,17 @@ export const exportService = {
 
         // Column widths
         ws['!cols'] = [
-            {wch:35},{wch:10},{wch:20},{wch:8},{wch:15},{wch:20},{wch:12},{wch:15},{wch:15},{wch:40}
+            {wch:35}, // Titulo
+            {wch:10}, // Tipo
+            {wch:20}, // Plataforma
+            {wch:8},  // Ano
+            {wch:15}, // Genero
+            {wch:20}, // Developer
+            {wch:12}, // Preco
+            {wch:15}, // Data
+            {wch:15}, // Estado
+            {wch:50}, // Link da Imagem
+            {wch:40}  // Notas
         ];
 
         XLSX.utils.book_append_sheet(wb, ws, 'Colecao');

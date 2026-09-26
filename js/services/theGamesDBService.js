@@ -1,5 +1,5 @@
 /**
- * TheGamesDB.net API Service — RetroCollection v145
+ * TheGamesDB.net API Service — RetroCollection v146
  * Handles searching and fetching official retail box art covers from TheGamesDB API v1.
  * Supports platform-aware search ranking, subtitle fallback, and resilient proxying.
  */

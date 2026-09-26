@@ -4,6 +4,24 @@ Registo completo de todas as alterações efetuadas em cada versão da aplicaç�
 
 ---
 
+## v146 — 2026-09-26
+### 📊 Adição da Coluna "Link da Imagem" na Exportação para Excel
+
+- **Nova Funcionalidade**:
+  - A exportação da coleção para folha de cálculo Excel (`.xlsx` via SheetJS) inclui agora a coluna **"Link da Imagem"**, contendo o URL/dados da capa de cada item.
+  - Ajustada a largura da coluna para visualização limpa no Excel.
+
+### 🔧 Ficheiros Modificados
+- `js/services/exportService.js` → adição da coluna 'Link da Imagem' no mapeamento e formatação de colunas, v146
+- `index.html` → versão v146
+- `sw.js` → cache v146
+- `js/app.js` → imports e strings de versão v146
+- `js/services/chartService.js` → versão v146
+- `js/services/theGamesDBService.js` → versão v146
+- `.agent/historico.md` → registo v146
+
+---
+
 ## v145 — 2026-09-26
 ### 🔧 Auto-Preenchimento Completo de Metadados ao Selecionar Capa (TheGamesDB)
 
