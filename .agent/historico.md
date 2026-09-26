@@ -4,6 +4,27 @@ Registo completo de todas as alterações efetuadas em cada versão da aplicaç�
 
 ---
 
+## v135 — 2026-09-26
+### 👁️ Visibilidade de Chaves e Tokens nas Definições da Nuvem
+- **Campos de Chaves Visíveis por Omissão**:
+  - Os campos **GitHub Token (Escrita)** e **TheGamesDB.net API Key** na secção de *Sincronização Cloud* passam a ser visíveis por omissão (em vez de ocultados por `type="password"`), permitindo conferir e validar facilmente o token ou chave introduzida.
+  - Formatação com fonte monospace e dimensionamento responsivo para visualização clara de tokens alfanuméricos longos (ex.: `ghp_...`).
+- **Botão de Alternância de Visibilidade (👁️ / 🙈)**:
+  - Adicionado botão interativo para alternar rapidamente a visibilidade (`window.toggleKeyVisibility`) em ambos os campos caso o utilizador pretenda ocultar ou revelar as credenciais sob demanda.
+- **Melhoria na Persistência de Credenciais**:
+  - Refinamento da função `saveCloudLink` para suportar limpeza/remoção correta de tokens e chaves vazias no `localStorage`.
+- **Invalidação de Cache e Service Worker**:
+  - `sw.js`, `index.html`, `js/services/chartService.js` e `js/app.js` atualizados para a versão `v135`.
+
+### 🔧 Ficheiros Modificados
+- `js/app.js` → campos visíveis com botão de alternância de visibilidade, função `toggleKeyVisibility`, melhoria em `saveCloudLink` e versão v135
+- `index.html` → versão v135 e scripts de controlo de cache
+- `sw.js` → cache v135
+- `js/services/chartService.js` → importações e anotações atualizadas para v135
+- `.agent/historico.md` → registo da versão v135
+
+---
+
 ## v134 — 2026-08-19
 ### 📊 Novo Gráfico de Estatísticas: "Lançamentos por Ano"
 - **Gráfico Cronológico de Lançamentos de Jogos na Página Principal**:

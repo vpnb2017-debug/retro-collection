@@ -1,15 +1,15 @@
-import { dbService } from './services/db.js?v=134';
-import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js?v=134';
-import { coverSearchService } from './services/coverSearch.js?v=134';
-import WebuyService from './services/webuyService.js?v=134';
-import { localFileSync } from './services/localFileSync.js?v=134';
-import { metadataService } from './services/metadataService.js?v=134';
-import { cloudSyncService } from './services/cloudSyncService.js?v=134';
-import { theGamesDBService } from './services/theGamesDBService.js?v=134';
-import { barcodeScannerService } from './services/barcodeScannerService.js?v=134';
-import { chartService } from './services/chartService.js?v=134';
-import { exportService } from './services/exportService.js?v=134';
-import { themeService } from './services/themeService.js?v=134';
+import { dbService } from './services/db.js?v=135';
+import { getPlatformOptions, addPlatform, updatePlatform, deletePlatform, ensurePlatformExists } from './services/platforms.js?v=135';
+import { coverSearchService } from './services/coverSearch.js?v=135';
+import WebuyService from './services/webuyService.js?v=135';
+import { localFileSync } from './services/localFileSync.js?v=135';
+import { metadataService } from './services/metadataService.js?v=135';
+import { cloudSyncService } from './services/cloudSyncService.js?v=135';
+import { theGamesDBService } from './services/theGamesDBService.js?v=135';
+import { barcodeScannerService } from './services/barcodeScannerService.js?v=135';
+import { chartService } from './services/chartService.js?v=135';
+import { exportService } from './services/exportService.js?v=135';
+import { themeService } from './services/themeService.js?v=135';
 
 // Global Exposure
 window.navigate = navigate;
@@ -44,6 +44,17 @@ window.selectTheme = (themeId) => {
     }
 };
 window.themeService = themeService;
+window.toggleKeyVisibility = (inputId, btn) => {
+    const el = document.getElementById(inputId);
+    if (!el) return;
+    if (el.type === 'text') {
+        el.type = 'password';
+        btn.textContent = '🙈';
+    } else {
+        el.type = 'text';
+        btn.textContent = '👁️';
+    }
+};
 // window.state moved down to avoid TDZ error
 
 // Utility for logging 
@@ -196,7 +207,7 @@ async function renderDashboard() {
         const ownedTotal = ownedGames.length + ownedConsoles.length;
         const wishlistTotal = games.filter(g => g.isWishlist).length + consoles.filter(c => c.isWishlist).length;
 
-        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:var(--accent-color); border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v134</span></h2>`;
+        titleEl.innerHTML = `<h2>Resumo <span style="font-size:0.6rem; color:var(--accent-color); border:1px solid; padding:2px 4px; border-radius:4px; margin-left:8px;">v135</span></h2>`;
 
         const platData = await getPlatformOptions();
 
@@ -1425,19 +1436,25 @@ async function renderSyncView() {
                  
                  <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:20px;">
                     <label style="font-size:0.75rem; color:var(--accent-color); font-weight:700; margin-left:5px;">Link do Gist (Secret)</label>
-                    <input type="text" id="cloud-url-input" placeholder="https://gist.github.com/..." value="${cloudUrl}" style="background:var(--bg-surface, #1a1a20); border:1px solid #444; color:white; padding:15px; border-radius:12px; font-size:0.9rem;">
+                    <input type="text" id="cloud-url-input" placeholder="https://gist.github.com/..." value="${cloudUrl}" style="background:var(--bg-surface, #1a1a20); border:1px solid #444; color:white; padding:15px; border-radius:12px; font-size:0.9rem; width:100%; box-sizing:border-box;">
                  </div>
 
                  <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:20px;">
                     <label style="font-size:0.75rem; color:var(--accent-color); font-weight:700; margin-left:5px;">GitHub Token (Escrita)</label>
-                    <input type="password" id="github-token-input" placeholder="ghp_..." value="${githubToken}" style="background:var(--bg-surface, #1a1a20); border:1px solid #444; color:white; padding:15px; border-radius:12px; font-size:0.9rem;">
-                    <p style="font-size:0.65rem; opacity:0.4; margin-top:2px;">Invisível por segurança. Necessário para enviar dados para a nuvem.</p>
+                    <div style="position:relative; display:flex; align-items:center; width:100%;">
+                        <input type="text" id="github-token-input" placeholder="ghp_..." value="${githubToken}" style="width:100%; background:var(--bg-surface, #1a1a20); border:1px solid #444; color:white; padding:15px; padding-right:48px; border-radius:12px; font-size:0.85rem; font-family:monospace; box-sizing:border-box;">
+                        <button type="button" onclick="window.toggleKeyVisibility('github-token-input', this)" style="position:absolute; right:12px; background:none; border:none; color:var(--text-muted, #aaa); cursor:pointer; font-size:1.15rem; padding:4px;" title="Ocultar / Mostrar">👁️</button>
+                    </div>
+                    <p style="font-size:0.65rem; opacity:0.5; margin-top:2px;">Necessário para enviar dados para a nuvem.</p>
                  </div>
 
                  <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:24px;">
                     <label style="font-size:0.75rem; color:var(--accent-color); font-weight:700; margin-left:5px;">TheGamesDB.net API Key (Opcional - Capas Físicas)</label>
-                    <input type="password" id="tgdb-key-input" placeholder="Chave de API do TheGamesDB.net..." value="${tgdbKey}" style="background:var(--bg-surface, #1a1a20); border:1px solid #444; color:white; padding:15px; border-radius:12px; font-size:0.9rem;">
-                    <p style="font-size:0.65rem; opacity:0.4; margin-top:2px;">Se preenchido, a pesquisa de capas priorizará os scans oficiais do TheGamesDB.net.</p>
+                    <div style="position:relative; display:flex; align-items:center; width:100%;">
+                        <input type="text" id="tgdb-key-input" placeholder="Chave de API do TheGamesDB.net..." value="${tgdbKey}" style="width:100%; background:var(--bg-surface, #1a1a20); border:1px solid #444; color:white; padding:15px; padding-right:48px; border-radius:12px; font-size:0.85rem; font-family:monospace; box-sizing:border-box;">
+                        <button type="button" onclick="window.toggleKeyVisibility('tgdb-key-input', this)" style="position:absolute; right:12px; background:none; border:none; color:var(--text-muted, #aaa); cursor:pointer; font-size:1.15rem; padding:4px;" title="Ocultar / Mostrar">👁️</button>
+                    </div>
+                    <p style="font-size:0.65rem; opacity:0.5; margin-top:2px;">Se preenchido, a pesquisa de capas priorizará os scans oficiais do TheGamesDB.net.</p>
                  </div>
 
                  <div style="display:flex; flex-direction:column; gap:12px;">
@@ -1453,7 +1470,7 @@ async function renderSyncView() {
                     </div>
                  </div>
                  
-                <p style="margin-top:15px; font-size:0.75rem; color:#22c55e; font-weight:700; text-align:center;">🤖 Sentinela de Sync Ativo (v134)</p>
+                <p style="margin-top:15px; font-size:0.75rem; color:#22c55e; font-weight:700; text-align:center;">🤖 Sentinela de Sync Ativo (v135)</p>
             </div>
 
             <!-- v123: Enhanced Export Section -->
@@ -1491,10 +1508,14 @@ async function saveCloudLink() {
     const token = document.getElementById('github-token-input').value.trim();
     const tgdbKey = document.getElementById('tgdb-key-input')?.value.trim();
 
-    if (!url && !tgdbKey) return uiService.alert("Por favor insira um link ou chave válida.");
+    if (!url && !tgdbKey && !token) return uiService.alert("Por favor insira um link ou chave válida.");
 
     if (url) localStorage.setItem('cloud_sync_url', url);
+    else localStorage.removeItem('cloud_sync_url');
+
     if (token) localStorage.setItem('github_token', token);
+    else localStorage.removeItem('github_token');
+
     if (tgdbKey !== undefined) {
         if (tgdbKey) localStorage.setItem('thegamesdb_api_key', tgdbKey);
         else localStorage.removeItem('thegamesdb_api_key');
@@ -1576,7 +1597,7 @@ async function pushToCloud(silent = false) {
         const platforms = await dbService.getAll('platforms');
 
         const data = {
-            version: "v134",
+            version: "v135",
             timestamp: new Date().toISOString(),
             games,
             consoles,
@@ -1649,7 +1670,7 @@ async function exportCollection() {
         const platforms = await dbService.getAll('platforms');
 
         const data = {
-            version: "v134",
+            version: "v135",
             timestamp: new Date().toISOString(),
             games,
             consoles,
@@ -1723,7 +1744,7 @@ async function importCollection() {
 
 /** INITIALIZATION **/
 async function init() {
-    logger("Iniciando RetroCollection v134...");
+    logger("Iniciando RetroCollection v135...");
     try {
         themeService.init();
         window.addEventListener('themeChanged', () => {
@@ -1737,10 +1758,10 @@ async function init() {
         await dbService.open();
         logger("DB Conectado.");
 
-        // Auto-Sync Logos logic for v134
-        if (!localStorage.getItem('logos_synced_v134')) {
+        // Auto-Sync Logos logic for v135
+        if (!localStorage.getItem('logos_synced_v135')) {
             await autoSyncLogos();
-            localStorage.setItem('logos_synced_v134', 'true');
+            localStorage.setItem('logos_synced_v135', 'true');
         }
 
         // v98 Resilient Startup
